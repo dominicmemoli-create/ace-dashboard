@@ -1,0 +1,28 @@
+# Netlify deployment config — AYCE Pilot Command dashboard
+# The site is a single self-contained static HTML file: no build step, no
+# external dependencies, no backend.
+
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Explicit UTF-8 so the em dashes / apostrophes in the dashboard render correctly
+    Content-Type = "text/html; charset=UTF-8"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+    # Keep this page out of search engines — it contains named employee performance data
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet"
+    # The dashboard is entirely inline (one <style>, two <script> blocks) and loads
+    # nothing from the network, so this CSP is tight without breaking anything.
+    # 'unsafe-inline' is required because the CSS/JS are inline by design.
+    Content-Security-Policy = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=UTF-8"

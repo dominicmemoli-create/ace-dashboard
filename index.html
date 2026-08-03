@@ -1,0 +1,2491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>AYCE Pilot Command — Chasin' Tails Falls Church</title>
+<style>/* ============================================================
+   AYCE Pilot Command — design system
+   Deep navy nav · warm cream canvas · white analytical surfaces
+   Coral accent · gold for Royalty tier · green/red for performance
+   ============================================================ */
+:root{
+  color-scheme: light;
+  --nav-bg:#131a23; --nav-bg-2:#1b2531; --nav-fg:#e9edf2; --nav-fg-dim:#8c99a8; --nav-line:#28313d;
+  --bg:#f6f4f0; --surface:#ffffff; --surface-2:#faf8f5; --surface-3:#f1ede6;
+  --border:#e7e2d9; --border-2:#d5cec1; --border-3:#bdb4a3;
+  --text:#161a1f; --text-2:#4a5058; --text-3:#656c76;
+  --accent:#c94f38; --accent-soft:#fbeae5; --accent-line:#f0c9be;
+  /* accent-text: for accent-coloured TEXT on tinted backgrounds (needs 4.5:1)
+     accent-strong: for accent FILLS carrying white text (needs 4.5:1 vs #fff) */
+  --accent-text:#a83c28; --accent-strong:#b8452f;
+  --gold:#85681c; --gold-soft:#f7efd9; --gold-line:#e2cd94;
+  --pos:#2c7a52; --pos-soft:#e4f2ea; --neg:#b23a28; --neg-soft:#fbe9e5;
+  --info:#3a6b8f; --info-soft:#e8f0f6;
+  --s1:#c94f38; --s2:#3a6b8f; --s3:#9a7b2a; --s4:#6b7280; --s5:#7a5c8f;
+  /* chart fills that carry white labels — all verified >=4.5:1 vs #fff, identical in both themes */
+  --fill-blue:#35648a; --fill-coral:#b8452f; --fill-gold:#8a6a1e; --fill-grey:#5d6673;
+  --shadow-1:0 1px 2px rgba(22,26,31,.05), 0 1px 3px rgba(22,26,31,.04);
+  --shadow-2:0 2px 4px rgba(22,26,31,.05), 0 6px 16px rgba(22,26,31,.07);
+  --shadow-3:0 8px 20px rgba(22,26,31,.10), 0 24px 48px rgba(22,26,31,.12);
+  --r:10px; --r-sm:7px; --r-lg:14px;
+  --ff:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --fm:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --dur:.18s; --ease:cubic-bezier(.2,.6,.3,1);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --nav-bg:#0d1218; --nav-bg-2:#141c25; --nav-fg:#e6ebf1; --nav-fg-dim:#7d8a99; --nav-line:#212b36;
+  --bg:#12161a; --surface:#1a1f25; --surface-2:#20262d; --surface-3:#272e36;
+  --border:#2a323b; --border-2:#3a444f; --border-3:#4d5967;
+  --text:#eef2f6; --text-2:#b3bdc8; --text-3:#8a94a1;
+  --accent:#df6b52; --accent-soft:#3a201a; --accent-line:#6b3527;
+  --accent-text:#f0917e; --accent-strong:#b8452f;
+  --gold:#d0aa54; --gold-soft:#332a12; --gold-line:#5e4d20;
+  --pos:#4aa878; --pos-soft:#17301f; --neg:#e0705c; --neg-soft:#37201c;
+  --info:#6ea3cb; --info-soft:#17262f;
+  --s1:#df6b52; --s2:#6ea3cb; --s3:#d0aa54; --s4:#8b95a1; --s5:#a487bb;
+  --fill-blue:#35648a; --fill-coral:#b8452f; --fill-gold:#8a6a1e; --fill-grey:#5d6673;
+  --shadow-1:0 1px 2px rgba(0,0,0,.3);
+  --shadow-2:0 2px 6px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.3);
+  --shadow-3:0 10px 30px rgba(0,0,0,.5), 0 30px 60px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--ff); background:var(--bg); color:var(--text);
+  font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------------- layout ---------------- */
+#shell{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+#main{min-width:0;display:flex;flex-direction:column}
+.container{width:100%;max-width:1320px;margin:0 auto;padding:0 28px 72px}
+
+/* ---------------- sidebar ---------------- */
+#side{
+  background:var(--nav-bg); color:var(--nav-fg); position:sticky; top:0; height:100vh;
+  display:flex;flex-direction:column;border-right:1px solid var(--nav-line);z-index:30;
+}
+#side .brand{padding:20px 20px 16px;border-bottom:1px solid var(--nav-line)}
+#side .brand .mark{display:flex;align-items:center;gap:9px}
+#side .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;
+  box-shadow:0 0 0 3px rgba(201,79,56,.18)}
+#side .brand h1{font-size:14.5px;font-weight:650;letter-spacing:-.15px;line-height:1.25}
+#side .brand .sub{font-size:11.5px;color:var(--nav-fg-dim);margin-top:5px;line-height:1.45}
+#side nav{padding:14px 12px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
+#side .navlbl{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--nav-fg-dim);
+  padding:10px 10px 6px;font-weight:600}
+#side nav button{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;
+  padding:9px 11px;border-radius:var(--r-sm);color:var(--nav-fg-dim);font-size:13.5px;cursor:pointer;
+  transition:background var(--dur) var(--ease),color var(--dur) var(--ease);position:relative;
+}
+#side nav button:hover{background:var(--nav-bg-2);color:var(--nav-fg)}
+#side nav button[aria-current="page"]{background:var(--nav-bg-2);color:#fff;font-weight:600}
+#side nav button[aria-current="page"]::before{
+  content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;background:var(--accent);
+  border-radius:0 3px 3px 0;
+}
+#side nav button .ic{width:16px;flex:none;opacity:.85;display:grid;place-items:center}
+#side nav button .ct{margin-left:auto;font-size:11px;color:var(--nav-fg-dim);font-variant-numeric:tabular-nums}
+#side .foot{padding:12px;border-top:1px solid var(--nav-line);display:flex;flex-direction:column;gap:8px}
+#side .foot .gen{font-size:10.5px;color:var(--nav-fg-dim);line-height:1.5;padding:0 4px}
+.themebtn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  background:var(--nav-bg-2);border:1px solid var(--nav-line);color:var(--nav-fg-dim);
+  border-radius:var(--r-sm);padding:8px 11px;font-size:12.5px;cursor:pointer;transition:color var(--dur)}
+.themebtn:hover{color:var(--nav-fg)}
+
+/* mobile top bar */
+#mobilebar{display:none}
+
+/* ---------------- topbar / filters ---------------- */
+#topbar{position:sticky;top:0;z-index:20;background:var(--bg);
+  border-bottom:1px solid var(--border);backdrop-filter:saturate(1.2) blur(6px)}
+.tb-in{max-width:1320px;margin:0 auto;padding:12px 28px}
+.tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tb-title{font-size:16px;font-weight:650;letter-spacing:-.2px;margin-right:4px}
+.tb-spacer{flex:1}
+.prov{font-size:11px;padding:4px 10px;border-radius:99px;background:var(--gold-soft);
+  color:var(--gold);border:1px solid var(--gold-line);font-weight:600;white-space:nowrap}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.fgroup{position:relative}
+.fbtn{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border-2);
+  border-radius:99px;padding:6px 12px;font-size:12.5px;color:var(--text-2);cursor:pointer;
+  transition:border-color var(--dur),box-shadow var(--dur),color var(--dur);white-space:nowrap}
+.fbtn:hover{border-color:var(--border-3);color:var(--text)}
+.fbtn[aria-expanded="true"]{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px var(--accent-soft)}
+.fbtn.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-text);font-weight:600}
+.fbtn .cv{font-size:11px;background:var(--accent-strong);color:#fff;border-radius:99px;padding:1px 6px;font-weight:600}
+.fbtn .ar{opacity:.5;font-size:9px}
+.pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;background:var(--surface);
+  border:1px solid var(--border-2);border-radius:var(--r);box-shadow:var(--shadow-3);
+  padding:8px;min-width:210px;max-height:340px;overflow-y:auto}
+.pop.right{left:auto;right:0}
+.pop .ph{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-3);
+  padding:6px 8px 7px;font-weight:600}
+.opt{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r-sm);cursor:pointer;
+  font-size:13px;transition:background var(--dur)}
+.opt:hover{background:var(--surface-3)}
+.opt input{accent-color:var(--accent);width:14px;height:14px;flex:none;cursor:pointer}
+.opt .mut{margin-left:auto;color:var(--text-3);font-size:11.5px}
+.popact{display:flex;gap:6px;padding:8px 6px 2px;border-top:1px solid var(--border);margin-top:6px}
+.popact button{flex:1;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:6px;font-size:12px;cursor:pointer;color:var(--text-2)}
+.popact button:hover{color:var(--text);border-color:var(--border-2)}
+.rng{display:flex;align-items:center;gap:8px;padding:8px}
+.rng input[type=number]{width:64px;padding:6px 8px;border:1px solid var(--border-2);
+  border-radius:var(--r-sm);background:var(--surface-2)}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:9px;min-height:22px}
+.chips .lbl{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border-2);
+  border-radius:99px;padding:3px 5px 3px 10px;font-size:12px;color:var(--text-2);animation:chipIn .18s var(--ease)}
+.chip b{color:var(--text);font-weight:600}
+.chip button{background:none;border:none;cursor:pointer;color:var(--text-3);width:17px;height:17px;
+  border-radius:50%;display:grid;place-items:center;font-size:13px;line-height:1}
+.chip button:hover{background:var(--neg-soft);color:var(--neg)}
+.chip.scope{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold);font-weight:600;padding:3px 10px}
+.chip.none{border-style:dashed;color:var(--text-3)}
+@keyframes chipIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.linkbtn{background:none;border:none;color:var(--accent-text);font-size:12px;cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;padding:3px 4px;border-radius:4px}
+
+/* ---------------- generic surfaces ---------------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);overflow:hidden}
+.card>header{display:flex;align-items:flex-start;gap:10px;padding:15px 18px 0}
+.card>header .ttl{font-size:13.5px;font-weight:650;letter-spacing:-.1px}
+.card>header .sub{font-size:11.5px;color:var(--text-3);margin-top:2px;font-weight:400;letter-spacing:0}
+.card>header .sp{flex:1}
+.card .body{padding:14px 18px 18px}
+.card .foot{padding:10px 18px;border-top:1px solid var(--border);background:var(--surface-2);
+  font-size:11.5px;color:var(--text-3);line-height:1.5}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sec-h h2{font-size:15px;font-weight:650;letter-spacing:-.2px}
+.sec-h .d{font-size:12px;color:var(--text-3)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g23{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+
+/* ---------------- hero result ---------------- */
+.hero{background-color:var(--nav-bg);background-image:linear-gradient(180deg,var(--nav-bg) 0%,var(--nav-bg-2) 100%);
+  border-radius:var(--r-lg);color:var(--nav-fg);padding:0;overflow:hidden;box-shadow:var(--shadow-2);
+  border:1px solid var(--nav-line)}
+.hero-top{display:flex;gap:28px;padding:22px 26px 20px;align-items:flex-start;flex-wrap:wrap}
+.hero-verdict{flex:1 1 330px;min-width:280px}
+.hero-eyebrow{font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--nav-fg-dim);
+  font-weight:650;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.verdict-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;
+  font-size:11.5px;font-weight:650;letter-spacing:.2px}
+.verdict-badge.pos{background:rgba(74,168,120,.16);color:#7fd3a5;border:1px solid rgba(74,168,120,.35)}
+.verdict-badge.neu{background:rgba(208,170,84,.14);color:#dcbc6c;border:1px solid rgba(208,170,84,.32)}
+.verdict-badge.neg{background:rgba(224,112,92,.15);color:#f0917e;border:1px solid rgba(224,112,92,.35)}
+.hero-delta{display:flex;align-items:baseline;gap:12px;margin:4px 0 2px;flex-wrap:wrap}
+.hero-delta .big{font-size:60px;font-weight:700;letter-spacing:-2.4px;line-height:1;
+  font-variant-numeric:tabular-nums;color:#fff}
+.hero-delta .big.up{color:#7fd3a5} .hero-delta .big.down{color:#f0917e}
+.hero-delta .unit{font-size:15px;color:var(--nav-fg-dim);font-weight:500;letter-spacing:0}
+.hero-line{font-size:13px;color:#c3ccd6;margin-top:10px;line-height:1.6;max-width:56ch}
+.hero-line b{color:#fff;font-weight:650}
+.hero-rail{flex:1 1 300px;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--nav-line);
+  border:1px solid var(--nav-line);border-radius:var(--r);overflow:hidden;min-width:260px}
+.hr-cell{background:var(--nav-bg-2);padding:11px 13px}
+.hr-cell .k{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--nav-fg-dim);
+  font-weight:600;display:flex;align-items:center;gap:5px}
+.hr-cell .v{font-size:21px;font-weight:680;color:#fff;letter-spacing:-.5px;margin-top:4px;line-height:1.15}
+.hr-cell .m{font-size:11px;color:var(--nav-fg-dim);margin-top:2px}
+.hr-cell .v.gold{color:#dcbc6c}
+.hero-bar{display:flex;gap:0;height:6px;background:var(--nav-line)}
+.hero-bar i{display:block;height:100%;transition:width .6s var(--ease)}
+.hero-summary{padding:14px 26px 18px;border-top:1px solid var(--nav-line);background:rgba(0,0,0,.14)}
+.hero-summary .sh{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--nav-fg-dim);
+  font-weight:650;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.hero-summary p{font-size:13.5px;line-height:1.65;color:#d5dce4;max-width:104ch}
+.hero-summary p b{color:#fff;font-weight:650}
+.hero-summary .interp{margin-top:9px;padding-top:9px;border-top:1px dashed var(--nav-line);
+  font-size:12.5px;color:#aab6c2;display:flex;gap:9px;align-items:flex-start;line-height:1.6}
+.itag{flex:none;font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:700;
+  padding:2px 7px;border-radius:4px;background:rgba(208,170,84,.16);color:#dcbc6c;margin-top:2px;
+  border:1px solid rgba(208,170,84,.3)}
+
+/* ---------------- KPI strip ---------------- */
+.kstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(166px,1fr));gap:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--shadow-1)}
+.kcell{padding:13px 16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.kcell .k{font-size:10.5px;letter-spacing:.65px;text-transform:uppercase;color:var(--text-3);
+  font-weight:650;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.kcell .v{font-size:25px;font-weight:680;letter-spacing:-.7px;margin-top:5px;line-height:1.1}
+.kcell .m{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.4}
+.kcell .v.accent{color:var(--accent)} .kcell .v.gold{color:var(--gold)}
+.kcell .v.pos{color:var(--pos)} .kcell .v.neg{color:var(--neg)}
+
+/* ---------------- info icon + tooltip ---------------- */
+.inf{width:14px;height:14px;border-radius:50%;border:1px solid var(--border-3);color:var(--text-3);
+  font-size:9.5px;font-weight:700;display:inline-grid;place-items:center;cursor:help;background:none;
+  flex:none;line-height:1;transition:color var(--dur),border-color var(--dur)}
+.inf:hover,.inf:focus-visible{color:var(--accent);border-color:var(--accent)}
+#tip{position:fixed;z-index:200;pointer-events:none;background:var(--nav-bg);color:#e9edf2;
+  border:1px solid var(--nav-line);border-radius:var(--r-sm);padding:9px 11px;font-size:12px;
+  line-height:1.5;box-shadow:var(--shadow-3);max-width:290px;opacity:0;transition:opacity .12s;
+  display:none}
+#tip.show{opacity:1}
+#tip .tt{font-weight:650;color:#fff;margin-bottom:4px;font-size:12.5px}
+#tip .tr{display:flex;justify-content:space-between;gap:14px;color:#b9c4cf}
+#tip .tr b{color:#fff;font-weight:600}
+#tip .td{margin-top:6px;padding-top:6px;border-top:1px solid var(--nav-line);color:#98a5b2;font-size:11.5px}
+
+/* ---------------- tables ---------------- */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);font-weight:650;
+  text-align:right;padding:9px 10px;border-bottom:1px solid var(--border-2);white-space:nowrap;
+  background:var(--surface-2);position:sticky;top:0;z-index:2}
+thead th.sortable{cursor:pointer;user-select:none;transition:color var(--dur)}
+thead th.sortable:hover{color:var(--text)}
+thead th .sarr{display:inline-block;width:9px;margin-left:3px;opacity:.35;font-size:9px}
+thead th[aria-sort] .sarr{opacity:1;color:var(--accent-text)}
+thead th[aria-sort]{color:var(--text)}
+th:first-child,td:first-child{text-align:left;padding-left:16px}
+th:last-child,td:last-child{padding-right:16px}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;
+  vertical-align:middle}
+tbody tr.rowlink{cursor:pointer;transition:background var(--dur)}
+tbody tr.rowlink:hover{background:var(--surface-2)}
+tbody tr.rowlink:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+tbody tr.sel{background:var(--accent-soft)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+tbody tr.sub td{background:var(--surface-2);font-weight:600;color:var(--text-2);border-bottom:1px solid var(--border-2)}
+tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--surface-3);
+  border-top:2px solid var(--border-2);position:sticky;bottom:0}
+.muted{color:var(--text-3)}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+.mono{font-family:var(--fm);font-size:12px}
+
+/* avatar + rank */
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.av{width:29px;height:29px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px}
+.who .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:6px;font-size:11px;
+  font-weight:700;background:var(--surface-3);color:var(--text-2);flex:none}
+.rank.r1{background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-line)}
+.rank.r2,.rank.r3{background:var(--surface-3);color:var(--text-2);border:1px solid var(--border-2)}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 7px;border-radius:5px;
+  font-weight:600;letter-spacing:.15px;white-space:nowrap}
+.tag.und{background:var(--info-soft);color:var(--info)}
+.tag.alc{background:var(--accent-soft);color:var(--accent-text)}
+.tag.pre{background:var(--gold-soft);color:var(--gold)}
+.tag.unk{background:var(--surface-3);color:var(--text-2)}
+.tag.classic{background:var(--surface-3);color:var(--text-2)}
+.tag.premium{background:var(--info-soft);color:var(--info)}
+.tag.royalty{background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-line)}
+.tag.yes{background:var(--pos-soft);color:var(--pos)}
+.tag.no{background:var(--surface-3);color:var(--text-2)}
+.conf{display:inline-flex;align-items:center;gap:3px}
+.conf i{width:4px;height:11px;border-radius:1.5px;background:var(--border-2);display:block}
+.conf i.on{background:var(--pos)} .conf.low i.on{background:var(--gold)} .conf.vlow i.on{background:var(--neg)}
+
+/* mini bar in cells */
+.mbar{display:inline-block;height:5px;border-radius:3px;background:var(--accent);vertical-align:1px;
+  margin-right:7px;min-width:2px;transition:width .4s var(--ease)}
+.mbar.q{background:var(--border-3)}
+
+/* ---------------- toolbar (leaderboard controls) ---------------- */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 18px;
+  border-bottom:1px solid var(--border);background:var(--surface-2)}
+.srch{position:relative;display:flex;align-items:center}
+.srch input{padding:7px 11px 7px 30px;border:1px solid var(--border-2);border-radius:99px;
+  background:var(--surface);font-size:12.5px;width:190px;transition:border-color var(--dur),box-shadow var(--dur)}
+.srch input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.srch .si{position:absolute;left:11px;color:var(--text-3);font-size:12px;pointer-events:none}
+.seg{display:flex;background:var(--surface);border:1px solid var(--border-2);border-radius:99px;padding:2px;gap:2px}
+.seg button{background:none;border:none;padding:5px 11px;border-radius:99px;font-size:12px;
+  color:var(--text-2);cursor:pointer;transition:background var(--dur),color var(--dur);white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--accent-strong);color:#fff;font-weight:600}
+.tog{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-2);cursor:pointer;
+  padding:5px 10px;border:1px solid var(--border-2);border-radius:99px;background:var(--surface);
+  transition:border-color var(--dur),color var(--dur)}
+.tog:hover{color:var(--text);border-color:var(--border-3)}
+.tog input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+.stepper{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-2);
+  background:var(--surface);border:1px solid var(--border-2);border-radius:99px;padding:4px 6px 4px 12px}
+.stepper input[type=range]{width:88px;accent-color:var(--accent)}
+.stepper .val{min-width:18px;text-align:center;font-weight:650;color:var(--text)}
+
+/* ---------------- drawer ---------------- */
+#scrim{position:fixed;inset:0;background:rgba(14,18,24,.42);z-index:90;opacity:0;
+  transition:opacity .22s var(--ease);backdrop-filter:blur(1.5px)}
+#scrim.show{opacity:1}
+.drawer{position:fixed;top:0;right:0;height:100dvh;width:min(680px,100vw);background:var(--bg);
+  z-index:100;box-shadow:var(--shadow-3);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .26s var(--ease);border-left:1px solid var(--border-2)}
+.drawer.show{transform:none}
+.drawer .dh{padding:18px 22px 14px;border-bottom:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:flex-start;gap:13px}
+.drawer .dh .av{width:42px;height:42px;font-size:14px}
+.drawer .dh h3{font-size:17px;font-weight:670;letter-spacing:-.3px}
+.drawer .dh .meta{font-size:12px;color:var(--text-3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;
+  align-items:center}
+.drawer .db{flex:1;overflow-y:auto;padding:16px 22px 40px}
+.xbtn{margin-left:auto;background:var(--surface-3);border:1px solid var(--border);width:30px;height:30px;
+  border-radius:50%;cursor:pointer;color:var(--text-2);display:grid;place-items:center;font-size:15px;flex:none;
+  transition:background var(--dur),color var(--dur)}
+.xbtn:hover{background:var(--neg-soft);color:var(--neg)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.dcell{background:var(--surface);padding:10px 12px}
+.dcell .k{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);font-weight:650}
+.dcell .v{font-size:18px;font-weight:670;margin-top:3px;letter-spacing:-.3px}
+.dcell .m{font-size:10.5px;color:var(--text-3);margin-top:1px}
+.cmpbar{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12.5px}
+.cmpbar .cl{width:118px;flex:none;color:var(--text-2)}
+.cmpbar .ct{flex:1;height:20px;background:var(--surface-3);border-radius:4px;position:relative;overflow:hidden}
+.cmpbar .cf{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .5s var(--ease)}
+.cmpbar .cv{width:70px;text-align:right;font-weight:650;flex:none}
+.avgline{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text);opacity:.55;z-index:2}
+
+/* ---------------- modal ---------------- */
+.modal{position:fixed;z-index:110;top:50%;left:50%;transform:translate(-50%,-48%) scale(.98);
+  width:min(620px,calc(100vw - 32px));max-height:86dvh;background:var(--surface);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-3);display:flex;flex-direction:column;opacity:0;
+  transition:opacity .2s var(--ease),transform .2s var(--ease);border:1px solid var(--border-2)}
+.modal.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.modal .mh{padding:16px 20px 13px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+.modal .mh h3{font-size:15px;font-weight:670}
+.modal .mh .s{font-size:12px;color:var(--text-3);margin-top:2px}
+.modal .mb{padding:16px 20px 20px;overflow-y:auto}
+.calcrow{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border);
+  font-size:13px}
+.calcrow .cl{color:var(--text-2)} .calcrow .cr{font-weight:650;white-space:nowrap}
+.calcrow.tot{border-bottom:none;border-top:2px solid var(--border-2);margin-top:4px;padding-top:12px;font-size:15px}
+.note{background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--info);
+  border-radius:var(--r-sm);padding:10px 13px;font-size:12.5px;color:var(--text-2);line-height:1.6;margin-top:12px}
+.note.gold{border-left-color:var(--gold)} .note.warn{border-left-color:var(--neg)}
+.note b{color:var(--text)}
+
+/* ---------------- accordion ---------------- */
+.acc{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.acc+.acc{margin-top:9px}
+.acc>button{width:100%;display:flex;align-items:center;gap:11px;padding:13px 16px;background:none;border:none;
+  cursor:pointer;text-align:left;font-size:13.5px;font-weight:600;transition:background var(--dur)}
+.acc>button:hover{background:var(--surface-2)}
+.acc>button .ch{margin-left:auto;color:var(--text-3);transition:transform .22s var(--ease);font-size:11px}
+.acc>button[aria-expanded="true"] .ch{transform:rotate(90deg)}
+.acc .ab{padding:0 16px 16px;font-size:12.5px;color:var(--text-2);line-height:1.7}
+.acc .ab dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin-top:4px}
+.acc .ab dt{font-weight:650;color:var(--text);white-space:nowrap}
+
+/* status pills */
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;padding:3px 9px;
+  border-radius:99px;white-space:nowrap}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.st.ok{background:var(--pos-soft);color:var(--pos)}
+.st.partial{background:var(--gold-soft);color:var(--gold)}
+.st.excl{background:var(--surface-3);color:var(--text-2)}
+.st.rev{background:var(--neg-soft);color:var(--neg)}
+
+/* ---------------- charts ---------------- */
+.chart{width:100%}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-family:var(--ff)}
+.hit{cursor:pointer}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--text-2);margin-bottom:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:2.5px;display:block}
+.legend i.ln{height:3px;width:14px;border-radius:2px}
+.daybtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.daybtn{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;
+  cursor:pointer;text-align:left;transition:border-color var(--dur),box-shadow var(--dur),background var(--dur)}
+.daybtn:hover{border-color:var(--border-3)}
+.daybtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);
+  box-shadow:0 0 0 2px var(--accent-soft)}
+.daybtn .dl{font-size:11.5px;color:var(--text-2);font-weight:600}
+.daybtn .dv{font-size:17px;font-weight:680;margin-top:2px;letter-spacing:-.3px}
+.daybtn .dm{font-size:10.5px;color:var(--text-3)}
+.spark{display:block}
+
+/* funnel */
+.funnel{display:flex;flex-direction:column;gap:9px}
+.fstep{display:flex;align-items:center;gap:12px}
+.fstep .fl{width:132px;flex:none;font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:5px}
+.fstep .fbarw{flex:1;height:34px;background:var(--surface-3);border-radius:6px;overflow:hidden;display:flex}
+.fstep .fseg{height:100%;display:flex;align-items:center;padding:0 9px;font-size:11.5px;font-weight:650;
+  color:#fff;transition:width .55s var(--ease);white-space:nowrap;overflow:hidden}
+.fstep .fv{width:104px;flex:none;text-align:right;font-weight:670;font-size:13.5px}
+.fstep .fv small{display:block;font-size:10.5px;color:var(--text-3);font-weight:500}
+
+/* ---------------- skeleton / empty / error ---------------- */
+.skel{background:linear-gradient(90deg,var(--surface-3) 25%,var(--surface-2) 50%,var(--surface-3) 75%);
+  background-size:200% 100%;animation:sh 1.1s infinite linear;border-radius:var(--r-sm)}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-hero{height:206px;border-radius:var(--r-lg);margin-bottom:14px}
+.skel-k{height:88px;border-radius:var(--r-lg);margin-bottom:14px}
+.skel-c{height:250px;border-radius:var(--r-lg)}
+.empty{padding:44px 22px;text-align:center;color:var(--text-3)}
+.empty .ei{font-size:26px;opacity:.4;margin-bottom:10px}
+.empty .et{font-size:14px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.empty .es{font-size:12.5px;max-width:44ch;margin:0 auto 14px;line-height:1.6}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent-strong);color:#fff;border:none;
+  border-radius:var(--r-sm);padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;
+  transition:filter var(--dur)}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:var(--surface);color:var(--text-2);border:1px solid var(--border-2)}
+.btn.ghost:hover{color:var(--text);border-color:var(--border-3);filter:none}
+.btn.sm{padding:6px 11px;font-size:12px}
+.errbox{margin:14px 0;padding:14px 16px;background:var(--neg-soft);border:1px solid var(--neg);
+  border-radius:var(--r);color:var(--neg);font-size:13px}
+.errbox b{display:block;margin-bottom:4px}
+
+/* ---------------- gate ---------------- */
+#gate{position:fixed;inset:0;z-index:300;background:var(--nav-bg);display:grid;place-items:center;padding:20px}
+#gate .gb{width:min(360px,100%);text-align:center;color:var(--nav-fg)}
+#gate .gm{display:inline-flex;align-items:center;gap:9px;margin-bottom:20px}
+#gate .gm .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 3px rgba(201,79,56,.2)}
+#gate h2{font-size:19px;font-weight:670;letter-spacing:-.3px}
+#gate .gs{font-size:12.5px;color:var(--nav-fg-dim);margin-top:6px;line-height:1.6}
+#gate form{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+#gate input{padding:11px 14px;border:1px solid var(--nav-line);border-radius:var(--r-sm);
+  background:var(--nav-bg-2);color:#fff;font-size:15px;text-align:center;letter-spacing:3px}
+#gate input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,79,56,.18)}
+#gate button{padding:11px;border:none;border-radius:var(--r-sm);background:var(--accent-strong);color:#fff;
+  font-size:14px;font-weight:650;cursor:pointer}
+#gate .ge{font-size:12px;color:#f0917e;min-height:17px}
+#gate .gn{font-size:11px;color:var(--nav-fg-dim);margin-top:18px;line-height:1.6;
+  border-top:1px solid var(--nav-line);padding-top:14px}
+
+/* ---------------- responsive ---------------- */
+@media(max-width:1080px){ .g23,.g3{grid-template-columns:1fr} }
+@media(max-width:900px){
+  #shell{grid-template-columns:1fr}
+  #side{position:fixed;left:0;top:0;bottom:0;width:250px;height:100dvh;transform:translateX(-100%);
+    transition:transform .24s var(--ease);z-index:120}
+  #side.open{transform:none}
+  #mobilebar{display:flex;align-items:center;gap:11px;padding:10px 16px;background:var(--nav-bg);
+    color:var(--nav-fg);position:sticky;top:0;z-index:40}
+  #mobilebar .mt{font-size:14px;font-weight:650}
+  #mobilebar .mb-sub{font-size:11px;color:var(--nav-fg-dim)}
+  #mobilebar button{background:var(--nav-bg-2);border:1px solid var(--nav-line);color:var(--nav-fg);
+    border-radius:var(--r-sm);width:34px;height:34px;display:grid;place-items:center;cursor:pointer;flex:none}
+  #topbar{top:54px}
+  .container,.tb-in{padding-left:16px;padding-right:16px}
+  .g2{grid-template-columns:1fr}
+  .hero-delta .big{font-size:46px}
+  .drawer{width:100vw}
+}
+@media(max-width:560px){
+  body{font-size:14px}
+  .kstrip{grid-template-columns:1fr 1fr}
+  .hero-rail{grid-template-columns:1fr 1fr}
+  .hero-top{padding:18px 17px 16px;gap:18px}
+  .hero-summary{padding:13px 17px 16px}
+  .container,.tb-in{padding-left:12px;padding-right:12px}
+  .card>header{padding:13px 14px 0} .card .body{padding:12px 14px 15px}
+  .toolbar{padding:10px 14px}
+  .srch input{width:100%}
+  .srch{flex:1 1 100%}
+  th:first-child,td:first-child{padding-left:12px}
+  .daybtns{grid-template-columns:1fr}
+  .fstep .fl{width:96px;font-size:11px}
+  .fstep .fv{width:80px;font-size:12.5px}
+  .drawer .db{padding:14px 15px 36px}
+}
+
+/* ---------------- motion ---------------- */
+.pg{animation:pgIn .26s var(--ease)}
+@keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rise{animation:rise .4s var(--ease) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grow{animation:grow .6s var(--ease) backwards;transform-origin:left center}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .8s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fade{animation:fade .5s var(--ease) backwards}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .draw{stroke-dashoffset:0}
+}
+
+/* ---------------- print ---------------- */
+@media print{
+  @page{margin:12mm}
+  #side,#topbar,#mobilebar,#scrim,.drawer,.toolbar,.no-print{display:none!important}
+  #shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11px}
+  .container{padding:0;max-width:none}
+  .card,.kstrip{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .hero{background:#fff!important;color:#000!important;border:1px solid #ccc}
+  .hero-delta .big,.hero-summary p,.hero-summary p b,.hr-cell .v,.hero-line,.hero-line b{color:#000!important}
+  .hr-cell{background:#fff!important} .hero-summary{background:#fff!important}
+  .hero-eyebrow,.hr-cell .k,.hr-cell .m,.hero-summary .sh{color:#444!important}
+  thead th{position:static}
+  tfoot td{position:static}
+  .printonly{display:block!important}
+}
+.printonly{display:none}
+</style>
+</head>
+<body>
+
+<!-- presentation gate: NOT security. The passcode is embedded in this file. -->
+<div id="gate">
+  <div class="gb">
+    <div class="gm"><span class="dot"></span><span style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;font-weight:650;color:#8c99a8">Chasin' Tails</span></div>
+    <h2>AYCE Pilot Command</h2>
+    <div class="gs">Founders Row · Falls Church<br>Pilot weekend Jul 31 – Aug 2, 2026</div>
+    <form id="gform" autocomplete="off">
+      <label class="sr" for="pw">Passcode</label>
+      <input id="pw" type="password" placeholder="passcode" autocomplete="off" inputmode="text">
+      <button type="submit">Enter dashboard</button>
+      <div class="ge" id="gerr" role="alert"></div>
+    </form>
+    <div class="gn">This passcode is a presentation gate only. It is stored in this file in plain text and protects
+      nothing — anyone holding the file can read the data. Server-side authentication is required for real access control.</div>
+  </div>
+</div>
+
+<div id="shell" style="visibility:hidden">
+  <aside id="side">
+    <div class="brand">
+      <div class="mark"><span class="dot"></span>
+        <h1>AYCE Pilot Command</h1></div>
+      <div class="sub">Chasin' Tails · Founders Row<br>Pilot weekend Jul 31 – Aug 2, 2026</div>
+    </div>
+    <div class="navlbl">Analysis</div>
+    <nav id="navlist" aria-label="Primary"></nav>
+    <div class="foot">
+      <button class="themebtn" id="themeBtn" type="button">
+        <span>Appearance</span><span id="themeLabel">Light</span></button>
+      <div class="gen">Data generated<br><span id="genstamp"></span></div>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="mobilebar">
+      <button id="menuBtn" type="button" aria-label="Open navigation">☰</button>
+      <div><div class="mt" id="mtitle">Pilot overview</div>
+        <div class="mb-sub">Chasin' Tails · AYCE pilot</div></div>
+    </div>
+
+    <div id="topbar">
+      <div class="tb-in">
+        <div class="tb-row">
+          <span class="tb-title" id="pgtitle">Pilot overview</span>
+          <span class="tb-spacer"></span>
+          <span class="prov">Provisional rates — not payroll</span>
+        </div>
+        <div id="filterbar"></div>
+      </div>
+    </div>
+
+    <main class="container"><div id="content"></div></main>
+  </div>
+</div>
+
+<script>window.__ACE__ = {"generated":"2026-08-03 03:18 ET","rates":{"classic":5,"premium":7.5,"royalty":10},"dates":[20260731,20260801,20260802],"intents":["UNDECIDED","ALC","AYCE","UNKNOWN"],"tiers":["classic","premium","royalty"],"weekendLabels":["Jul 10-12","Jul 17-19","Jul 24-26","Pilot (Jul 31-Aug 2)"],"overall":{"pilot":{"guests":851,"aceCovers":311,"tables":262,"aceTables":110,"mixCovers":36.5,"mixTables":42,"revenue":89932.08,"aceRevenue":54223.18},"baseline3wk":{"guests":4230,"aceCovers":1246,"tables":1382,"aceTables":492,"mixCovers":29.5,"mixTables":35.6,"revenue":414692.35,"aceRevenue":207469.97},"weekends":[{"guests":932,"aceCovers":277,"tables":306,"aceTables":115,"mixCovers":29.7,"mixTables":37.6,"revenue":97784.73,"aceRevenue":49608.26},{"guests":822,"aceCovers":279,"tables":274,"aceTables":111,"mixCovers":33.9,"mixTables":40.5,"revenue":82685.03,"aceRevenue":47102.43},{"guests":896,"aceCovers":251,"tables":290,"aceTables":101,"mixCovers":28,"mixTables":34.8,"revenue":90765.19,"aceRevenue":43077.74},{"guests":851,"aceCovers":311,"tables":262,"aceTables":110,"mixCovers":36.5,"mixTables":42,"revenue":89932.08,"aceRevenue":54223.18}],"byDay":[{"guests":232,"aceCovers":82,"tables":78,"aceTables":29,"mixCovers":35.3,"mixTables":37.2,"revenue":25881,"aceRevenue":14816.3},{"guests":305,"aceCovers":106,"tables":103,"aceTables":44,"mixCovers":34.8,"mixTables":42.7,"revenue":33382.61,"aceRevenue":19223.36},{"guests":314,"aceCovers":123,"tables":81,"aceTables":37,"mixCovers":39.2,"mixTables":45.7,"revenue":30668.47,"aceRevenue":20183.52}],"conversion":{"eligibleTables":164,"convertedTables":54,"convRateTables":32.9,"eligibleCovers":585,"convertedCovers":203,"convRateCovers":34.7,"undecided":{"elig":125,"conv":50,"rate":40},"alc":{"elig":39,"conv":4,"rate":10.3},"predecidedTables":37,"unknownIntentTables":61,"commission":1130}},"servers":[{"n":"Anson Dewei","p":{"guests":51,"aceCovers":15,"tables":17,"aceTables":8,"mixCovers":29.4,"mixTables":47.1,"revenue":5089.76,"aceRevenue":2873.96},"b":{"guests":160,"aceCovers":54,"tables":59,"aceTables":22,"mixCovers":33.8,"mixTables":37.3,"revenue":18713.57,"aceRevenue":8402.12},"q":true,"w":[35.3,31.2,null,29.4],"wt":[22,8,0,17],"c":{"eligibleTables":11,"convertedTables":3,"convRateTables":27.3,"eligibleCovers":39,"convertedCovers":5,"convRateCovers":12.8,"undecided":{"elig":8,"conv":2,"rate":25},"alc":{"elig":3,"conv":1,"rate":33.3},"predecidedTables":2,"unknownIntentTables":4,"commission":35}},{"n":"Brandon Hudson","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":170,"aceCovers":40,"tables":57,"aceTables":18,"mixCovers":23.5,"mixTables":31.6,"revenue":16594.57,"aceRevenue":6520.72},"q":true,"w":[20.8,21.8,null,null],"wt":[25,21,0,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Cai Hiu","p":{"guests":29,"aceCovers":11,"tables":6,"aceTables":4,"mixCovers":37.9,"mixTables":66.7,"revenue":2784.23,"aceRevenue":1638.78},"b":{"guests":27,"aceCovers":9,"tables":6,"aceTables":3,"mixCovers":33.3,"mixTables":50,"revenue":1803.36,"aceRevenue":1357.16},"q":false,"w":[33.3,null,null,37.9],"wt":[6,0,0,6],"c":{"eligibleTables":5,"convertedTables":3,"convRateTables":60,"eligibleCovers":25,"convertedCovers":7,"convRateCovers":28,"undecided":{"elig":3,"conv":3,"rate":100},"alc":{"elig":2,"conv":0,"rate":0},"predecidedTables":0,"unknownIntentTables":1,"commission":40}},{"n":"Chad San Pedro","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":138,"aceCovers":37,"tables":44,"aceTables":15,"mixCovers":26.8,"mixTables":34.1,"revenue":15211.52,"aceRevenue":7042.52},"q":true,"w":[14.8,17.6,29.5,null],"wt":[10,5,14,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Charles Javier","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":53,"aceCovers":7,"tables":15,"aceTables":3,"mixCovers":13.2,"mixTables":20,"revenue":3976.4,"aceRevenue":937.2},"q":true,"w":[null,20,12,null],"wt":[0,3,5,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Cindy Nguyen","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":104,"aceCovers":22,"tables":31,"aceTables":7,"mixCovers":21.2,"mixTables":22.6,"revenue":9943.66,"aceRevenue":3388.76},"q":true,"w":[18.9,null,28.6,null],"wt":[9,0,9,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Danny Choe","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":182,"aceCovers":75,"tables":49,"aceTables":23,"mixCovers":41.2,"mixTables":46.9,"revenue":19457.8,"aceRevenue":12123.1},"q":true,"w":[null,41.7,34.8,null],"wt":[0,19,15,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Dominic Memoli","p":{"guests":60,"aceCovers":25,"tables":18,"aceTables":11,"mixCovers":41.7,"mixTables":61.1,"revenue":6787.98,"aceRevenue":4182.08},"b":{"guests":219,"aceCovers":79,"tables":72,"aceTables":29,"mixCovers":36.1,"mixTables":40.3,"revenue":22463.38,"aceRevenue":12385.18},"q":true,"w":[null,47.2,39.5,41.7],"wt":[0,18,12,18],"c":{"eligibleTables":16,"convertedTables":9,"convRateTables":56.2,"eligibleCovers":55,"convertedCovers":23,"convRateCovers":41.8,"undecided":{"elig":14,"conv":9,"rate":64.3},"alc":{"elig":2,"conv":0,"rate":0},"predecidedTables":1,"unknownIntentTables":1,"commission":150}},{"n":"Dominick Kim","p":{"guests":6,"aceCovers":5,"tables":1,"aceTables":1,"mixCovers":83.3,"mixTables":100,"revenue":878.4,"aceRevenue":878.4},"b":{"guests":229,"aceCovers":79,"tables":75,"aceTables":30,"mixCovers":34.5,"mixTables":40,"revenue":23463.65,"aceRevenue":12836},"q":true,"w":[31.6,45.5,null,83.3],"wt":[26,17,0,1],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":1,"commission":0}},{"n":"Emelyn Leiva","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":94,"aceCovers":48,"tables":40,"aceTables":23,"mixCovers":51.1,"mixTables":57.5,"revenue":11863.51,"aceRevenue":8528.36},"q":true,"w":[84.6,69.2,61.1,null],"wt":[5,7,9,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Jeffrey Pak","p":{"guests":26,"aceCovers":15,"tables":7,"aceTables":4,"mixCovers":57.7,"mixTables":57.1,"revenue":3283.76,"aceRevenue":2467.16},"b":{"guests":161,"aceCovers":46,"tables":42,"aceTables":17,"mixCovers":28.6,"mixTables":40.5,"revenue":14574.6,"aceRevenue":7188.6},"q":true,"w":[null,25,33.8,57.7],"wt":[0,1,18,7],"c":{"eligibleTables":4,"convertedTables":2,"convRateTables":50,"eligibleCovers":15,"convertedCovers":5,"convRateCovers":33.3,"undecided":{"elig":3,"conv":1,"rate":33.3},"alc":{"elig":1,"conv":1,"rate":100},"predecidedTables":0,"unknownIntentTables":3,"commission":30}},{"n":"Jessica  Kim","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":74,"aceCovers":14,"tables":20,"aceTables":6,"mixCovers":18.9,"mixTables":30,"revenue":5503,"aceRevenue":2360.2},"q":true,"w":[11.8,8.3,null,null],"wt":[10,1,0,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Jon Welch","p":{"guests":47,"aceCovers":14,"tables":10,"aceTables":5,"mixCovers":29.8,"mixTables":50,"revenue":4914.32,"aceRevenue":2389.12},"b":{"guests":274,"aceCovers":91,"tables":97,"aceTables":39,"mixCovers":33.2,"mixTables":40.2,"revenue":27706.56,"aceRevenue":14891.96},"q":true,"w":[38.7,71.8,23.1,29.8],"wt":[12,17,20,10],"c":{"eligibleTables":5,"convertedTables":1,"convRateTables":20,"eligibleCovers":30,"convertedCovers":2,"convRateCovers":6.7,"undecided":{"elig":4,"conv":1,"rate":25},"alc":{"elig":1,"conv":0,"rate":0},"predecidedTables":5,"unknownIntentTables":0,"commission":20}},{"n":"Jordan Banzon","p":{"guests":30,"aceCovers":15,"tables":11,"aceTables":5,"mixCovers":50,"mixTables":45.5,"revenue":4247.06,"aceRevenue":2870.06},"b":{"guests":324,"aceCovers":83,"tables":102,"aceTables":33,"mixCovers":25.6,"mixTables":32.4,"revenue":28727.28,"aceRevenue":12707.38},"q":true,"w":[23,28.9,38.1,50],"wt":[12,17,9,11],"c":{"eligibleTables":4,"convertedTables":0,"convRateTables":0,"eligibleCovers":10,"convertedCovers":0,"convRateCovers":0,"undecided":{"elig":1,"conv":0,"rate":0},"alc":{"elig":3,"conv":0,"rate":0},"predecidedTables":5,"unknownIntentTables":2,"commission":0}},{"n":"Jordy Gonzalez","p":{"guests":122,"aceCovers":28,"tables":26,"aceTables":10,"mixCovers":23,"mixTables":38.5,"revenue":8861.52,"aceRevenue":4334.22},"b":{"guests":247,"aceCovers":41,"tables":67,"aceTables":18,"mixCovers":16.6,"mixTables":26.9,"revenue":24334.74,"aceRevenue":9269.72},"q":true,"w":[24.4,12.7,7.3,23],"wt":[17,18,24,26],"c":{"eligibleTables":20,"convertedTables":6,"convRateTables":30,"eligibleCovers":104,"convertedCovers":52,"convRateCovers":50,"undecided":{"elig":17,"conv":6,"rate":35.3},"alc":{"elig":3,"conv":0,"rate":0},"predecidedTables":2,"unknownIntentTables":4,"commission":125}},{"n":"Joshua Ivan Sanchez","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":148,"aceCovers":44,"tables":47,"aceTables":18,"mixCovers":29.7,"mixTables":38.3,"revenue":13771.07,"aceRevenue":6558.92},"q":true,"w":[38.1,null,13.2,null],"wt":[23,0,14,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Kendall","p":{"guests":65,"aceCovers":24,"tables":25,"aceTables":9,"mixCovers":36.9,"mixTables":36,"revenue":6995.42,"aceRevenue":3670.32},"b":{"guests":354,"aceCovers":87,"tables":96,"aceTables":25,"mixCovers":24.6,"mixTables":26,"revenue":32573.44,"aceRevenue":14120.44},"q":true,"w":[27.7,33.3,13.9,36.9],"wt":[22,19,32,25],"c":{"eligibleTables":14,"convertedTables":4,"convRateTables":28.6,"eligibleCovers":32,"convertedCovers":8,"convRateCovers":25,"undecided":{"elig":12,"conv":4,"rate":33.3},"alc":{"elig":2,"conv":0,"rate":0},"predecidedTables":2,"unknownIntentTables":9,"commission":55}},{"n":"Madelyn Flemmons","p":{"guests":46,"aceCovers":24,"tables":19,"aceTables":10,"mixCovers":52.2,"mixTables":52.6,"revenue":6222.2,"aceRevenue":4161.2},"b":{"guests":97,"aceCovers":39,"tables":37,"aceTables":16,"mixCovers":40.2,"mixTables":43.2,"revenue":11269.06,"aceRevenue":7037.76},"q":true,"w":[37.2,null,41.4,52.2],"wt":[16,0,10,19],"c":{"eligibleTables":12,"convertedTables":4,"convRateTables":33.3,"eligibleCovers":30,"convertedCovers":9,"convRateCovers":30,"undecided":{"elig":7,"conv":4,"rate":57.1},"alc":{"elig":5,"conv":0,"rate":0},"predecidedTables":2,"unknownIntentTables":5,"commission":65}},{"n":"Ramon Fajutrao","p":{"guests":79,"aceCovers":39,"tables":22,"aceTables":10,"mixCovers":49.4,"mixTables":45.5,"revenue":9103,"aceRevenue":6452.2},"b":{"guests":221,"aceCovers":77,"tables":77,"aceTables":33,"mixCovers":34.8,"mixTables":42.9,"revenue":24768.79,"aceRevenue":14366.64},"q":true,"w":[39.4,34.7,40.4,49.4],"wt":[27,23,19,22],"c":{"eligibleTables":13,"convertedTables":7,"convRateTables":53.8,"eligibleCovers":57,"convertedCovers":39,"convRateCovers":68.4,"undecided":{"elig":11,"conv":6,"rate":54.5},"alc":{"elig":2,"conv":1,"rate":50},"predecidedTables":4,"unknownIntentTables":5,"commission":195}},{"n":"Richard Nguyen","p":{"guests":52,"aceCovers":16,"tables":17,"aceTables":6,"mixCovers":30.8,"mixTables":35.3,"revenue":5904.9,"aceRevenue":3181.2},"b":{"guests":78,"aceCovers":34,"tables":29,"aceTables":14,"mixCovers":43.6,"mixTables":48.3,"revenue":8503.04,"aceRevenue":5372.54},"q":true,"w":[58.6,30,null,30.8],"wt":[9,11,0,17],"c":{"eligibleTables":8,"convertedTables":1,"convRateTables":12.5,"eligibleCovers":24,"convertedCovers":2,"convRateCovers":8.3,"undecided":{"elig":7,"conv":1,"rate":14.3},"alc":{"elig":1,"conv":0,"rate":0},"predecidedTables":5,"unknownIntentTables":4,"commission":15}},{"n":"Ryan Vagoun","p":{"guests":85,"aceCovers":35,"tables":33,"aceTables":13,"mixCovers":41.2,"mixTables":39.4,"revenue":10277.32,"aceRevenue":6080.32},"b":{"guests":57,"aceCovers":23,"tables":21,"aceTables":10,"mixCovers":40.4,"mixTables":47.6,"revenue":6558.81,"aceRevenue":3981.66},"q":true,"w":[null,null,40.4,41.2],"wt":[0,0,21,33],"c":{"eligibleTables":23,"convertedTables":7,"convRateTables":30.4,"eligibleCovers":58,"convertedCovers":17,"convRateCovers":29.3,"undecided":{"elig":15,"conv":6,"rate":40},"alc":{"elig":8,"conv":1,"rate":12.5},"predecidedTables":5,"unknownIntentTables":5,"commission":132.5}},{"n":"Soph Abrahamsen","p":{"guests":26,"aceCovers":11,"tables":9,"aceTables":4,"mixCovers":42.3,"mixTables":44.4,"revenue":2533.79,"aceRevenue":1882.44},"b":{"guests":50,"aceCovers":13,"tables":15,"aceTables":3,"mixCovers":26,"mixTables":20,"revenue":4594.24,"aceRevenue":2353.84},"q":true,"w":[null,null,30,42.3],"wt":[0,0,10,9],"c":{"eligibleTables":7,"convertedTables":2,"convRateTables":28.6,"eligibleCovers":22,"convertedCovers":7,"convRateCovers":31.8,"undecided":{"elig":7,"conv":2,"rate":28.6},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":2,"unknownIntentTables":0,"commission":52.5}},{"n":"Taylor Ellis","p":{"guests":38,"aceCovers":6,"tables":13,"aceTables":3,"mixCovers":15.8,"mixTables":23.1,"revenue":3953.46,"aceRevenue":1101.36},"b":{"guests":120,"aceCovers":54,"tables":48,"aceTables":23,"mixCovers":45,"mixTables":47.9,"revenue":14391.64,"aceRevenue":8606.94},"q":true,"w":[35.7,66.7,52.4,15.8],"wt":[17,5,19,13],"c":{"eligibleTables":8,"convertedTables":2,"convRateTables":25,"eligibleCovers":27,"convertedCovers":5,"convRateCovers":18.5,"undecided":{"elig":5,"conv":2,"rate":40},"alc":{"elig":3,"conv":0,"rate":0},"predecidedTables":0,"unknownIntentTables":5,"commission":30}},{"n":"Tommy Ho","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":58,"aceCovers":15,"tables":22,"aceTables":7,"mixCovers":25.9,"mixTables":31.8,"revenue":5624.8,"aceRevenue":2351.4},"q":true,"w":[13.8,null,40.7,null],"wt":[10,0,11,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Tyasia Rollins","p":{"guests":23,"aceCovers":5,"tables":9,"aceTables":2,"mixCovers":21.7,"mixTables":22.2,"revenue":2368.2,"aceRevenue":1080},"b":{"guests":127,"aceCovers":35,"tables":41,"aceTables":14,"mixCovers":27.6,"mixTables":34.1,"revenue":13523.52,"aceRevenue":5854.92},"q":true,"w":[28.6,42.1,12.5,21.7],"wt":[7,7,10,9],"c":{"eligibleTables":8,"convertedTables":1,"convRateTables":12.5,"eligibleCovers":21,"convertedCovers":2,"convRateCovers":9.5,"undecided":{"elig":5,"conv":1,"rate":20},"alc":{"elig":3,"conv":0,"rate":0},"predecidedTables":0,"unknownIntentTables":1,"commission":30}},{"n":"Younchul Chang","p":{"guests":0,"aceCovers":0,"tables":0,"aceTables":0,"mixCovers":null,"mixTables":null,"revenue":0,"aceRevenue":0},"b":{"guests":43,"aceCovers":12,"tables":15,"aceTables":5,"mixCovers":27.9,"mixTables":33.3,"revenue":4014.4,"aceRevenue":1919.8},"q":true,"w":[null,88.9,null,null],"wt":[0,3,0,0],"c":{"eligibleTables":0,"convertedTables":0,"convRateTables":null,"eligibleCovers":0,"convertedCovers":0,"convRateCovers":null,"undecided":{"elig":0,"conv":0,"rate":null},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":0,"unknownIntentTables":0,"commission":0}},{"n":"Zoom Le","p":{"guests":26,"aceCovers":15,"tables":6,"aceTables":3,"mixCovers":57.7,"mixTables":50,"revenue":4264.8,"aceRevenue":3651},"b":{"guests":190,"aceCovers":54,"tables":69,"aceTables":21,"mixCovers":28.4,"mixTables":30.4,"revenue":19309.95,"aceRevenue":8849.44},"q":true,"w":[25,34.1,null,57.7],"wt":[16,12,0,6],"c":{"eligibleTables":3,"convertedTables":1,"convRateTables":33.3,"eligibleCovers":20,"convertedCovers":14,"convRateCovers":70,"undecided":{"elig":3,"conv":1,"rate":33.3},"alc":{"elig":0,"conv":0,"rate":null},"predecidedTables":2,"unknownIntentTables":1,"commission":110}}],"rows":[[0,0,"H2",4,1,1,4,0,2,770.84],[0,0,"15",1,1,2,1,0,3,221.76],[0,0,"13",2,0,-1,0,0,0,172.8],[0,0,"14",3,0,-1,0,0,0,296.4],[0,0,"16",2,1,0,2,0,1,255.36],[0,0,"13",2,1,1,2,0,3,383.52],[0,0,"15",1,1,2,1,0,2,221.76],[0,2,"35",8,0,-1,0,0,0,462],[0,2,"32",3,0,-1,0,0,0,121.2],[0,2,"33",2,1,2,2,0,3,403.2],[0,2,"5",1,1,2,1,0,0,220.8],[0,2,"6",2,0,-1,0,0,3,192],[0,2,"8",2,1,1,2,0,0,396.72],[0,2,"6",8,0,-1,0,0,0,316.2],[0,2,"5",2,0,-1,0,0,0,183.6],[0,2,"8",4,0,-1,0,0,1,335.4],[0,2,"7",4,0,-1,0,0,1,136.2],[2,1,"33",4,1,1,4,0,3,614.4],[2,1,"1001",16,0,-1,0,0,1,1024.45],[2,1,"1001",2,1,0,2,0,0,216.96],[2,1,"1003",2,1,2,2,0,0,546.72],[2,1,"1002",3,1,0,2,1,0,260.7],[2,1,"1004",2,0,-1,0,0,1,121],[7,1,"22",11,0,-1,0,0,0,570.9],[7,1,"32",2,1,1,2,0,0,337.92],[7,1,"33",3,1,1,3,0,0,431.98],[7,1,"34",2,0,-1,0,0,1,179.4],[7,1,"31",2,0,-1,0,0,1,350.4],[7,1,"35",9,0,-1,0,0,0,723.6],[7,1,"34",2,0,-1,0,0,0,202.8],[7,1,"32",2,1,2,2,0,3,449.92],[7,1,"33",3,1,1,2,0,0,457.92],[7,1,"31",1,1,1,1,0,0,168.96],[7,1,"32",2,0,-1,0,0,0,140.8],[7,2,"42",2,1,2,2,0,0,482.4],[7,2,"3",2,1,1,2,0,0,318.32],[7,2,"1",5,1,0,5,0,0,434.5],[7,2,"4",2,1,1,2,0,0,337.92],[7,2,"2",3,1,1,2,0,0,381.12],[7,2,"1",4,0,-1,0,0,0,438],[7,2,"3",3,1,1,2,0,2,381.12],[8,0,"23",6,1,1,5,0,3,878.4],[10,2,"11",3,1,0,3,0,0,312.84],[10,2,"22",2,1,1,5,0,3,826.4],[10,2,"11",4,0,-1,0,0,3,220.8],[10,2,"21",5,1,1,5,0,3,944.4],[10,2,"22",2,1,1,2,0,1,383.52],[10,2,"35",6,0,-1,0,0,0,273.6],[10,2,"22",4,0,-1,0,0,0,322.2],[12,0,"22",2,1,2,2,0,0,495.12],[12,0,"21",5,0,-1,0,0,0,370.8],[12,0,"12",2,1,1,2,0,2,360.72],[12,0,"22",3,0,-1,0,0,2,226],[12,0,"21",7,0,-1,0,0,0,435.6],[12,0,"11",3,0,-1,0,0,1,196.2],[12,2,"13",7,1,1,5,0,2,685.6],[12,2,"16",2,1,1,2,0,2,340.8],[12,2,"12",13,0,-1,0,0,0,1296.6],[12,2,"14",3,1,1,3,0,2,506.88],[13,0,"33",3,0,-1,0,0,3,178.8],[13,0,"32",2,0,-1,0,0,3,144],[13,0,"7",3,1,1,3,0,2,543.6],[13,0,"8",2,1,1,2,0,2,367.4],[13,0,"1002",3,1,1,3,0,2,526.08],[13,0,"1004",2,0,-1,0,0,0,148.8],[13,0,"1001",4,0,-1,0,0,1,352.8],[13,0,"1002",2,0,-1,0,0,1,256.8],[13,0,"1003",2,0,-1,0,0,1,295.8],[13,0,"1004",4,1,1,4,0,2,806.64],[13,0,"1001",3,1,2,3,0,2,626.34],[14,1,"7",2,1,1,2,0,3,307.2],[14,1,"6",2,0,-1,0,0,0,229.2],[14,1,"7",3,1,1,3,0,2,481.2],[14,1,"6",2,1,1,2,0,3,342.32],[14,1,"7",2,1,1,2,0,0,377.52],[14,1,"5",2,0,-1,0,0,1,90],[14,1,"9",8,0,-1,0,0,0,1041.6],[14,1,"6",4,1,0,2,0,0,208.56],[14,1,"7",4,0,-1,0,0,0,278.4],[14,1,"5",2,0,-1,0,0,0,190.8],[14,1,"7",4,0,-1,0,0,3,160.8],[14,2,"35",8,0,-1,0,0,0,692.4],[14,2,"23",5,0,-1,0,0,3,318.4],[14,2,"42",2,1,2,2,0,0,478.8],[14,2,"23",1,0,-1,0,0,1,8.4],[14,2,"44",2,1,1,2,0,0,337.92],[14,2,"43",2,1,1,2,0,2,356.4],[14,2,"23",9,0,-1,0,0,1,926.9],[14,2,"42",4,1,1,4,0,0,685.44],[14,2,"43",3,0,-1,0,0,0,238.8],[14,2,"44",2,0,-1,0,0,0,115.2],[14,2,"51",38,1,0,7,0,0,758.86],[14,2,"52",0,0,-1,0,0,0,0],[14,2,"52",8,0,-1,0,0,0,49.2],[14,2,"53",2,0,-1,0,0,0,62.4],[14,2,"52",1,0,-1,0,0,0,124.8],[16,0,"6",2,1,1,2,0,3,408.72],[16,0,"8",5,0,-1,0,0,0,314.4],[16,0,"9",2,0,-1,0,0,3,225],[16,0,"H2",1,1,1,1,0,0,189.36],[16,1,"16",2,0,-1,0,0,3,140.4],[16,1,"13",3,0,-1,0,0,0,273.6],[16,1,"11",2,1,0,2,0,0,276],[16,1,"14",2,0,-1,0,0,0,165],[16,1,"16",1,0,-1,0,0,0,127.2],[16,1,"15",2,0,-1,0,0,1,204],[16,1,"16",2,1,1,2,0,3,360.72],[16,1,"15",2,0,-1,0,0,0,158.4],[16,1,"13",7,0,-1,0,0,3,516.6],[16,1,"33",3,1,1,3,0,0,535.68],[16,1,"32",3,0,-1,0,0,0,346.8],[16,1,"42",2,0,-1,0,0,3,218.4],[16,2,"11",3,0,-1,0,0,3,0],[16,2,"11",2,1,1,2,0,0,342.72],[16,2,"16",2,0,-1,0,0,0,279.6],[16,2,"11",1,0,-1,0,0,3,0],[16,2,"15",2,0,-1,0,0,1,160.1],[16,2,"11",4,1,0,4,0,2,426.72],[16,2,"21",6,1,0,6,0,3,792.48],[16,2,"42",2,1,1,2,0,2,337.92],[16,2,"22",2,0,-1,0,0,0,195.6],[17,0,"35",5,0,-1,0,0,0,444],[17,0,"34",1,0,-1,0,0,0,135.6],[17,0,"2",1,1,1,1,0,3,153.6],[17,0,"1",2,0,-1,0,0,1,198],[17,0,"3",3,0,-1,0,0,1,162.6],[17,0,"2",4,1,1,4,0,3,625.24],[17,0,"3",4,0,-1,0,0,1,422.4],[17,0,"1",2,1,1,2,0,0,358.32],[17,0,"1",2,0,-1,0,0,1,260.4],[17,1,"14",2,1,1,2,0,2,326.4],[17,1,"43",2,1,1,2,0,0,307.2],[17,1,"44",2,0,-1,0,0,3,165.6],[17,1,"43",2,1,1,2,0,2,421.92],[17,1,"51",1,1,2,2,0,3,495.92],[17,1,"42",4,1,1,4,0,3,716.24],[17,1,"44",2,1,2,2,0,0,443.52],[17,1,"41",2,0,-1,0,0,0,123.6],[17,1,"42",2,0,-1,0,0,1,148.8],[17,1,"43",3,1,0,3,0,0,312.84],[18,0,"5",2,0,-1,0,0,3,181.2],[18,0,"7",2,0,-1,0,0,3,201.6],[18,0,"6",3,0,-1,0,0,3,260.4],[18,0,"3",3,1,0,2,0,2,241.2],[18,0,"42",2,1,0,2,0,0,333.36],[18,0,"41",2,0,-1,0,0,0,207.6],[18,0,"35",8,1,1,4,2,0,955.2],[18,0,"23",5,0,-1,0,0,1,399.6],[18,0,"42",2,0,-1,0,0,0,192],[18,0,"41",4,0,-1,0,0,2,342],[18,0,"35",7,1,1,5,0,0,993.92],[18,1,"2",0,0,-1,0,0,3,0],[18,1,"4",1,0,-1,0,0,0,66],[18,1,"22",10,1,1,8,0,0,1882.08],[18,1,"53",3,0,-1,0,0,0,238.8],[18,1,"41",4,1,0,2,0,0,270.96],[18,1,"52",2,1,2,2,0,3,538.32],[18,1,"53",2,0,-1,0,0,2,116.4],[18,1,"23",5,0,-1,0,0,0,445.2],[18,1,"51",2,1,0,2,0,1,306.96],[18,2,"3",6,1,0,6,0,0,510.2],[18,2,"2",4,1,0,4,0,2,420],[19,0,"7",4,0,-1,0,0,0,224.2],[19,0,"H1",5,0,-1,0,0,3,419.5],[19,0,"7",4,0,-1,0,0,0,205.6],[19,0,"6",3,0,-1,0,0,2,514.8],[19,0,"9",2,0,-1,0,0,0,187.8],[19,0,"3",2,0,-1,0,0,3,219.6],[19,1,"21",6,0,-1,0,0,0,267],[19,1,"32",3,1,2,3,0,2,604.8],[19,1,"11",2,0,-1,0,0,0,98.4],[19,1,"11",2,1,1,2,0,0,360.72],[19,1,"21",4,1,1,3,1,2,616.56],[19,1,"12",4,0,-1,0,0,3,206.4],[19,1,"22",2,0,-1,0,0,1,283.2],[19,1,"11",3,1,2,3,0,3,691.68],[19,1,"12",2,1,2,2,0,2,463.92],[19,1,"304",2,0,-1,0,0,0,97.2],[19,1,"22",2,1,2,2,0,2,443.52],[20,0,"43",3,1,1,3,0,0,550.08],[20,0,"51",3,0,-1,0,0,3,158.4],[20,0,"43",4,1,2,4,0,0,938.64],[20,0,"53",4,0,-1,0,0,1,324.6],[20,0,"51",3,1,1,3,0,2,552.48],[20,0,"43",2,0,-1,0,0,0,235.2],[20,0,"44",2,0,-1,0,0,1,132.6],[20,0,"52",6,1,0,6,0,2,668.88],[20,0,"51",2,1,1,2,0,0,309.76],[20,1,"51",4,0,-1,0,0,1,512.4],[20,1,"43",2,0,-1,0,0,0,170.4],[20,1,"1",4,0,-1,0,0,0,187.8],[20,1,"2",2,0,-1,0,0,0,142.8],[20,1,"3",2,1,1,2,0,0,394.32],[20,1,"302",2,0,-1,0,0,3,91.2],[20,1,"4",1,1,1,1,0,1,168.96],[20,1,"2",2,0,-1,0,0,1,296.4],[20,1,"3",2,0,-1,0,0,0,56.4],[20,1,"1",2,1,2,2,0,3,460.32],[20,1,"303",2,1,0,2,0,0,231.36],[20,1,"2",3,1,1,3,0,2,521.28],[20,1,"4",2,1,2,2,0,2,460.32],[20,1,"1",2,0,-1,0,0,0,138.6],[20,2,"34",2,0,-1,0,0,0,79.8],[20,2,"32",3,0,-1,0,0,1,397.2],[20,2,"33",2,1,1,2,0,2,383.52],[20,2,"32",3,1,1,3,0,0,440.4],[20,2,"31",2,0,-1,0,0,3,195.6],[20,2,"33",3,0,-1,0,0,0,328.8],[20,2,"31",2,0,-1,0,0,0,152.4],[20,2,"33",3,0,-1,0,0,1,142.2],[20,2,"43",2,0,-1,0,0,3,241.2],[20,2,"32",2,0,-1,0,0,1,213],[21,2,"7",2,1,1,2,0,0,307.2],[21,2,"H2",4,0,-1,0,0,0,78],[21,2,"9",2,0,-1,0,0,0,74.4],[21,2,"H1",4,0,-1,0,0,0,153.6],[21,2,"9",3,0,-1,0,0,0,204],[21,2,"H1",5,1,1,5,0,0,884.4],[21,2,"H2",2,1,1,2,0,2,352.92],[21,2,"9",2,1,1,2,0,2,337.92],[21,2,"6",2,0,-1,0,0,0,141.35],[22,1,"21",5,0,-1,0,0,0,552],[22,1,"H1",5,0,-1,0,0,0,406.8],[22,1,"H2",3,0,-1,0,0,3,296.4],[22,1,"302",3,0,-1,0,0,3,127.8],[22,1,"H1",3,1,1,2,0,0,337.92],[22,1,"301",1,1,1,2,0,3,381.12],[22,1,"H2",2,0,-1,0,0,3,98.7],[22,1,"302",4,0,-1,0,0,0,291.6],[22,1,"6",4,0,-1,0,0,1,367.8],[22,1,"7",2,0,-1,0,0,1,168],[22,1,"8",2,1,1,2,0,0,382.32],[22,1,"9",2,0,-1,0,0,3,325.2],[22,1,"2",2,0,-1,0,0,1,217.8],[24,0,"33",4,0,-1,0,0,0,246],[24,0,"32",2,0,-1,0,0,0,304.8],[24,0,"31",2,0,-1,0,0,1,93.6],[24,0,"34",2,1,1,2,0,3,414.72],[24,0,"32",2,1,2,3,0,0,665.28],[24,0,"33",2,0,-1,0,0,0,189.6],[24,0,"34",2,0,-1,0,0,1,49.2],[24,0,"33",2,0,-1,0,0,1,156],[24,0,"23",5,0,-1,0,0,0,249],[26,2,"7",2,0,-1,0,0,0,172.2],[26,2,"6",2,1,2,2,0,2,457.92],[26,2,"8",2,0,-1,0,0,3,167.4],[26,2,"51",4,0,-1,0,0,0,274.2],[26,2,"53",14,1,2,11,0,0,2855.16],[26,2,"41",2,1,1,2,0,2,337.92]],"unattributed":{"label":"Host To Go","tables":13,"guests":40,"aceCovers":8,"aceTables":2,"revenue":1461.96,"aceRevenue":1329.36,"eligibleTables":3,"convertedTables":1,"eligibleCovers":16,"convertedCovers":6,"predecidedTables":0,"unknownIntentTables":10},"extraLedger":[{"server":"Host To Go","d":2,"table":"21","covers":6,"adultAce":6,"kidAce":0,"tier":1,"source":0,"stored":45}],"storedCommission":{"4":10,"10":10,"12":15,"19":10,"20":20,"21":10,"24":15,"25":22.5,"31":15,"32":7.5,"34":20,"35":15,"36":25,"37":15,"38":15,"42":15,"46":15,"49":20,"74":15,"77":10,"83":20,"85":15,"88":30,"91":35,"99":7.5,"102":10,"109":22.5,"113":15,"128":15,"131":15,"136":20,"139":15,"144":10,"146":30,"150":37.5,"153":67.5,"155":10,"159":10,"160":30,"171":15,"179":22.5,"181":40,"187":15,"192":15,"194":7.5,"198":10,"205":22.5,"212":15,"217":37.5,"225":15,"231":15,"238":30,"247":110},"largeParty":[{"key":"small(<6)","guests":605,"aceCovers":240,"tables":236,"aceTables":99,"mixCovers":39.7,"mixTables":41.9,"revenue":69332.49,"aceRevenue":42220.24,"conversion":{"eligibleTables":143,"convertedTables":47,"convRateTables":32.9,"eligibleCovers":371,"convertedCovers":114,"convRateCovers":30.7,"undecided":{"elig":106,"conv":43,"rate":40.6},"alc":{"elig":37,"conv":4,"rate":10.8},"predecidedTables":35,"unknownIntentTables":58,"commission":775}},{"key":"large(6+)","guests":246,"aceCovers":71,"tables":26,"aceTables":11,"mixCovers":28.9,"mixTables":42.3,"revenue":20599.59,"aceRevenue":12002.94,"conversion":{"eligibleTables":21,"convertedTables":7,"convRateTables":33.3,"eligibleCovers":214,"convertedCovers":89,"convRateCovers":41.6,"undecided":{"elig":19,"conv":7,"rate":36.8},"alc":{"elig":2,"conv":0,"rate":0},"predecidedTables":2,"unknownIntentTables":3,"commission":355}}],"dataQuality":{"totalOrders":3873,"pilotFloorOrders":262,"voided":88,"noTable":1875,"barExcluded":266,"pilotIntentMatched":249,"pilotIntentUnknown":61,"aceCoversNeGuests":18}};</script>
+<script>/* =============================================================================
+   AYCE Pilot Command — Chasin' Tails Falls Church
+   Single-file client app. No network, no dependencies.
+
+   Business definitions are LOCKED and mirror the source extract exactly:
+     mix(covers)   = Σ(adultAce+kidAce) / Σ covers
+     eligible      = intent ∈ {UNDECIDED, ALC}      (AYCE pre-decided & UNKNOWN excluded)
+     converted     = eligible AND didAce
+     convRateTbl   = converted/eligible             (null when eligible = 0)
+     convRateCov   = Σcovers(converted)/Σcovers(eligible)
+     commission    = adultAce × rate[tier] on converted tables only (kids excluded)
+     largeParty    = covers ≥ 6
+     baselineQual  = ≥15 baseline tables (Jul 10–30)
+   ========================================================================== */
+(function () {
+"use strict";
+
+/* ---------------------------------------------------------------- payload -- */
+const P = window.__ACE__;
+const RATES = P.rates;
+const DAY_LABEL = ["Fri 7/31", "Sat 8/1", "Sun 8/2"];
+const DAY_FULL  = ["Friday Jul 31", "Saturday Aug 1", "Sunday Aug 2"];
+const INTENT_LABEL = { UNDECIDED: "Undecided", ALC: "A la carte", AYCE: "Pre-decided AYCE", UNKNOWN: "Unknown intent" };
+const INTENT_CLS   = { UNDECIDED: "und", ALC: "alc", AYCE: "pre", UNKNOWN: "unk" };
+const TIER_LABEL   = { classic: "Classic", premium: "Premium", royalty: "Royalty" };
+const SERVER_NAMES = P.servers.map(s => s.n);
+
+/* row records — the filterable universe (249 server-attributed floor tables) */
+const ROWS = P.rows.map((r, i) => ({
+  i,
+  server: SERVER_NAMES[r[0]],
+  day: r[1],
+  table: r[2],
+  covers: r[3],
+  didAce: !!r[4],
+  tier: r[5] < 0 ? null : P.tiers[r[5]],
+  adultAce: r[6],
+  kidAce: r[7],
+  intent: P.intents[r[8]],
+  fnb: r[9],
+}));
+const SRV = {}; P.servers.forEach(s => { SRV[s.n] = s; });
+
+/* commission by the stated rule (see METHOD_FLAGS for the one stored mismatch) */
+const isEligible  = r => r.intent === "UNDECIDED" || r.intent === "ALC";
+const isConverted = r => isEligible(r) && r.didAce;
+const ruleComm    = r => (isConverted(r) && r.tier ? r.adultAce * RATES[r.tier] : 0);
+
+/* the single ledger entry whose stored amount ≠ adultAce × rate */
+const MISMATCHES = [];
+ROWS.forEach(r => {
+  const stored = P.storedCommission[r.i];
+  if (stored != null && Math.abs(stored - ruleComm(r)) > 1e-9) {
+    MISMATCHES.push({ row: r, stored, rule: ruleComm(r) });
+  }
+});
+
+/* ------------------------------------------------------------------ utils -- */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const r1 = n => Math.round(n * 10) / 10;
+const r2 = n => Math.round(n * 100) / 100;
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => (n == null ? "—" : n.toLocaleString("en-US"));
+const pct = (n, d) => (n == null ? "—" : n.toFixed(d == null ? 1 : d) + "%");
+const usd = n => (n == null ? "—" : "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const usd0 = n => (n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"));
+const sgn = n => (n == null ? "—" : (n >= 0 ? "+" : "") + n.toFixed(1));
+const initials = n => n.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+/* fixed avatar palette — every colour verified ≥4.5:1 against white text, both themes */
+const AV_PALETTE = ["#9c4436", "#35648a", "#4c6b2f", "#6b4a86", "#8a5a1f", "#356b5e", "#8a3f5e", "#44506b"];
+const avColor = n => { let h = 0; for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
+  return AV_PALETTE[h % AV_PALETTE.length]; };
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* --------------------------------------------------------------- defaults -- */
+const DEF_FILTERS = () => ({ days: [], servers: [], intents: [], tiers: [], pmin: null, pmax: null, conv: "all" });
+
+const S = {
+  page: "overview",
+  filters: DEF_FILTERS(),
+  sort: { key: "conv", dir: -1 },
+  lb: { search: "", minElig: 0, qualifiedOnly: false, preset: "all" },
+  ledger: { search: "", open: {}, sort: { key: "amount", dir: -1 } },
+  server: null,
+  drawerTab: "all",
+  openPop: null,
+  animated: {},
+  ready: false,
+};
+
+/* persistence -------------------------------------------------------------- */
+const LS = {
+  get(k, f) { try { const v = localStorage.getItem("ace." + k); return v == null ? f : JSON.parse(v); } catch (e) { return f; } },
+  set(k, v) { try { localStorage.setItem("ace." + k, JSON.stringify(v)); } catch (e) { /* private mode */ } },
+};
+function persist() { LS.set("filters", S.filters); LS.set("page", S.page); LS.set("lb", S.lb); }
+function restore() {
+  const f = LS.get("filters", null);
+  if (f && typeof f === "object") {
+    const d = DEF_FILTERS();
+    S.filters = {
+      days: Array.isArray(f.days) ? f.days.filter(x => x >= 0 && x <= 2) : d.days,
+      servers: Array.isArray(f.servers) ? f.servers.filter(x => SRV[x]) : d.servers,
+      intents: Array.isArray(f.intents) ? f.intents.filter(x => P.intents.indexOf(x) >= 0) : d.intents,
+      tiers: Array.isArray(f.tiers) ? f.tiers.filter(x => P.tiers.indexOf(x) >= 0) : d.tiers,
+      pmin: typeof f.pmin === "number" ? f.pmin : null,
+      pmax: typeof f.pmax === "number" ? f.pmax : null,
+      conv: ["all", "yes", "no"].indexOf(f.conv) >= 0 ? f.conv : "all",
+    };
+  }
+  const pg = LS.get("page", null);
+  if (pg && PAGES[pg]) S.page = pg;
+  const lb = LS.get("lb", null);
+  if (lb && typeof lb === "object") S.lb = Object.assign(S.lb, lb);
+}
+
+/* ---------------------------------------------------------------- filters -- */
+function isDefaultFilters() {
+  const f = S.filters;
+  return !f.days.length && !f.servers.length && !f.intents.length && !f.tiers.length
+    && f.pmin == null && f.pmax == null && f.conv === "all";
+}
+function activeRows() {
+  const f = S.filters;
+  return ROWS.filter(r => {
+    if (f.days.length && f.days.indexOf(r.day) < 0) return false;
+    if (f.servers.length && f.servers.indexOf(r.server) < 0) return false;
+    if (f.intents.length && f.intents.indexOf(r.intent) < 0) return false;
+    if (f.tiers.length && (!r.tier || f.tiers.indexOf(r.tier) < 0)) return false;
+    if (f.pmin != null && r.covers < f.pmin) return false;
+    if (f.pmax != null && r.covers > f.pmax) return false;
+    if (f.conv === "yes" && !isConverted(r)) return false;
+    if (f.conv === "no" && !(isEligible(r) && !r.didAce)) return false;
+    return true;
+  });
+}
+
+/* ------------------------------------------------------ the metric engine -- */
+/* Implements the locked definitions. Used for every filtered recomputation.   */
+function agg(rows) {
+  const guests = rows.reduce((a, r) => a + r.covers, 0);
+  const aceCovers = rows.reduce((a, r) => a + r.adultAce + r.kidAce, 0);
+  const aceRows = rows.filter(r => r.didAce);
+  const elig = rows.filter(isEligible);
+  const conv = elig.filter(r => r.didAce);
+  const eligCov = elig.reduce((a, r) => a + r.covers, 0);
+  const convCov = conv.reduce((a, r) => a + r.covers, 0);
+  const und = elig.filter(r => r.intent === "UNDECIDED");
+  const alc = elig.filter(r => r.intent === "ALC");
+  const undC = und.filter(r => r.didAce), alcC = alc.filter(r => r.didAce);
+  return {
+    rows, tables: rows.length, guests, aceCovers,
+    aceTables: aceRows.length,
+    mixCovers: guests ? r1(100 * aceCovers / guests) : null,
+    mixTables: rows.length ? r1(100 * aceRows.length / rows.length) : null,
+    revenue: r2(rows.reduce((a, r) => a + r.fnb, 0)),
+    aceRevenue: r2(aceRows.reduce((a, r) => a + r.fnb, 0)),
+    eligibleTables: elig.length,
+    convertedTables: conv.length,
+    convRateTables: elig.length ? r1(100 * conv.length / elig.length) : null,
+    eligibleCovers: eligCov,
+    convertedCovers: convCov,
+    convRateCovers: eligCov ? r1(100 * convCov / eligCov) : null,
+    predecidedTables: rows.filter(r => r.intent === "AYCE").length,
+    unknownIntentTables: rows.filter(r => r.intent === "UNKNOWN").length,
+    commission: r2(conv.reduce((a, r) => a + ruleComm(r), 0)),
+    undecided: { elig: und.length, conv: undC.length, rate: und.length ? r1(100 * undC.length / und.length) : null,
+                 eligCov: und.reduce((a, r) => a + r.covers, 0), convCov: undC.reduce((a, r) => a + r.covers, 0) },
+    alc: { elig: alc.length, conv: alcC.length, rate: alc.length ? r1(100 * alcC.length / alc.length) : null,
+           eligCov: alc.reduce((a, r) => a + r.covers, 0), convCov: alcC.reduce((a, r) => a + r.covers, 0) },
+    converted: conv,
+  };
+}
+
+/* Scope: unfiltered → stored authoritative totals (262 floor tables, exactly
+   reconciling with the source extract). Filtered → recomputed from the 249
+   server-attributed rows. The 13 unattributed "Host To Go" tables have no
+   row-level records and therefore cannot participate in filtering.           */
+function scope() {
+  const def = isDefaultFilters();
+  const rows = activeRows();
+  const a = agg(rows);
+  if (def) {
+    const O = P.overall.pilot, C = P.overall.conversion, U = P.unattributed;
+    return {
+      isDefault: true, rows, a,
+      tables: O.tables, guests: O.guests, aceCovers: O.aceCovers, aceTables: O.aceTables,
+      mixCovers: O.mixCovers, mixTables: O.mixTables, revenue: O.revenue, aceRevenue: O.aceRevenue,
+      eligibleTables: C.eligibleTables, convertedTables: C.convertedTables,
+      convRateTables: C.convRateTables, eligibleCovers: C.eligibleCovers,
+      convertedCovers: C.convertedCovers, convRateCovers: C.convRateCovers,
+      predecidedTables: C.predecidedTables, unknownIntentTables: C.unknownIntentTables,
+      /* rule-based commission = attributed rows + unattributed ledger entry */
+      commission: r2(a.commission + P.extraLedger.reduce((s, l) => s + l.adultAce * RATES[P.tiers[l.tier]], 0)),
+      storedCommission: C.commission,
+      undecided: C.undecided, alc: C.alc,
+      baseline: P.overall.baseline3wk.mixCovers,
+      mixDelta: r1(O.mixCovers - P.overall.baseline3wk.mixCovers),
+      unattributed: U,
+    };
+  }
+  return Object.assign({ isDefault: false, baseline: null, mixDelta: null, storedCommission: null }, a);
+}
+
+/* ---------------------------------------------------------------- tooltip -- */
+const tip = document.createElement("div"); tip.id = "tip"; tip.setAttribute("role", "tooltip");
+document.body.appendChild(tip);
+function tipHTML(o) {
+  let h = o.title ? `<div class="tt">${o.title}</div>` : "";
+  (o.rows || []).forEach(([k, v]) => { h += `<div class="tr"><span>${k}</span><b>${v}</b></div>`; });
+  if (o.def) h += `<div class="td">${o.def}</div>`;
+  return h;
+}
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.display = "block";
+  requestAnimationFrame(() => tip.classList.add("show"));
+  moveTip(e);
+}
+function moveTip(e) {
+  const w = tip.offsetWidth || 220, h = tip.offsetHeight || 60;
+  let x = e.clientX + 15, y = e.clientY + 16;
+  if (x + w > innerWidth - 10) x = e.clientX - w - 12;
+  if (y + h > innerHeight - 10) y = e.clientY - h - 12;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+function hideTip() { tip.classList.remove("show"); tip.style.display = "none"; }
+function bindTip(el, html) {
+  el.addEventListener("mousemove", e => { if (tip.dataset.k !== html) { tip.dataset.k = html; showTip(e, html); } else moveTip(e); });
+  el.addEventListener("mouseleave", () => { tip.dataset.k = ""; hideTip(); });
+  el.addEventListener("focus", () => {
+    const r = el.getBoundingClientRect();
+    showTip({ clientX: r.left + r.width / 2, clientY: r.bottom }, html);
+  });
+  el.addEventListener("blur", hideTip);
+}
+/* info icon */
+const DEFS = {
+  mix: "AYCE mix (covers) = AYCE items rung ÷ guests seated, floor tables only. Includes pre-decided AYCE and unknown-intent tables.",
+  convT: "Table conversion = tables recorded Undecided or A-la-carte whose check contains AYCE items, ÷ all eligible tables. Pre-decided AYCE and unknown-intent tables are excluded from both sides.",
+  convC: "Cover conversion = guests seated at converted tables ÷ guests seated at all eligible tables. Uses seated guest counts, not AYCE items rung.",
+  comm: "Provisional commission = adult AYCE covers × tier rate, on converted tables only. Children's AYCE covers earn no commission. Pre-decided AYCE tables earn no commission.",
+  base: "Baseline = Toast-only AYCE cover mix for Jul 10–30 (three prior weekends). Intent was not recorded before the pilot, so no conversion baseline exists.",
+  elig: "Eligible tables = recorded intent of Undecided or A-la-carte. These are the only tables a server could convert.",
+  rev: "Pre-tax food & beverage on floor tables. AYCE table revenue is the F&B total of every table that rang AYCE items, not the AYCE items alone.",
+  large: "Large party = 6 or more seated covers.",
+  gap: "Gap to average = eligible × (restaurant average conversion − server conversion) ÷ 100, floored at zero. Arithmetic only — it is not an employee evaluation score.",
+  conf: "Sample indicator based on eligible tables: 15+ adequate, 8–14 limited, 1–7 very small.",
+  scope: "Unfiltered totals come from the source extract and cover all 262 floor tables. Filtered results are recomputed from the 249 server-attributed tables; 13 unattributed \"Host To Go\" tables have no row-level records.",
+};
+function inf(key) {
+  return `<button class="inf" type="button" aria-label="Definition" data-def="${key}">i</button>`;
+}
+function bindInfo(root) {
+  $$(".inf", root).forEach(b => {
+    const d = DEFS[b.dataset.def]; if (!d) return;
+    bindTip(b, tipHTML({ def: d }));
+    b.addEventListener("click", e => { e.stopPropagation(); });
+  });
+}
+
+/* ----------------------------------------------------------------- charts -- */
+function mkChart(svg, cls) {
+  const d = document.createElement("div");
+  d.className = "chart" + (cls ? " " + cls : "");
+  d.innerHTML = svg;
+  return d;
+}
+
+/* line/area trend across the 4 weekends */
+function trendChart(o) {
+  const W = 560, H = 232, pad = { l: 40, r: 92, t: 22, b: 34 };
+  const pts = o.points, n = pts.length;
+  const vals = pts.map(p => p.v).filter(v => v != null);
+  const lo = Math.max(0, Math.min.apply(null, vals) - 8), hi = Math.max.apply(null, vals) + 7;
+  const X = i => pad.l + (i * (W - pad.l - pad.r)) / (n - 1);
+  const Y = v => H - pad.b - ((v - lo) / (hi - lo)) * (H - pad.t - pad.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">`;
+  /* gridlines */
+  for (let g = 0; g <= 3; g++) {
+    const v = lo + ((hi - lo) * g) / 3, y = Y(v);
+    s += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+    s += `<text x="${pad.l - 8}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="var(--text-3)">${v.toFixed(0)}%</text>`;
+  }
+  /* baseline reference */
+  if (o.baseline != null) {
+    const by = Y(o.baseline);
+    s += `<line x1="${pad.l}" y1="${by}" x2="${W - pad.r + 6}" y2="${by}" stroke="var(--text-3)"
+      stroke-width="1.4" stroke-dasharray="5 4"/>
+      <text x="${W - pad.r + 10}" y="${by - 4}" font-size="10.5" font-weight="600" fill="var(--text-2)">3-wk baseline</text>
+      <text x="${W - pad.r + 10}" y="${by + 10}" font-size="11.5" font-weight="700" fill="var(--text-2)">${o.baseline.toFixed(1)}%</text>`;
+  }
+  /* area + line */
+  const dPts = pts.map((p, i) => [X(i), Y(p.v)]);
+  const line = dPts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  s += `<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--accent)" stop-opacity=".22"/>
+    <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
+  s += `<path class="fade" d="${line} L ${dPts[n - 1][0]} ${H - pad.b} L ${dPts[0][0]} ${H - pad.b} Z" fill="url(#ag)"/>`;
+  s += `<path class="draw" style="--len:900" d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.4"
+    stroke-linecap="round" stroke-linejoin="round"/>`;
+  /* pilot emphasis band */
+  const px = X(n - 1);
+  s += `<line x1="${px}" y1="${pad.t - 6}" x2="${px}" y2="${H - pad.b}" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity=".45"/>`;
+  s += `<text x="${px}" y="${pad.t - 10}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent)" letter-spacing=".5">PILOT</text>`;
+  /* points */
+  pts.forEach((p, i) => {
+    const last = i === n - 1;
+    s += `<circle cx="${X(i)}" cy="${Y(p.v)}" r="${last ? 6 : 4}" fill="${last ? "var(--accent)" : "var(--surface)"}"
+      stroke="var(--accent)" stroke-width="2.2"/>`;
+    s += `<text x="${X(i)}" y="${Y(p.v) - (last ? 15 : 12)}" text-anchor="middle" font-size="${last ? 12.5 : 11}"
+      font-weight="${last ? 700 : 600}" fill="${last ? "var(--accent)" : "var(--text-2)"}">${p.v.toFixed(1)}%</text>`;
+    s += `<text x="${X(i)}" y="${H - pad.b + 16}" text-anchor="middle" font-size="10.5" fill="var(--text-3)">${esc(p.label)}</text>`;
+    s += `<rect class="hit" data-i="${i}" x="${X(i) - 26}" y="${pad.t - 12}" width="52" height="${H - pad.t - pad.b + 18}" fill="transparent"/>`;
+  });
+  s += "</svg>";
+  const el = mkChart(s);
+  $$(".hit", el).forEach((h, i) => bindTip(h, tipHTML(pts[i].tip)));
+  return el;
+}
+
+/* horizontal stacked composition bar */
+function stackBar(segs, opts) {
+  const total = segs.reduce((a, s) => a + s.v, 0) || 1;
+  const wrap = document.createElement("div");
+  let h = `<div style="display:flex;height:${(opts && opts.h) || 40};border-radius:8px;overflow:hidden;border:1px solid var(--border)">`;
+  segs.forEach((sg, i) => {
+    const w = (100 * sg.v) / total;
+    h += `<div class="hit grow" data-i="${i}" style="width:${w}%;background:${sg.color};animation-delay:${i * 90}ms;
+      display:flex;align-items:center;padding:0 10px;color:${sg.ink || "#fff"};font-size:11.5px;font-weight:650;overflow:hidden;white-space:nowrap">
+      ${w > 13 ? esc(sg.short || "") : ""}</div>`;
+  });
+  h += `</div><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px">`;
+  segs.forEach(sg => {
+    h += `<div style="flex:1 1 130px;min-width:118px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);
+        text-transform:uppercase;letter-spacing:.55px;font-weight:650">
+        <i style="width:9px;height:9px;border-radius:2.5px;background:${sg.color};display:block;flex:none"></i>${esc(sg.label)}</div>
+      <div style="font-size:19px;font-weight:680;letter-spacing:-.4px;margin-top:4px">${sg.fv}</div>
+      <div style="font-size:11.5px;color:var(--text-3)">${((100 * sg.v) / total).toFixed(1)}% of floor</div></div>`;
+  });
+  h += `</div>`;
+  wrap.className = "chart"; wrap.innerHTML = h;
+  $$(".hit", wrap).forEach((el, i) => { if (segs[i].tip) bindTip(el, tipHTML(segs[i].tip)); });
+  return wrap;
+}
+
+/* funnel */
+function funnel(steps, maxV) {
+  const wrap = document.createElement("div");
+  wrap.className = "funnel";
+  let h = "";
+  steps.forEach((st, i) => {
+    const total = st.segs.reduce((a, s) => a + s.v, 0);
+    const pctw = maxV ? (100 * total) / maxV : 100;
+    h += `<div class="fstep"><div class="fl">${esc(st.label)}${st.def ? " " + inf(st.def) : ""}</div>
+      <div class="fbarw"><div style="width:${pctw}%;display:flex;height:100%">`;
+    st.segs.forEach((sg, j) => {
+      const w = total ? (100 * sg.v) / total : 0;
+      h += `<div class="fseg hit grow" data-k="${i}-${j}" style="width:${w}%;background:${sg.color};
+        color:${sg.ink || "#fff"};animation-delay:${i * 110 + j * 50}ms">
+        ${w > 22 ? esc(sg.label) + " " + sg.v : ""}</div>`;
+    });
+    h += `</div></div><div class="fv">${st.value}<small>${esc(st.sub || "")}</small></div></div>`;
+  });
+  wrap.innerHTML = h;
+  const flat = []; steps.forEach(st => st.segs.forEach(sg => flat.push(sg)));
+  $$(".hit", wrap).forEach((el, i) => { if (flat[i] && flat[i].tip) bindTip(el, tipHTML(flat[i].tip)); });
+  return wrap;
+}
+
+/* grouped comparison bars (intent / large party) */
+function compareBars(items, o) {
+  const wrap = document.createElement("div");
+  wrap.className = "chart";
+  let h = "";
+  const max = o && o.max ? o.max : 100;
+  items.forEach((it, i) => {
+    const w = it.rate == null ? 0 : (100 * it.rate) / max;
+    h += `<div style="margin-bottom:${i === items.length - 1 ? 2 : 15}px">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600">${esc(it.label)}</span>
+        <span class="tag ${it.cls || "unk"}" style="font-size:10px">n = ${it.n}</span>
+        <span style="margin-left:auto;font-size:16px;font-weight:680;letter-spacing:-.3px;color:${it.color}">${pct(it.rate)}</span>
+      </div>
+      <div class="hit" data-i="${i}" style="height:24px;background:var(--surface-3);border-radius:5px;overflow:hidden;position:relative">
+        <div class="grow" style="width:${w}%;height:100%;background:${it.color};border-radius:5px;animation-delay:${i * 110}ms"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:5px">${esc(it.sub)}</div></div>`;
+  });
+  wrap.innerHTML = h;
+  $$(".hit", wrap).forEach((el, i) => { if (items[i].tip) bindTip(el, tipHTML(items[i].tip)); });
+  return wrap;
+}
+
+/* scatter: eligible tables (x) vs conversion rate (y), bubble = AYCE revenue */
+function scatter(pts, o) {
+  const W = 640, H = 340, pad = { l: 46, r: 22, t: 18, b: 42 };
+  const xMax = Math.max(6, Math.max.apply(null, pts.map(p => p.x))) * 1.12;
+  const yMax = 100;
+  const rMax = Math.max.apply(null, pts.map(p => p.r)) || 1;
+  const X = v => pad.l + (v / xMax) * (W - pad.l - pad.r);
+  const Y = v => H - pad.b - (v / yMax) * (H - pad.t - pad.b);
+  const R = v => 5 + Math.sqrt(v / rMax) * 17;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">`;
+  for (let g = 0; g <= 4; g++) {
+    const v = (yMax * g) / 4, y = Y(v);
+    s += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--border)"/>
+      <text x="${pad.l - 8}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="var(--text-3)">${v}%</text>`;
+  }
+  for (let g = 0; g <= 4; g++) {
+    const v = (xMax * g) / 4, x = X(v);
+    s += `<text x="${x}" y="${H - pad.b + 15}" text-anchor="middle" font-size="10" fill="var(--text-3)">${v.toFixed(0)}</text>`;
+  }
+  /* reference lines */
+  const ay = Y(o.avgY);
+  s += `<line x1="${pad.l}" y1="${ay}" x2="${W - pad.r}" y2="${ay}" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4"/>
+    <text x="${W - pad.r - 4}" y="${ay - 6}" text-anchor="end" font-size="10.5" font-weight="650" fill="var(--accent)">restaurant avg ${o.avgY.toFixed(1)}%</text>`;
+  if (o.minX) {
+    const mx = X(o.minX);
+    s += `<line x1="${mx}" y1="${pad.t}" x2="${mx}" y2="${H - pad.b}" stroke="var(--text-3)" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>
+      <text x="${mx + 5}" y="${pad.t + 11}" font-size="10" fill="var(--text-3)">min sample ${o.minX}</text>`;
+  }
+  s += `<text x="${(pad.l + W - pad.r) / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--text-2)" font-weight="600">Eligible tables (sample size) →</text>`;
+  s += `<text transform="translate(13,${(pad.t + H - pad.b) / 2}) rotate(-90)" text-anchor="middle" font-size="11" fill="var(--text-2)" font-weight="600">Table conversion rate</text>`;
+  pts.slice().sort((a, b) => b.r - a.r).forEach((p, i) => {
+    s += `<g class="hit rise" data-n="${esc(p.name)}" style="animation-delay:${i * 26}ms">
+      <circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${R(p.r)}" fill="${p.color}" fill-opacity=".26" stroke="${p.color}" stroke-width="1.8"/>
+      <circle cx="${X(p.x)}" cy="${Y(p.y)}" r="2.5" fill="${p.color}"/>
+      ${p.x >= (o.minX || 0) && R(p.r) > 11 ? `<text x="${X(p.x)}" y="${Y(p.y) - R(p.r) - 5}" text-anchor="middle"
+        font-size="10" font-weight="650" fill="var(--text-2)">${esc(p.short)}</text>` : ""}
+    </g>`;
+  });
+  s += "</svg>";
+  const el = mkChart(s);
+  const sorted = pts.slice().sort((a, b) => b.r - a.r);
+  $$(".hit", el).forEach((g, i) => {
+    bindTip(g, tipHTML(sorted[i].tip));
+    g.style.cursor = "pointer";
+    g.addEventListener("click", () => openServer(sorted[i].name));
+  });
+  return el;
+}
+
+/* sparkline across the 4 weekends */
+function sparkline(vals, labels, tables) {
+  const W = 76, H = 22, pad = 3;
+  const ok = vals.map((v, i) => ({ v, i })).filter(p => p.v != null);
+  if (ok.length < 2) return `<span class="muted" style="font-size:11px">—</span>`;
+  const lo = Math.min.apply(null, ok.map(p => p.v)), hi = Math.max.apply(null, ok.map(p => p.v));
+  const rng = hi - lo || 1;
+  const X = i => pad + (i * (W - pad * 2)) / (vals.length - 1);
+  const Y = v => H - pad - ((v - lo) / rng) * (H - pad * 2);
+  const d = ok.map((p, k) => (k ? "L" : "M") + X(p.i).toFixed(1) + " " + Y(p.v).toFixed(1)).join(" ");
+  const last = ok[ok.length - 1];
+  const up = last.v >= ok[0].v;
+  const col = up ? "var(--pos)" : "var(--neg)";
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${X(last.i)}" cy="${Y(last.v)}" r="2.6" fill="${col}"/></svg>`;
+}
+
+/* horizontal ranked bars (commission distribution) */
+function rankBars(items, o) {
+  const max = Math.max.apply(null, items.map(i => i.v)) || 1;
+  const wrap = document.createElement("div");
+  wrap.className = "chart";
+  let h = "";
+  items.forEach((it, i) => {
+    h += `<div class="hit" data-i="${i}" style="display:flex;align-items:center;gap:10px;padding:5px 0;cursor:${o && o.click ? "pointer" : "default"}">
+      <div style="width:126px;flex:none;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.label)}</div>
+      <div style="flex:1;height:17px;background:var(--surface-3);border-radius:4px;overflow:hidden">
+        <div class="grow" style="width:${(100 * it.v) / max}%;height:100%;background:${it.color};border-radius:4px;animation-delay:${i * 45}ms"></div>
+      </div>
+      <div style="width:78px;flex:none;text-align:right;font-weight:650;font-size:12.5px">${it.fv}</div>
+      <div style="width:64px;flex:none;text-align:right;font-size:11.5px;color:var(--text-3)">${esc(it.sub || "")}</div>
+    </div>`;
+  });
+  wrap.innerHTML = h;
+  $$(".hit", wrap).forEach((el, i) => {
+    if (items[i].tip) bindTip(el, tipHTML(items[i].tip));
+    if (o && o.click) el.addEventListener("click", () => o.click(items[i]));
+  });
+  return wrap;
+}
+
+/* ---------------------------------------------------- number animation ----- */
+function animateNums(root, key) {
+  const els = $$("[data-to]", root);
+  const settle = () => els.forEach(e => { e.textContent = e.dataset.fin; });
+  if (S.animated[key] || reduced() || document.hidden) { settle(); return; }
+  S.animated[key] = true;
+  const t0 = performance.now(), D = 620;
+  let done = false;
+  const finish = () => { if (!done) { done = true; settle(); } };
+  function step(t) {
+    if (done) return;
+    const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
+    els.forEach(el => {
+      const to = parseFloat(el.dataset.to), kind = el.dataset.kind;
+      const v = to * e;
+      el.textContent = kind === "pct" ? v.toFixed(1) + "%"
+        : kind === "usd" ? usd(v) : kind === "usd0" ? usd0(v)
+        : kind === "sgn" ? (v >= 0 ? "+" : "") + v.toFixed(1)
+        : Math.round(v).toLocaleString("en-US");
+    });
+    if (k < 1) requestAnimationFrame(step); else finish();
+  }
+  requestAnimationFrame(step);
+  /* rAF is paused in background/non-compositing tabs — never leave a placeholder on screen */
+  setTimeout(finish, D + 320);
+}
+const anim = (val, fin, kind) =>
+  `<span data-to="${val}" data-fin="${esc(fin)}" data-kind="${kind}">${
+    kind === "int" ? "0" : kind === "usd" || kind === "usd0" ? "$0"
+    : kind === "sgn" ? (val >= 0 ? "+0.0" : "-0.0") : "0.0%"}</span>`;
+
+window.__ACE_APP__ = { S, ROWS, SRV, P, agg, scope, activeRows, isDefaultFilters, ruleComm, isEligible, isConverted, MISMATCHES };
+
+/* ============================ deterministic management summary ============ */
+/* Generated from the data by explicit conditional rules. No model, no API.    */
+function buildSummary(sc) {
+  const S1 = [], interp = [];
+  let verdict, vcls;
+
+  if (sc.isDefault) {
+    const d = sc.mixDelta, dir = d > 0 ? "increase" : d < 0 ? "decrease" : "no change";
+    const bestDay = P.overall.byDay
+      .map((v, i) => ({ i, v })).sort((a, b) => b.v.mixCovers - a.v.mixCovers)[0];
+
+    S1.push(`The pilot weekend produced a <b>${Math.abs(d).toFixed(1)}-point ${dir}</b> in AYCE cover mix ` +
+      `(<b>${pct(sc.mixCovers)}</b> versus the <b>${pct(sc.baseline)}</b> three-week baseline), while ` +
+      `<b>${sc.convertedTables} of ${sc.eligibleTables}</b> eligible tables converted (<b>${pct(sc.convRateTables)}</b>).`);
+
+    S1.push(`Performance was strongest on <b>${DAY_FULL[bestDay.i]}</b> at ${pct(bestDay.v.mixCovers)} mix.`);
+
+    const u = sc.undecided, a = sc.alc;
+    if (u.rate != null && a.rate != null) {
+      const cmp = u.rate > a.rate ? "well above" : u.rate < a.rate ? "below" : "level with";
+      S1.push(`Undecided tables converted at <b>${pct(u.rate)}</b> (${u.conv} of ${u.elig}) — ${cmp} ` +
+        `the <b>${pct(a.rate)}</b> recorded on a-la-carte tables (${a.conv} of ${a.elig}).`);
+    }
+    S1.push(`Provisional commission totals <b>${usd(sc.commission)}</b> across ${sc.convertedTables} converted tables.`);
+
+    if (d >= 3 && sc.convertedTables >= 25) { verdict = "Positive signal"; vcls = "pos"; }
+    else if (d > 0) { verdict = "Directional gain"; vcls = "neu"; }
+    else if (d === 0) { verdict = "No change"; vcls = "neu"; }
+    else { verdict = "Below baseline"; vcls = "neg"; }
+
+    /* evidence strength — rule-based, explicitly labelled as interpretation */
+    const parts = [];
+    parts.push(`the ${sc.eligibleTables}-table eligible base is large enough to read at weekend level, ` +
+      `but ${sc.unknownIntentTables} tables had no readable intent and sit outside the conversion rates`);
+    parts.push(`intent was not recorded before the pilot, so conversion has no prior-period comparison — ` +
+      `only AYCE mix can be compared to the three earlier weekends`);
+    parts.push(`one weekend cannot separate the commission pilot from ordinary weekend-to-weekend variation`);
+    interp.push(`Evidence supports continuing the pilot rather than concluding it: ` + parts.join("; ") + ".");
+  } else {
+    const n = sc.tables;
+    if (!n) return { lines: ["No tables match the current filters."], verdict: "No data", vcls: "neu", interp: [] };
+    S1.push(`The current filter selects <b>${n} table${n === 1 ? "" : "s"}</b> covering <b>${fmt(sc.guests)}</b> guests, ` +
+      `with an AYCE cover mix of <b>${pct(sc.mixCovers)}</b>.`);
+    if (sc.eligibleTables) {
+      S1.push(`<b>${sc.convertedTables} of ${sc.eligibleTables}</b> eligible tables converted (<b>${pct(sc.convRateTables)}</b>), ` +
+        `generating <b>${usd(sc.commission)}</b> in provisional commission.`);
+    } else {
+      S1.push(`No eligible tables fall inside this selection, so conversion rates are not defined.`);
+    }
+    verdict = "Filtered view"; vcls = "neu";
+    interp.push(`Figures are recomputed from the ${ROWS.length} server-attributed tables only. ` +
+      `Filtered subsets are smaller samples — treat differences between them as indicative, not conclusive.`);
+  }
+  return { lines: S1, verdict: verdict, vcls: vcls, interp: interp };
+}
+
+/* ================================ filter bar ============================== */
+function serverOptionCounts() {
+  const c = {}; ROWS.forEach(r => { c[r.server] = (c[r.server] || 0) + 1; }); return c;
+}
+function fchip(label, val, onClear) {
+  return { label, val, onClear };
+}
+function renderFilters(host) {
+  const f = S.filters;
+  const nActive = (f.days.length ? 1 : 0) + (f.servers.length ? 1 : 0) + (f.intents.length ? 1 : 0)
+    + (f.tiers.length ? 1 : 0) + (f.pmin != null || f.pmax != null ? 1 : 0) + (f.conv !== "all" ? 1 : 0);
+
+  const btn = (id, label, count) =>
+    `<div class="fgroup" data-pop="${id}">
+       <button class="fbtn ${count ? "on" : ""}" type="button" aria-expanded="${S.openPop === id}"
+         aria-haspopup="true" data-toggle="${id}">
+         ${esc(label)}${count ? `<span class="cv">${count}</span>` : ""}<span class="ar">▾</span></button>
+     </div>`;
+
+  let h = `<div class="filters" role="group" aria-label="Global filters">
+    ${btn("day", "Day", f.days.length)}
+    ${btn("server", "Server", f.servers.length)}
+    ${btn("intent", "Intent", f.intents.length)}
+    ${btn("tier", "AYCE tier", f.tiers.length)}
+    ${btn("party", "Party size", f.pmin != null || f.pmax != null ? 1 : 0)}
+    ${btn("conv", "Outcome", f.conv !== "all" ? 1 : 0)}
+    <button class="btn ghost sm" type="button" id="resetF" ${nActive ? "" : "disabled style=opacity:.45"}>Reset filters</button>
+  </div>`;
+
+  /* active-filter chips */
+  const chips = [];
+  if (f.days.length) chips.push(fchip("Day", f.days.slice().sort().map(d => DAY_LABEL[d]).join(", "), () => { f.days = []; }));
+  if (f.servers.length) chips.push(fchip("Server", f.servers.length <= 2 ? f.servers.join(", ") : f.servers.length + " selected", () => { f.servers = []; }));
+  if (f.intents.length) chips.push(fchip("Intent", f.intents.map(i => INTENT_LABEL[i]).join(", "), () => { f.intents = []; }));
+  if (f.tiers.length) chips.push(fchip("Tier", f.tiers.map(t => TIER_LABEL[t]).join(", "), () => { f.tiers = []; }));
+  if (f.pmin != null || f.pmax != null) chips.push(fchip("Party", (f.pmin != null ? f.pmin : "1") + "–" + (f.pmax != null ? f.pmax : "∞") + " covers", () => { f.pmin = f.pmax = null; }));
+  if (f.conv !== "all") chips.push(fchip("Outcome", f.conv === "yes" ? "Converted only" : "Not converted (eligible)", () => { f.conv = "all"; }));
+
+  h += `<div class="chips">`;
+  if (!chips.length) {
+    h += `<span class="chip none">Full weekend · all servers · no filters</span>`;
+  } else {
+    h += `<span class="lbl">Filters</span>`;
+    chips.forEach((c, i) => {
+      h += `<span class="chip"><span>${esc(c.label)}: <b>${esc(String(c.val))}</b></span>
+        <button type="button" data-clear="${i}" aria-label="Clear ${esc(c.label)} filter">×</button></span>`;
+    });
+    h += `<span class="chip scope">Filtered · ${activeRows().length} of ${ROWS.length} attributed tables ${inf("scope")}</span>`;
+  }
+  h += `</div>`;
+  host.innerHTML = h;
+
+  /* popover content */
+  if (S.openPop) {
+    const g = $(`.fgroup[data-pop="${S.openPop}"]`, host);
+    if (g) g.appendChild(buildPop(S.openPop));
+  }
+
+  $$("[data-toggle]", host).forEach(b => b.addEventListener("click", e => {
+    e.stopPropagation();
+    S.openPop = S.openPop === b.dataset.toggle ? null : b.dataset.toggle;
+    render();
+  }));
+  $$("[data-clear]", host).forEach(b => b.addEventListener("click", () => {
+    chips[+b.dataset.clear].onClear(); persist(); render();
+  }));
+  const rf = $("#resetF", host);
+  if (rf) rf.addEventListener("click", () => { S.filters = DEF_FILTERS(); S.openPop = null; persist(); render(); });
+  bindInfo(host);
+}
+
+function buildPop(id) {
+  const f = S.filters, d = document.createElement("div");
+  d.className = "pop"; d.addEventListener("click", e => e.stopPropagation());
+  const multi = (title, opts, arr) => {
+    let h = `<div class="ph">${esc(title)}</div>`;
+    opts.forEach(o => {
+      h += `<label class="opt"><input type="checkbox" value="${esc(o.v)}" ${arr.indexOf(o.v) >= 0 ? "checked" : ""}>
+        <span>${esc(o.l)}</span>${o.n != null ? `<span class="mut">${o.n}</span>` : ""}</label>`;
+    });
+    h += `<div class="popact"><button type="button" data-all>Select all</button><button type="button" data-none>Clear</button></div>`;
+    return h;
+  };
+  const counts = serverOptionCounts();
+
+  if (id === "day") {
+    d.innerHTML = multi("Weekend day", DAY_LABEL.map((l, i) => ({ v: String(i), l, n: ROWS.filter(r => r.day === i).length })), f.days.map(String));
+    wireMulti(d, v => { f.days = v.map(Number); });
+  } else if (id === "server") {
+    d.innerHTML = `<div class="ph">Server</div><div style="padding:0 6px 6px"><input id="srvq" type="search"
+      placeholder="Search servers…" aria-label="Search servers" style="width:100%;padding:6px 10px;border:1px solid var(--border-2);
+      border-radius:6px;background:var(--surface-2);font-size:12.5px"></div><div id="srvlist"></div>
+      <div class="popact"><button type="button" data-all>Select all</button><button type="button" data-none>Clear</button></div>`;
+    const list = $("#srvlist", d);
+    const paint = q => {
+      const opts = SERVER_NAMES.filter(n => counts[n] && n.toLowerCase().indexOf(q.toLowerCase()) >= 0);
+      list.innerHTML = opts.length ? opts.map(n =>
+        `<label class="opt"><input type="checkbox" value="${esc(n)}" ${f.servers.indexOf(n) >= 0 ? "checked" : ""}>
+          <span>${esc(n)}</span><span class="mut">${counts[n]}</span></label>`).join("")
+        : `<div style="padding:12px 10px;color:var(--text-3);font-size:12.5px">No servers match.</div>`;
+      $$("input", list).forEach(cb => cb.addEventListener("change", () => {
+        const v = $$("#srvlist input:checked", d).map(x => x.value);
+        const keep = f.servers.filter(n => opts.indexOf(n) < 0);
+        f.servers = keep.concat(v); persist(); renderBody();
+      }));
+    };
+    paint("");
+    $("#srvq", d).addEventListener("input", e => paint(e.target.value));
+    $("[data-all]", d).addEventListener("click", () => { f.servers = SERVER_NAMES.filter(n => counts[n]); persist(); render(); });
+    $("[data-none]", d).addEventListener("click", () => { f.servers = []; persist(); render(); });
+  } else if (id === "intent") {
+    d.innerHTML = multi("Recorded intent", P.intents.map(i => ({ v: i, l: INTENT_LABEL[i], n: ROWS.filter(r => r.intent === i).length })), f.intents);
+    wireMulti(d, v => { f.intents = v; });
+  } else if (id === "tier") {
+    d.innerHTML = multi("AYCE tier rung", P.tiers.map(t => ({ v: t, l: TIER_LABEL[t], n: ROWS.filter(r => r.tier === t).length })), f.tiers);
+    wireMulti(d, v => { f.tiers = v; });
+  } else if (id === "party") {
+    d.innerHTML = `<div class="ph">Party size (covers)</div>
+      <div class="rng"><input type="number" id="pmin" min="0" max="60" placeholder="min" value="${f.pmin != null ? f.pmin : ""}"
+        aria-label="Minimum covers"><span style="color:var(--text-3)">to</span>
+        <input type="number" id="pmax" min="0" max="60" placeholder="max" value="${f.pmax != null ? f.pmax : ""}" aria-label="Maximum covers"></div>
+      <div class="popact"><button type="button" data-lg>Large parties (6+)</button><button type="button" data-none>Clear</button></div>`;
+    const upd = () => {
+      const a = $("#pmin", d).value, b = $("#pmax", d).value;
+      f.pmin = a === "" ? null : Math.max(0, +a); f.pmax = b === "" ? null : Math.max(0, +b);
+      persist(); renderBody();
+    };
+    $("#pmin", d).addEventListener("change", upd); $("#pmax", d).addEventListener("change", upd);
+    $("[data-lg]", d).addEventListener("click", () => { f.pmin = 6; f.pmax = null; persist(); render(); });
+    $("[data-none]", d).addEventListener("click", () => { f.pmin = f.pmax = null; persist(); render(); });
+  } else if (id === "conv") {
+    d.innerHTML = `<div class="ph">Conversion outcome</div>` +
+      [["all", "All tables"], ["yes", "Converted only"], ["no", "Eligible, not converted"]].map(([v, l]) =>
+        `<label class="opt"><input type="radio" name="cv" value="${v}" ${f.conv === v ? "checked" : ""}><span>${l}</span></label>`).join("") +
+      `<div style="padding:8px 9px 2px;font-size:11.5px;color:var(--text-3);line-height:1.5;border-top:1px solid var(--border);margin-top:6px">
+        Converted / not-converted apply only to eligible tables (Undecided or A-la-carte).</div>`;
+    $$("input", d).forEach(r => r.addEventListener("change", () => { f.conv = r.value; persist(); render(); }));
+  }
+  return d;
+}
+function wireMulti(d, apply) {
+  const read = () => $$("input:checked", d).map(x => x.value);
+  $$("input", d).forEach(cb => cb.addEventListener("change", () => { apply(read()); persist(); renderBody(); }));
+  const all = $("[data-all]", d), none = $("[data-none]", d);
+  if (all) all.addEventListener("click", () => { $$("input", d).forEach(x => { x.checked = true; }); apply(read()); persist(); render(); });
+  if (none) none.addEventListener("click", () => { $$("input", d).forEach(x => { x.checked = false; }); apply([]); persist(); render(); });
+}
+
+/* ================================= OVERVIEW =============================== */
+function pgOverview(host) {
+  const sc = scope();
+  if (!sc.tables) { host.appendChild(emptyState()); return; }
+  const sum = buildSummary(sc);
+  const wrap = document.createElement("div");
+
+  /* ---- hero ---- */
+  const dl = sc.mixDelta;
+  const aceShare = sc.revenue ? r1(100 * sc.aceRevenue / sc.revenue) : null;
+  let h = `<section class="hero rise" aria-label="Pilot result">
+    <div class="hero-top">
+      <div class="hero-verdict">
+        <div class="hero-eyebrow">Pilot result
+          <span class="verdict-badge ${sum.vcls}">${esc(sum.verdict)}</span></div>`;
+  if (sc.isDefault) {
+    h += `<div class="hero-delta">
+        <span class="big ${dl >= 0 ? "up" : "down"}">${anim(dl, sgn(dl), "sgn")}</span>
+        <span class="unit">points of AYCE cover mix<br>vs the three-week baseline</span></div>
+      <div class="hero-line">Pilot weekend <b>${pct(sc.mixCovers)}</b> · baseline <b>${pct(sc.baseline)}</b> ·
+        <b>${fmt(sc.aceCovers)}</b> AYCE covers of <b>${fmt(sc.guests)}</b> floor guests across <b>${sc.tables}</b> tables.</div>`;
+  } else {
+    h += `<div class="hero-delta">
+        <span class="big">${anim(sc.mixCovers, pct(sc.mixCovers), "pct")}</span>
+        <span class="unit">AYCE cover mix<br>in the current selection</span></div>
+      <div class="hero-line"><b>${fmt(sc.aceCovers)}</b> AYCE covers of <b>${fmt(sc.guests)}</b> guests across
+        <b>${sc.tables}</b> tables. Baseline comparison is unavailable for filtered subsets.</div>`;
+  }
+  h += `</div>
+      <div class="hero-rail">
+        <div class="hr-cell"><div class="k">Table conversion</div>
+          <div class="v">${pct(sc.convRateTables)}</div>
+          <div class="m">${sc.convertedTables} of ${sc.eligibleTables} eligible</div></div>
+        <div class="hr-cell"><div class="k">Cover conversion</div>
+          <div class="v">${pct(sc.convRateCovers)}</div>
+          <div class="m">${fmt(sc.convertedCovers)} of ${fmt(sc.eligibleCovers)} covers</div></div>
+        <div class="hr-cell"><div class="k">AYCE revenue</div>
+          <div class="v">${usd0(sc.aceRevenue)}</div>
+          <div class="m">${pct(aceShare)} of floor revenue</div></div>
+        <div class="hr-cell"><div class="k">Provisional commission</div>
+          <div class="v gold">${usd(sc.commission)}</div>
+          <div class="m">${sc.convertedTables} converted tables</div></div>
+      </div>
+    </div>
+    <div class="hero-bar" aria-hidden="true">
+      <i style="width:${sc.revenue ? (100 * sc.aceRevenue) / sc.revenue : 0}%;background:var(--accent)"></i>
+      <i style="flex:1;background:var(--nav-line)"></i>
+    </div>
+    <div class="hero-summary">
+      <div class="sh">Management summary <span style="font-weight:500;text-transform:none;letter-spacing:0">— generated from the data by fixed rules</span></div>
+      <p>${sum.lines.join(" ")}</p>`;
+  sum.interp.forEach(t => { h += `<div class="interp"><span class="itag">Interpretation</span><span>${t}</span></div>`; });
+  h += `</div></section>`;
+
+  /* ---- KPI strip ---- */
+  h += `<div class="kstrip sec" style="margin-top:14px">
+    ${kcell("AYCE cover mix", pct(sc.mixCovers), sc.isDefault ? `${sgn(dl)} pts vs baseline` : "current selection", "mix", dl >= 0 ? "pos" : "neg")}
+    ${kcell("AYCE table mix", pct(sc.mixTables), `${sc.aceTables} of ${sc.tables} tables rang AYCE`, "mix")}
+    ${kcell("AYCE covers", fmt(sc.aceCovers), `of ${fmt(sc.guests)} floor guests`, "mix")}
+    ${kcell("Floor revenue", usd0(sc.revenue), `${usd0(sc.aceRevenue)} from AYCE tables`, "rev")}
+    ${kcell("Converted tables", fmt(sc.convertedTables), `${pct(sc.convRateTables)} of ${sc.eligibleTables} eligible`, "convT", "accent")}
+    ${kcell("Provisional commission", usd(sc.commission), `avg ${usd(sc.convertedTables ? sc.commission / sc.convertedTables : 0)} per table`, "comm", "gold")}
+  </div>`;
+
+  /* ---- trend + by day ---- */
+  h += `<div class="sec g23">
+    <div class="card"><header><div><div class="ttl">AYCE cover mix — four weekends ${inf("mix")}</div>
+      <div class="sub">Three prior weekends establish the baseline; the pilot weekend is highlighted.</div></div></header>
+      <div class="body"><div id="cTrend"></div></div>
+      <div class="foot">Floor tables only, bar tables 101–116 excluded. Covers basis: AYCE items rung ÷ guests seated.
+        ${sc.isDefault ? "" : "<b>Trend always reflects the full weekend</b> — it is not affected by filters."}</div></div>
+    <div class="card"><header><div><div class="ttl">Pilot weekend by day</div>
+      <div class="sub">Select a day to cross-filter the whole dashboard.</div></div></header>
+      <div class="body"><div id="cDay"></div></div>
+      <div class="foot">Day figures come from the source extract and cover all ${P.overall.pilot.tables} floor tables.</div></div>
+  </div>`;
+
+  /* ---- funnel + revenue ---- */
+  h += `<div class="sec g2">
+    <div class="card"><header><div><div class="ttl">Conversion funnel ${inf("convT")}</div>
+      <div class="sub">From eligible tables to converted covers, split by recorded intent.</div></div></header>
+      <div class="body"><div class="legend">
+        <span><i style="background:var(--fill-blue)"></i>Undecided origin</span>
+        <span><i style="background:var(--fill-coral)"></i>A-la-carte origin</span>
+        <span><i style="background:var(--border-2)"></i>Did not convert</span></div>
+        <div id="cFunnel"></div></div>
+      <div class="foot">${sc.predecidedTables} pre-decided AYCE tables and ${sc.unknownIntentTables} unknown-intent tables
+        sit outside this funnel entirely — they are neither eligible nor converted.</div></div>
+    <div class="card"><header><div><div class="ttl">Revenue composition ${inf("rev")}</div>
+      <div class="sub">Pre-tax food &amp; beverage on floor tables.</div></div></header>
+      <div class="body"><div id="cRev"></div></div>
+      <div class="foot">AYCE table revenue is the full F&amp;B total of every table that rang AYCE items — not the AYCE items alone.</div></div>
+  </div>`;
+
+  /* ---- intent + large party ---- */
+  h += `<div class="sec g2">
+    <div class="card"><header><div><div class="ttl">Conversion by recorded intent ${inf("elig")}</div>
+      <div class="sub">Sample size shown for each group.</div></div></header>
+      <div class="body"><div id="cIntent"></div></div>
+      <div class="foot">Intent is recorded at greeting from the OpenTable reservation note.</div></div>
+    <div class="card"><header><div><div class="ttl">Large-party analysis ${inf("large")}</div>
+      <div class="sub">Parties of 6 or more versus smaller parties.</div></div></header>
+      <div class="body"><div id="cLarge"></div></div>
+      <div class="foot" id="lpNote"></div></div>
+  </div>`;
+
+  wrap.innerHTML = h;
+  host.appendChild(wrap);
+
+  /* charts */
+  const trendPts = P.overall.weekends.map((w, i) => ({
+    label: P.weekendLabels[i].replace(" (Jul 31-Aug 2)", "").replace("Jul ", ""),
+    v: w.mixCovers,
+    tip: tipHTML({
+      title: P.weekendLabels[i],
+      rows: [["AYCE cover mix", pct(w.mixCovers)], ["AYCE covers", fmt(w.aceCovers)], ["Guests seated", fmt(w.guests)],
+        ["AYCE tables", `${w.aceTables} of ${w.tables}`], ["F&B revenue", usd0(w.revenue)]],
+      def: DEFS.mix,
+    }),
+  }));
+  $("#cTrend", wrap).appendChild(trendChart({
+    points: trendPts, baseline: P.overall.baseline3wk.mixCovers,
+    aria: "AYCE cover mix across four weekends, rising from 29.7 percent to 36.5 percent",
+  }));
+
+  /* by-day cross-filter */
+  const dayHost = $("#cDay", wrap);
+  const dayWrap = document.createElement("div");
+  let dh = `<div class="daybtns">`;
+  P.overall.byDay.forEach((v, i) => {
+    const on = S.filters.days.length === 1 && S.filters.days[0] === i;
+    const dayRows = ROWS.filter(r => r.day === i), da = agg(dayRows);
+    dh += `<button class="daybtn" type="button" aria-pressed="${on}" data-d="${i}">
+      <div class="dl">${DAY_LABEL[i]}</div>
+      <div class="dv">${pct(v.mixCovers)}</div>
+      <div class="dm">${pct(da.convRateTables)} conv · ${fmt(v.aceCovers)} AYCE cov</div>
+      <div class="dm">${usd0(v.revenue)} · ${v.tables} tables</div></button>`;
+  });
+  dh += `</div>`;
+  dayWrap.innerHTML = dh;
+  dayHost.appendChild(dayWrap);
+  $$(".daybtn", dayWrap).forEach(b => {
+    const i = +b.dataset.d, v = P.overall.byDay[i], da = agg(ROWS.filter(r => r.day === i));
+    bindTip(b, tipHTML({
+      title: DAY_FULL[i],
+      rows: [["AYCE cover mix", `${pct(v.mixCovers)} (${v.aceCovers} ÷ ${v.guests})`],
+        ["AYCE table mix", `${pct(v.mixTables)} (${v.aceTables} ÷ ${v.tables})`],
+        ["Table conversion", `${pct(da.convRateTables)} (${da.convertedTables} ÷ ${da.eligibleTables})`],
+        ["F&B revenue", usd(v.revenue)], ["AYCE table revenue", usd(v.aceRevenue)]],
+      def: "Conversion is computed from server-attributed tables; mix and revenue cover all floor tables.",
+    }));
+    b.addEventListener("click", () => {
+      const f = S.filters;
+      f.days = (f.days.length === 1 && f.days[0] === i) ? [] : [i];
+      persist(); render();
+    });
+  });
+
+  /* funnel */
+  const maxF = sc.eligibleTables || 1;
+  $("#cFunnel", wrap).appendChild(funnel([
+    {
+      label: "Eligible tables", value: fmt(sc.eligibleTables), sub: "undecided + a-la-carte", def: "elig",
+      segs: [
+        { v: sc.undecided.elig, color: "var(--fill-blue)", label: "Undecided",
+          tip: tipHTML({ title: "Undecided at greeting", rows: [["Eligible tables", fmt(sc.undecided.elig)], ["Share of eligible", pct(100 * sc.undecided.elig / (sc.eligibleTables || 1))]], def: DEFS.elig }) },
+        { v: sc.alc.elig, color: "var(--fill-coral)", label: "A la carte",
+          tip: tipHTML({ title: "A-la-carte at greeting", rows: [["Eligible tables", fmt(sc.alc.elig)], ["Share of eligible", pct(100 * sc.alc.elig / (sc.eligibleTables || 1))]], def: DEFS.elig }) },
+      ],
+    },
+    {
+      label: "Converted tables", value: fmt(sc.convertedTables), sub: pct(sc.convRateTables) + " of eligible", def: "convT",
+      segs: [
+        { v: sc.undecided.conv, color: "var(--fill-blue)", label: "Undecided",
+          tip: tipHTML({ title: "Converted from Undecided", rows: [["Converted", fmt(sc.undecided.conv)], ["Eligible", fmt(sc.undecided.elig)], ["Rate", pct(sc.undecided.rate)]], def: DEFS.convT }) },
+        { v: sc.alc.conv, color: "var(--fill-coral)", label: "A la carte",
+          tip: tipHTML({ title: "Converted from A-la-carte", rows: [["Converted", fmt(sc.alc.conv)], ["Eligible", fmt(sc.alc.elig)], ["Rate", pct(sc.alc.rate)]], def: DEFS.convT }) },
+        { v: Math.max(0, sc.eligibleTables - sc.convertedTables), color: "var(--border-2)", ink: "var(--text)", label: "Not converted",
+          tip: tipHTML({ title: "Did not convert", rows: [["Tables", fmt(sc.eligibleTables - sc.convertedTables)], ["Share of eligible", pct(100 * (sc.eligibleTables - sc.convertedTables) / (sc.eligibleTables || 1))]], def: "Eligible tables whose check contained no AYCE items." }) },
+      ],
+    },
+    {
+      label: "Converted covers", value: fmt(sc.convertedCovers), sub: pct(sc.convRateCovers) + " of eligible covers", def: "convC",
+      segs: [
+        { v: sc.convertedCovers, color: "var(--fill-gold)", label: "Covers",
+          tip: tipHTML({ title: "Converted covers", rows: [["Converted covers", fmt(sc.convertedCovers)], ["Eligible covers", fmt(sc.eligibleCovers)], ["Rate", pct(sc.convRateCovers)]], def: DEFS.convC }) },
+        { v: Math.max(0, sc.eligibleCovers - sc.convertedCovers), color: "var(--border-2)", ink: "var(--text)", label: "Not converted",
+          tip: tipHTML({ title: "Eligible covers that did not convert", rows: [["Covers", fmt(sc.eligibleCovers - sc.convertedCovers)]], def: DEFS.convC }) },
+      ],
+    },
+  ], Math.max(maxF, sc.eligibleCovers)));
+
+  /* revenue */
+  const nonAce = r2(sc.revenue - sc.aceRevenue);
+  $("#cRev", wrap).appendChild(stackBar([
+    { v: sc.aceRevenue, color: "var(--fill-coral)", label: "AYCE tables", short: "AYCE tables", fv: usd0(sc.aceRevenue),
+      tip: tipHTML({ title: "AYCE table revenue", rows: [["F&B revenue", usd(sc.aceRevenue)], ["Share of floor", pct(100 * sc.aceRevenue / (sc.revenue || 1))], ["AYCE tables", fmt(sc.aceTables)]], def: DEFS.rev }) },
+    { v: nonAce, color: "var(--fill-grey)", label: "Non-AYCE tables", short: "Non-AYCE", fv: usd0(nonAce),
+      tip: tipHTML({ title: "Non-AYCE table revenue", rows: [["F&B revenue", usd(nonAce)], ["Share of floor", pct(100 * nonAce / (sc.revenue || 1))], ["Tables", fmt(sc.tables - sc.aceTables)]], def: DEFS.rev }) },
+  ]));
+  const rvTot = document.createElement("div");
+  rvTot.style.cssText = "margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px";
+  rvTot.innerHTML = `<span style="color:var(--text-2)">Total floor F&amp;B revenue</span><b style="font-size:15px">${usd(sc.revenue)}</b>`;
+  $("#cRev", wrap).appendChild(rvTot);
+
+  /* intent */
+  $("#cIntent", wrap).appendChild(compareBars([
+    { label: "Undecided", rate: sc.undecided.rate, n: sc.undecided.elig, cls: "und", color: "var(--s2)",
+      sub: `${sc.undecided.conv} of ${sc.undecided.elig} tables converted · ${fmt(sc.undecided.convCov != null ? sc.undecided.convCov : "—")} covers`,
+      tip: tipHTML({ title: "Undecided → AYCE", rows: [["Converted tables", fmt(sc.undecided.conv)], ["Eligible tables", fmt(sc.undecided.elig)], ["Conversion rate", pct(sc.undecided.rate)]], def: DEFS.convT }) },
+    { label: "A la carte", rate: sc.alc.rate, n: sc.alc.elig, cls: "alc", color: "var(--accent)",
+      sub: `${sc.alc.conv} of ${sc.alc.elig} tables converted`,
+      tip: tipHTML({ title: "A-la-carte → AYCE", rows: [["Converted tables", fmt(sc.alc.conv)], ["Eligible tables", fmt(sc.alc.elig)], ["Conversion rate", pct(sc.alc.rate)]], def: DEFS.convT }) },
+  ]));
+
+  /* large party */
+  const lpSmall = sc.isDefault ? P.largeParty[0] : null, lpLarge = sc.isDefault ? P.largeParty[1] : null;
+  const sm = lpSmall ? { mix: lpSmall.mixCovers, tables: lpSmall.tables, rate: lpSmall.conversion.convRateTables, elig: lpSmall.conversion.eligibleTables, conv: lpSmall.conversion.convertedTables }
+    : (a => ({ mix: a.mixCovers, tables: a.tables, rate: a.convRateTables, elig: a.eligibleTables, conv: a.convertedTables }))(agg(sc.rows.filter(r => r.covers < 6)));
+  const lg = lpLarge ? { mix: lpLarge.mixCovers, tables: lpLarge.tables, rate: lpLarge.conversion.convRateTables, elig: lpLarge.conversion.eligibleTables, conv: lpLarge.conversion.convertedTables }
+    : (a => ({ mix: a.mixCovers, tables: a.tables, rate: a.convRateTables, elig: a.eligibleTables, conv: a.convertedTables }))(agg(sc.rows.filter(r => r.covers >= 6)));
+  $("#cLarge", wrap).appendChild(compareBars([
+    { label: "Parties under 6", rate: sm.rate, n: sm.elig, cls: "unk", color: "var(--s4)",
+      sub: `${sm.tables} tables · ${pct(sm.mix)} AYCE mix · ${sm.conv} of ${sm.elig} converted`,
+      tip: tipHTML({ title: "Parties of 1–5 covers", rows: [["Tables", fmt(sm.tables)], ["AYCE cover mix", pct(sm.mix)], ["Converted", `${sm.conv} of ${sm.elig}`], ["Conversion rate", pct(sm.rate)]], def: DEFS.large }) },
+    { label: "Parties of 6+", rate: lg.rate, n: lg.elig, cls: "pre", color: "var(--gold)",
+      sub: `${lg.tables} tables · ${pct(lg.mix)} AYCE mix · ${lg.conv} of ${lg.elig} converted`,
+      tip: tipHTML({ title: "Parties of 6 or more covers", rows: [["Tables", fmt(lg.tables)], ["AYCE cover mix", pct(lg.mix)], ["Converted", `${lg.conv} of ${lg.elig}`], ["Conversion rate", pct(lg.rate)]], def: DEFS.large }) },
+  ]));
+  $("#lpNote", wrap).innerHTML = lg.elig < 30
+    ? `<b>Small sample:</b> only ${lg.elig} eligible large-party tables. The ${pct(lg.rate)} conversion rate carries a wide margin of error and should not be read as a reliable difference from the ${pct(sm.rate)} recorded on smaller parties.`
+    : `Based on ${lg.elig} eligible large-party tables.`;
+
+  bindInfo(wrap);
+  animateNums(wrap, "overview");
+}
+function kcell(k, v, m, def, cls) {
+  return `<div class="kcell"><div class="k">${esc(k)}${def ? " " + inf(def) : ""}</div>
+    <div class="v ${cls || ""}">${esc(v)}</div><div class="m">${m}</div></div>`;
+}
+function emptyState() {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.innerHTML = `<div class="empty"><div class="ei">◍</div>
+    <div class="et">No tables match these filters</div>
+    <div class="es">The current combination of day, server, intent, tier, party size and outcome selects zero tables.
+      Widen or clear the filters to see results.</div>
+    <button class="btn" type="button" id="es-reset">Reset filters</button></div>`;
+  d.querySelector("#es-reset").addEventListener("click", () => { S.filters = DEF_FILTERS(); persist(); render(); });
+  return d;
+}
+
+/* ============================ SERVER PERFORMANCE ========================== */
+function confidence(elig) {
+  if (elig >= 15) return { n: 3, cls: "", label: "Adequate sample" };
+  if (elig >= 8) return { n: 2, cls: "low", label: "Limited sample" };
+  if (elig >= 1) return { n: 1, cls: "vlow", label: "Very small sample" };
+  return { n: 0, cls: "vlow", label: "No eligible tables" };
+}
+function serverRows() {
+  const rows = activeRows(), def = isDefaultFilters();
+  const byS = {};
+  rows.forEach(r => { (byS[r.server] = byS[r.server] || []).push(r); });
+  const restaurant = agg(rows);
+  const avg = restaurant.convRateTables || 0;
+  return Object.keys(byS).map(name => {
+    const s = SRV[name], a = agg(byS[name]);
+    /* unfiltered → stored values verbatim (exact reconciliation with source) */
+    const use = def ? {
+      tables: s.p.tables, covers: s.p.guests, mix: s.p.mixCovers, aceRev: s.p.aceRevenue,
+      elig: s.c.eligibleTables, convN: s.c.convertedTables, conv: s.c.convRateTables,
+      convC: s.c.convRateCovers, comm: a.commission,
+    } : {
+      tables: a.tables, covers: a.guests, mix: a.mixCovers, aceRev: a.aceRevenue,
+      elig: a.eligibleTables, convN: a.convertedTables, conv: a.convRateTables,
+      convC: a.convRateCovers, comm: a.commission,
+    };
+    const base = s.q ? s.b.mixCovers : null;
+    const gap = (use.conv != null && use.elig > 0 && use.conv < avg) ? r1(use.elig * (avg - use.conv) / 100) : 0;
+    return Object.assign({
+      name, s, a, base,
+      delta: base != null && use.mix != null ? r1(use.mix - base) : null,
+      missed: use.elig - use.convN, gap, conf: confidence(use.elig),
+    }, use);
+  }).filter(r => r.tables > 0);
+}
+const LB_COLS = [
+  { k: "rank", l: "#", s: false },
+  { k: "name", l: "Server", s: true },
+  { k: "trend", l: "Trend", s: false },
+  { k: "tables", l: "Tables", s: true },
+  { k: "covers", l: "Covers", s: true },
+  { k: "elig", l: "Eligible", s: true, d: "elig" },
+  { k: "conv", l: "Conv % tbl", s: true, d: "convT" },
+  { k: "convC", l: "Conv % cov", s: true, d: "convC" },
+  { k: "mix", l: "AYCE mix", s: true, d: "mix" },
+  { k: "base", l: "3-wk base", s: true, d: "base" },
+  { k: "delta", l: "Δ pts", s: true },
+  { k: "aceRev", l: "AYCE rev", s: true },
+  { k: "comm", l: "Commission", s: true, d: "comm" },
+];
+function pgServers(host) {
+  let rows = serverRows();
+  const restaurant = agg(activeRows());
+  const avg = restaurant.convRateTables || 0;
+  const wrap = document.createElement("div");
+
+  /* toolbar + local view controls */
+  const lb = S.lb;
+  let view = rows.slice();
+  if (lb.search) view = view.filter(r => r.name.toLowerCase().indexOf(lb.search.toLowerCase()) >= 0);
+  if (lb.minElig) view = view.filter(r => r.elig >= lb.minElig);
+  if (lb.qualifiedOnly) view = view.filter(r => r.s.q);
+  if (lb.preset === "top") { S.sort = { key: "conv", dir: -1 }; }
+  else if (lb.preset === "improve") { view = view.filter(r => r.delta != null); S.sort = { key: "delta", dir: -1 }; }
+  else if (lb.preset === "missed") { S.sort = { key: "missed", dir: -1 }; }
+
+  const sk = S.sort.key, sd = S.sort.dir;
+  view.sort((x, y) => {
+    if (sk === "name") return x.name.localeCompare(y.name) * sd;
+    const a = x[sk], b = y[sk];
+    const av = a == null ? -Infinity : a, bv = b == null ? -Infinity : b;
+    return (av < bv ? -1 : av > bv ? 1 : 0) * sd || (y.mix || 0) - (x.mix || 0);
+  });
+
+  let h = `<div class="sec-h" style="margin-top:2px"><h2>Server leaderboard</h2>
+    <span class="d">${view.length} of ${rows.length} servers${isDefaultFilters() ? "" : " · filtered"} ·
+      restaurant average conversion <b>${pct(avg)}</b></span></div>`;
+
+  h += `<div class="card"><div class="toolbar no-print">
+      <div class="srch"><span class="si">⌕</span>
+        <input type="search" id="lbq" placeholder="Search server…" aria-label="Search servers" value="${esc(lb.search)}"></div>
+      <div class="seg" role="group" aria-label="Leaderboard view">
+        ${[["all", "All"], ["top", "Top performers"], ["improve", "Biggest improvement"], ["missed", "Most missed"]]
+          .map(([v, l]) => `<button type="button" data-preset="${v}" aria-pressed="${lb.preset === v}">${l}</button>`).join("")}
+      </div>
+      <label class="stepper">Min eligible
+        <input type="range" id="lbmin" min="0" max="24" step="1" value="${lb.minElig}" aria-label="Minimum eligible tables">
+        <span class="val">${lb.minElig}</span></label>
+      <label class="tog"><input type="checkbox" id="lbq2" ${lb.qualifiedOnly ? "checked" : ""}>
+        Qualified baseline only ${inf("base")}</label>
+    </div>`;
+
+  if (!view.length) {
+    h += `<div class="empty"><div class="ei">◍</div><div class="et">No servers match</div>
+      <div class="es">Try lowering the minimum eligible-table threshold or clearing the search.</div></div></div>`;
+    wrap.innerHTML = h; host.appendChild(wrap);
+    wireLbToolbar(wrap); bindInfo(wrap); return;
+  }
+
+  h += `<div class="tw"><table><thead><tr>`;
+  LB_COLS.forEach(c => {
+    const on = S.sort.key === c.k;
+    h += `<th ${c.s ? `class="sortable" tabindex="0" role="columnheader" data-k="${c.k}"` : ""}
+      ${on ? `aria-sort="${sd === 1 ? "ascending" : "descending"}"` : ""}>${esc(c.l)}${c.d ? " " + inf(c.d) : ""}
+      ${c.s ? `<span class="sarr">${on ? (sd === 1 ? "▲" : "▼") : "▾"}</span>` : ""}</th>`;
+  });
+  h += `</tr></thead><tbody>`;
+  view.forEach((r, i) => {
+    const rk = i + 1;
+    h += `<tr class="rowlink ${S.server === r.name ? "sel" : ""}" tabindex="0" role="button"
+        aria-label="Open detail for ${esc(r.name)}" data-s="${esc(r.name)}">
+      <td><span class="rank ${rk <= 3 ? "r" + rk : ""}">${rk}</span></td>
+      <td><div class="who"><span class="av" style="background:${avColor(r.name)}">${esc(initials(r.name))}</span>
+        <span style="min-width:0"><span class="nm">${esc(r.name)}</span>
+          <span class="conf ${r.conf.cls}" title="${esc(r.conf.label)}" style="margin-left:6px">
+            ${[1, 2, 3].map(n => `<i class="${n <= r.conf.n ? "on" : ""}"></i>`).join("")}</span></span></div></td>
+      <td>${sparkline(r.s.w)}</td>
+      <td>${fmt(r.tables)}</td>
+      <td>${fmt(r.covers)}</td>
+      <td>${fmt(r.elig)}</td>
+      <td><b>${pct(r.conv)}</b> <span class="muted">${r.elig ? `(${r.convN}/${r.elig})` : ""}</span></td>
+      <td>${pct(r.convC)}</td>
+      <td><span class="mbar" style="width:${Math.max(2, (r.mix || 0) * 0.55)}px"></span>${pct(r.mix)}</td>
+      <td class="${r.base == null ? "muted" : ""}">${r.base == null ? "n/q" : pct(r.base)}</td>
+      <td class="${r.delta == null ? "muted" : r.delta >= 0 ? "pos" : "neg"}">${r.delta == null ? "—" : sgn(r.delta)}</td>
+      <td>${usd0(r.aceRev)}</td>
+      <td><b>${usd(r.comm)}</b></td></tr>`;
+  });
+  h += `</tbody></table></div>
+    <div class="foot">Rank reflects the current sort, not an overall performance verdict.
+      Sample bars: three = 15+ eligible · two = 8–14 · one = 1–7. “n/q” = fewer than 15 baseline tables Jul 10–30, so no baseline is shown.
+      ${isDefaultFilters() ? "Values are the source extract's stored figures." : "Values are recomputed for the current filter."}</div></div>`;
+  wrap.innerHTML = h;
+
+  /* ---------- opportunities ---------- */
+  const scPts = rows.filter(r => r.elig > 0).map(r => ({
+    name: r.name, short: initials(r.name), x: r.elig, y: r.conv || 0, r: Math.max(1, r.aceRev),
+    color: r.elig < 8 ? "var(--s4)" : (r.conv || 0) >= avg ? "var(--pos)" : "var(--accent)",
+    tip: tipHTML({
+      title: r.name,
+      rows: [["Eligible tables", fmt(r.elig)], ["Converted", fmt(r.convN)], ["Table conversion", pct(r.conv)],
+        ["vs restaurant avg", sgn((r.conv || 0) - avg) + " pts"], ["AYCE revenue", usd0(r.aceRev)],
+        ["Commission", usd(r.comm)], ["Sample", r.conf.label]],
+      def: "Bubble area is proportional to AYCE table revenue. Click to open the server detail.",
+    }),
+  }));
+  const h2 = `<div class="sec-h"><h2>Opportunities</h2>
+    <span class="d">Where conversion upside remains, sized by AYCE revenue</span></div>
+    <div class="g23">
+      <div class="card"><header><div><div class="ttl">Conversion vs sample size</div>
+        <div class="sub">Servers right of the sample line carry enough eligible tables to read; those left of it do not.</div></div></header>
+        <div class="body"><div class="legend">
+          <span><i style="background:var(--pos)"></i>At or above restaurant average</span>
+          <span><i style="background:var(--accent)"></i>Below average — upside</span>
+          <span><i style="background:var(--s4)"></i>Sample too small to rank</span>
+          <span><i class="ln" style="background:var(--accent)"></i>Restaurant average</span></div>
+          <div id="cScatter"></div></div>
+        <div class="foot">A high rate on very few eligible tables is not evidence of skill. Bubbles left of the
+          minimum-sample line are shown for completeness only.</div></div>
+      <div class="card"><header><div><div class="ttl">Gap to restaurant average ${inf("gap")}</div>
+        <div class="sub">Additional tables that would have converted at the ${pct(avg)} average.</div></div></header>
+        <div class="body"><div id="cGap"></div></div>
+        <div class="foot"><b>Formula:</b> eligible × (restaurant average − server rate) ÷ 100, floored at zero, shown only for
+          servers with ${LB_MIN_GAP}+ eligible tables. This is arithmetic, not an employee evaluation score, and it makes no
+          assumption about why a table did not convert.</div></div>
+    </div>`;
+  const wrap2 = document.createElement("div");
+  wrap2.className = "sec";
+  wrap2.innerHTML = h2;
+
+  host.appendChild(wrap);
+  host.appendChild(wrap2);
+
+  $("#cScatter", wrap2).appendChild(scatter(scPts, {
+    avgY: avg, minX: 8, aria: "Scatter plot of server conversion rate against eligible table count",
+  }));
+  const gapItems = rows.filter(r => r.elig >= LB_MIN_GAP && r.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 10)
+    .map(r => ({
+      label: r.name, v: r.gap, fv: "+" + r.gap.toFixed(1) + " tbl",
+      sub: pct(r.conv), color: "var(--accent)",
+      tip: tipHTML({
+        title: r.name,
+        rows: [["Eligible tables", fmt(r.elig)], ["Converted", fmt(r.convN)], ["Server rate", pct(r.conv)],
+          ["Restaurant average", pct(avg)], ["Gap", `${r.elig} × (${avg.toFixed(1)} − ${(r.conv || 0).toFixed(1)}) ÷ 100 = ${r.gap.toFixed(1)}`]],
+        def: DEFS.gap,
+      }),
+    }));
+  const gh = $("#cGap", wrap2);
+  if (gapItems.length) gh.appendChild(rankBars(gapItems, { click: it => openServer(it.label) }));
+  else gh.innerHTML = `<div class="empty" style="padding:26px 10px"><div class="et">No gap to show</div>
+    <div class="es">No server with ${LB_MIN_GAP}+ eligible tables sits below the restaurant average in this selection.</div></div>`;
+
+  wireLbToolbar(wrap);
+  $$("th.sortable", wrap).forEach(th => {
+    const go = () => {
+      const k = th.dataset.k;
+      if (S.sort.key === k) S.sort.dir *= -1; else S.sort = { key: k, dir: k === "name" ? 1 : -1 };
+      S.lb.preset = "all"; persist(); render();
+    };
+    th.addEventListener("click", go);
+    th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  $$("tr.rowlink", wrap).forEach(tr => {
+    const go = () => openServer(tr.dataset.s);
+    tr.addEventListener("click", go);
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  bindInfo(wrap); bindInfo(wrap2);
+}
+const LB_MIN_GAP = 8;
+function wireLbToolbar(wrap) {
+  const q = $("#lbq", wrap);
+  if (q) q.addEventListener("input", e => {
+    S.lb.search = e.target.value; persist();
+    const pos = e.target.selectionStart; render();
+    const nq = $("#lbq"); if (nq) { nq.focus(); nq.setSelectionRange(pos, pos); }
+  });
+  $$("[data-preset]", wrap).forEach(b => b.addEventListener("click", () => {
+    S.lb.preset = b.dataset.preset;
+    if (b.dataset.preset === "all") S.sort = { key: "conv", dir: -1 };
+    persist(); render();
+  }));
+  const mn = $("#lbmin", wrap);
+  if (mn) mn.addEventListener("change", e => { S.lb.minElig = +e.target.value; persist(); render(); });
+  if (mn) mn.addEventListener("input", e => { const v = $(".val", mn.parentNode); if (v) v.textContent = e.target.value; });
+  const qo = $("#lbq2", wrap);
+  if (qo) qo.addEventListener("change", e => { S.lb.qualifiedOnly = e.target.checked; persist(); render(); });
+}
+
+/* ============================== SERVER DRAWER ============================= */
+let lastFocus = null;
+function openServer(name) { S.server = name; S.drawerTab = "all"; renderDrawer(); }
+function closeDrawer() {
+  S.server = null;
+  const d = $("#drawer"), s = $("#scrim");
+  if (d) { d.classList.remove("show"); setTimeout(() => d.remove(), 260); }
+  if (s) { s.classList.remove("show"); setTimeout(() => s.remove(), 260); }
+  if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+  render();
+}
+function renderDrawer() {
+  lastFocus = document.activeElement;
+  $$("#drawer,#scrim").forEach(e => e.remove());
+  const name = S.server, s = SRV[name];
+  if (!s) return;
+  const def = isDefaultFilters();
+  const rows = activeRows().filter(r => r.server === name);
+  const a = agg(rows);
+  const restaurant = agg(activeRows());
+  const use = def ? {
+    tables: s.p.tables, guests: s.p.guests, mix: s.p.mixCovers, rev: s.p.revenue, aceRev: s.p.aceRevenue,
+    elig: s.c.eligibleTables, convN: s.c.convertedTables, conv: s.c.convRateTables, convC: s.c.convRateCovers,
+    und: s.c.undecided, alc: s.c.alc, pre: s.c.predecidedTables, unk: s.c.unknownIntentTables,
+  } : {
+    tables: a.tables, guests: a.guests, mix: a.mixCovers, rev: a.revenue, aceRev: a.aceRevenue,
+    elig: a.eligibleTables, convN: a.convertedTables, conv: a.convRateTables, convC: a.convRateCovers,
+    und: a.undecided, alc: a.alc, pre: a.predecidedTables, unk: a.unknownIntentTables,
+  };
+  const base = s.q ? s.b.mixCovers : null;
+  const delta = base != null && use.mix != null ? r1(use.mix - base) : null;
+  const cf = confidence(use.elig);
+
+  const scrim = document.createElement("div"); scrim.id = "scrim";
+  const dr = document.createElement("div");
+  dr.id = "drawer"; dr.className = "drawer"; dr.setAttribute("role", "dialog");
+  dr.setAttribute("aria-modal", "true"); dr.setAttribute("aria-label", "Server detail: " + name);
+
+  let h = `<div class="dh">
+    <span class="av" style="background:${avColor(name)}">${esc(initials(name))}</span>
+    <div style="min-width:0"><h3>${esc(name)}</h3>
+      <div class="meta"><span>${use.tables} tables · ${fmt(use.guests)} covers</span>
+        <span class="conf ${cf.cls}">${[1, 2, 3].map(n => `<i class="${n <= cf.n ? "on" : ""}"></i>`).join("")}</span>
+        <span>${esc(cf.label)}</span>
+        ${s.q ? "" : `<span class="st partial">baseline not qualified</span>`}</div></div>
+    <button class="xbtn" type="button" id="drclose" aria-label="Close server detail">×</button></div>
+    <div class="db">`;
+
+  if (!def) h += `<div class="note"><b>Filtered view.</b> These figures cover only this server's tables that match the
+    active filters (${rows.length} of ${s.p.tables}).</div>`;
+
+  if (!rows.length && !def) {
+    h += `<div class="empty"><div class="ei">◍</div><div class="et">No tables in this selection</div>
+      <div class="es">${esc(name)} has no tables matching the active filters.</div></div>`;
+  } else {
+    h += `<div class="dgrid">
+      ${dcell("Table conv", pct(use.conv), `${use.convN} of ${use.elig}`)}
+      ${dcell("Cover conv", pct(use.convC), "eligible covers")}
+      ${dcell("AYCE mix", pct(use.mix), `${a.aceCovers} of ${fmt(use.guests)}`)}
+      ${dcell("3-wk base", base == null ? "n/q" : pct(base), base == null ? "<15 tables" : "Jul 10–30")}
+      ${dcell("Change", delta == null ? "—" : sgn(delta), "points of mix", delta == null ? "" : delta >= 0 ? "pos" : "neg")}
+      ${dcell("AYCE revenue", usd0(use.aceRev), `of ${usd0(use.rev)}`)}
+      ${dcell("Commission", usd(a.commission), `${a.convertedTables} tables`, "gold")}
+      ${dcell("Missed", fmt(use.elig - use.convN), "eligible, no AYCE")}
+    </div>`;
+
+    /* comparison vs restaurant */
+    h += `<div class="card" style="margin-bottom:14px"><header><div><div class="ttl">Versus restaurant average</div>
+      <div class="sub">Marker shows the restaurant figure for the same selection.</div></div></header><div class="body">`;
+    [["Table conversion", use.conv, restaurant.convRateTables, "var(--accent)"],
+     ["Cover conversion", use.convC, restaurant.convRateCovers, "var(--s2)"],
+     ["AYCE cover mix", use.mix, restaurant.mixCovers, "var(--s3)"]].forEach(([l, v, av, c]) => {
+      h += `<div class="cmpbar"><span class="cl">${l}</span>
+        <span class="ct"><i class="cf" style="width:${Math.min(100, v || 0)}%;background:${c}"></i>
+          <i class="avgline" style="left:${Math.min(100, av || 0)}%"></i></span>
+        <span class="cv ${v != null && av != null ? (v >= av ? "pos" : "neg") : ""}">${pct(v)}</span></div>`;
+    });
+    h += `<div style="font-size:11.5px;color:var(--text-3);margin-top:8px">
+      Restaurant: table ${pct(restaurant.convRateTables)} · cover ${pct(restaurant.convRateCovers)} · mix ${pct(restaurant.mixCovers)}</div>
+      </div></div>`;
+
+    /* weekend trend */
+    h += `<div class="card" style="margin-bottom:14px"><header><div><div class="ttl">Weekend trend</div>
+      <div class="sub">AYCE cover mix across the four weekends (unfiltered).</div></div></header><div class="body">`;
+    h += `<div style="display:flex;gap:8px">`;
+    s.w.forEach((v, i) => {
+      const pilot = i === 3;
+      h += `<div style="flex:1;text-align:center;padding:9px 4px;border-radius:8px;
+        background:${pilot ? "var(--accent-soft)" : "var(--surface-2)"};border:1px solid ${pilot ? "var(--accent-line)" : "var(--border)"}">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;font-weight:650">
+          ${esc(P.weekendLabels[i].replace(" (Jul 31-Aug 2)", "").replace("Jul ", "").replace("Pilot", "Pilot"))}</div>
+        <div style="font-size:17px;font-weight:680;margin-top:3px;color:${pilot ? "var(--accent-text)" : "var(--text)"}">${v == null ? "—" : pct(v)}</div>
+        <div style="font-size:10.5px;color:var(--text-3)">${s.wt[i]} tbl</div></div>`;
+    });
+    h += `</div></div></div>`;
+
+    /* day by day */
+    const days = [0, 1, 2].map(d => ({ d, a: agg(rows.filter(r => r.day === d)) })).filter(x => x.a.tables);
+    if (days.length) {
+      h += `<div class="card" style="margin-bottom:14px"><header><div><div class="ttl">Day by day</div></div></header>
+        <div class="tw"><table><thead><tr><th>Day</th><th>Tables</th><th>Covers</th><th>AYCE mix</th>
+        <th>Eligible</th><th>Conv</th><th>Commission</th></tr></thead><tbody>`;
+      days.forEach(({ d, a: da }) => {
+        h += `<tr><td>${DAY_LABEL[d]}</td><td>${da.tables}</td><td>${fmt(da.guests)}</td><td>${pct(da.mixCovers)}</td>
+          <td>${da.eligibleTables}</td><td><b>${pct(da.convRateTables)}</b> <span class="muted">(${da.convertedTables}/${da.eligibleTables})</span></td>
+          <td>${usd(da.commission)}</td></tr>`;
+      });
+      h += `</tbody></table></div></div>`;
+    }
+
+    /* intent split + tier mix */
+    h += `<div class="card" style="margin-bottom:14px"><header><div><div class="ttl">Intent &amp; tier</div></div></header><div class="body">`;
+    h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;font-weight:650;margin-bottom:8px">Conversion by intent</div>`;
+    [["Undecided", use.und, "var(--s2)"], ["A la carte", use.alc, "var(--accent)"]].forEach(([l, o, c]) => {
+      h += `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+        <span>${l} <span class="muted">n=${o.elig}</span></span><b>${pct(o.rate)}</b></div>
+        <div style="height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden">
+          <div class="grow" style="width:${o.rate || 0}%;height:100%;background:${c}"></div></div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:3px">${o.conv} of ${o.elig} converted</div></div>`;
+    });
+    h += `</div><div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;font-weight:650;margin-bottom:8px">AYCE tier mix</div>`;
+    const tierCount = {};
+    rows.filter(r => r.didAce && r.tier).forEach(r => { tierCount[r.tier] = (tierCount[r.tier] || 0) + 1; });
+    const tot = Object.keys(tierCount).reduce((x, k) => x + tierCount[k], 0);
+    if (!tot) h += `<div class="muted" style="font-size:12.5px">No AYCE tables in this selection.</div>`;
+    else P.tiers.forEach(t => {
+      const n = tierCount[t] || 0;
+      h += `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+        <span class="tag ${t}">${TIER_LABEL[t]}</span><b>${n} <span class="muted" style="font-weight:400">${pct(100 * n / tot)}</span></b></div>
+        <div style="height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden">
+          <div class="grow" style="width:${(100 * n) / tot}%;height:100%;background:${t === "royalty" ? "var(--gold)" : t === "premium" ? "var(--s2)" : "var(--s4)"}"></div></div></div>`;
+    });
+    h += `</div></div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        ${use.pre} pre-decided AYCE · ${use.unk} unknown intent — both excluded from conversion rates, both counted in AYCE mix.</div>
+      </div></div>`;
+
+    /* table-level list */
+    const conv = rows.filter(isConverted);
+    const missed = rows.filter(r => isEligible(r) && !r.didAce);
+    const list = S.drawerTab === "converted" ? conv : S.drawerTab === "missed" ? missed : rows;
+    h += `<div class="card"><header><div><div class="ttl">Table-level detail</div>
+        <div class="sub">${list.length} table${list.length === 1 ? "" : "s"} shown</div></div></header>
+      <div class="toolbar"><div class="seg" role="group" aria-label="Table filter">
+        <button type="button" data-tab="all" aria-pressed="${S.drawerTab === "all"}">All ${rows.length}</button>
+        <button type="button" data-tab="converted" aria-pressed="${S.drawerTab === "converted"}">Converted ${conv.length}</button>
+        <button type="button" data-tab="missed" aria-pressed="${S.drawerTab === "missed"}">Missed ${missed.length}</button>
+      </div></div>`;
+    if (!list.length) {
+      h += `<div class="empty" style="padding:28px 14px"><div class="et">Nothing here</div>
+        <div class="es">No tables in this category for the current selection.</div></div>`;
+    } else {
+      h += `<div class="tw"><table><thead><tr><th>Day</th><th>Table</th><th>Covers</th><th>Intent</th>
+        <th>Outcome</th><th>Tier</th><th>AYCE rung</th><th>F&amp;B</th><th>Comm</th></tr></thead><tbody>`;
+      list.slice().sort((x, y) => x.day - y.day || String(x.table).localeCompare(String(y.table))).forEach(r => {
+        const c = ruleComm(r);
+        h += `<tr><td>${DAY_LABEL[r.day]}</td><td>${esc(r.table)}</td><td>${r.covers}</td>
+          <td><span class="tag ${INTENT_CLS[r.intent]}">${INTENT_LABEL[r.intent]}</span></td>
+          <td>${r.didAce ? `<span class="tag yes">AYCE</span>` : `<span class="tag no">a la carte</span>`}</td>
+          <td>${r.tier ? `<span class="tag ${r.tier}">${TIER_LABEL[r.tier]}</span>` : "—"}</td>
+          <td>${r.adultAce + r.kidAce || "—"}${r.kidAce ? ` <span class="muted">(${r.kidAce} kid)</span>` : ""}</td>
+          <td>${usd(r.fnb)}</td><td>${c ? usd(c) : "—"}</td></tr>`;
+      });
+      h += `</tbody></table></div>`;
+    }
+    h += `<div class="foot">Guest and reservation names are not included in this dashboard.</div></div>`;
+  }
+  h += `</div>`;
+  dr.innerHTML = h;
+  document.body.appendChild(scrim); document.body.appendChild(dr);
+  requestAnimationFrame(() => { scrim.classList.add("show"); dr.classList.add("show"); });
+  $("#drclose", dr).addEventListener("click", closeDrawer);
+  scrim.addEventListener("click", closeDrawer);
+  $$("[data-tab]", dr).forEach(b => b.addEventListener("click", () => { S.drawerTab = b.dataset.tab; renderDrawer(); }));
+  $("#drclose", dr).focus();
+  bindInfo(dr);
+}
+function dcell(k, v, m, cls) {
+  return `<div class="dcell"><div class="k">${esc(k)}</div><div class="v ${cls || ""}">${v}</div><div class="m">${esc(m)}</div></div>`;
+}
+
+/* ================================ COMMISSION ============================== */
+function extraLedgerActive() {
+  const f = S.filters;
+  return P.extraLedger.filter(l => {
+    if (f.days.length && f.days.indexOf(l.d) < 0) return false;
+    if (f.servers.length) return false;                     /* not a listed server */
+    if (f.intents.length && f.intents.indexOf(P.intents[l.source]) < 0) return false;
+    if (f.tiers.length && f.tiers.indexOf(P.tiers[l.tier]) < 0) return false;
+    if (f.pmin != null && l.covers < f.pmin) return false;
+    if (f.pmax != null && l.covers > f.pmax) return false;
+    if (f.conv === "no") return false;
+    return true;
+  });
+}
+function ledgerData() {
+  const rows = activeRows().filter(isConverted).map(r => ({
+    server: r.server, day: r.day, table: r.table, covers: r.covers,
+    adultAce: r.adultAce, kidAce: r.kidAce, tier: r.tier, source: r.intent,
+    amount: ruleComm(r), stored: P.storedCommission[r.i], row: r,
+  }));
+  extraLedgerActive().forEach(l => rows.push({
+    server: l.server, day: l.d, table: l.table, covers: l.covers,
+    adultAce: l.adultAce, kidAce: l.kidAce, tier: P.tiers[l.tier], source: P.intents[l.source],
+    amount: r2(l.adultAce * RATES[P.tiers[l.tier]]), stored: l.stored, row: null, unattributed: true,
+  }));
+  const q = S.ledger.search.toLowerCase();
+  return q ? rows.filter(r => r.server.toLowerCase().indexOf(q) >= 0) : rows;
+}
+function pgCommission(host) {
+  const all = ledgerData();
+  const wrap = document.createElement("div");
+  const total = r2(all.reduce((a, l) => a + l.amount, 0));
+  const adultCov = all.reduce((a, l) => a + l.adultAce, 0);
+  const byS = {};
+  all.forEach(l => { (byS[l.server] = byS[l.server] || []).push(l); });
+  const groups = Object.keys(byS).map(n => ({
+    server: n, ls: byS[n], sub: r2(byS[n].reduce((a, l) => a + l.amount, 0)),
+    adult: byS[n].reduce((a, l) => a + l.adultAce, 0),
+  })).sort((a, b) => b.sub - a.sub);
+
+  let h = `<div class="sec-h" style="margin-top:2px"><h2>Commission ledger</h2>
+    <span class="d">Provisional pilot rates · ${all.length} converted table${all.length === 1 ? "" : "s"}${isDefaultFilters() ? "" : " · filtered"}</span></div>`;
+
+  h += `<div class="note gold" style="margin-bottom:14px"><b>Provisional — not a payroll document.</b>
+    Pilot rates are unratified: Classic ${usd(RATES.classic)} · Premium ${usd(RATES.premium)} · Royalty ${usd(RATES.royalty)}
+    per <b>adult</b> AYCE cover, on converted tables only. Children's AYCE covers and pre-decided AYCE tables earn nothing.</div>`;
+
+  h += `<div class="kstrip" style="margin-bottom:14px">
+    ${kcell("Weekend total", usd(total), `${all.length} converted tables`, "comm", "gold")}
+    ${kcell("Adult AYCE covers", fmt(adultCov), "commission-bearing covers")}
+    ${kcell("Avg per converted table", usd(all.length ? total / all.length : 0), "total ÷ converted tables")}
+    ${kcell("Servers paid", fmt(groups.length), "with at least one conversion")}
+  </div>`;
+
+  h += `<div class="card"><div class="toolbar no-print">
+      <div class="srch"><span class="si">⌕</span><input type="search" id="ldq" placeholder="Search server…"
+        aria-label="Search ledger by server" value="${esc(S.ledger.search)}"></div>
+      <button class="btn ghost sm" type="button" id="expandAll">Expand all</button>
+      <button class="btn ghost sm" type="button" id="collapseAll">Collapse all</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost sm" type="button" id="csv">↓ Export CSV</button>
+      <button class="btn ghost sm" type="button" id="printBtn">⎙ Print view</button>
+    </div>`;
+
+  if (!all.length) {
+    h += `<div class="empty"><div class="ei">◍</div><div class="et">No commission in this selection</div>
+      <div class="es">No converted tables match the active filters and search.</div></div></div>`;
+    wrap.innerHTML = h; host.appendChild(wrap); wireLedger(wrap, all); return;
+  }
+
+  h += `<div class="tw"><table><thead><tr><th>Server</th><th>Day</th><th>Table</th><th>Source</th>
+    <th>Tier</th><th>Covers</th><th>Adult AYCE</th><th>Rate</th><th>Amount</th><th></th></tr></thead><tbody>`;
+  groups.forEach(g => {
+    const open = S.ledger.open[g.server] !== false;
+    h += `<tr class="rowlink sub" tabindex="0" role="button" aria-expanded="${open}" data-grp="${esc(g.server)}">
+      <td><span style="display:inline-flex;align-items:center;gap:8px">
+        <span style="color:var(--text-3);font-size:10px;display:inline-block;transition:transform .2s;
+          transform:rotate(${open ? 90 : 0}deg)">▶</span>
+        <span class="av" style="width:22px;height:22px;font-size:9.5px;background:${avColor(g.server)}">${esc(initials(g.server))}</span>
+        ${esc(g.server)}</span></td>
+      <td colspan="5" style="text-align:left;color:var(--text-3);font-weight:400">
+        ${g.ls.length} converted table${g.ls.length === 1 ? "" : "s"} · ${g.adult} adult AYCE covers ·
+        avg ${usd(g.sub / g.ls.length)}</td>
+      <td></td><td></td><td><b>${usd(g.sub)}</b></td><td></td></tr>`;
+    if (!open) return;
+    g.ls.slice().sort((a, b) => a.day - b.day || String(a.table).localeCompare(String(b.table))).forEach(l => {
+      const flag = l.stored != null && Math.abs(l.stored - l.amount) > 1e-9;
+      h += `<tr class="rowlink" tabindex="0" role="button" data-x="${esc(l.server)}|${l.day}|${esc(l.table)}"
+          aria-label="Explain calculation for table ${esc(l.table)}">
+        <td style="padding-left:44px" class="muted">${l.unattributed ? `<span class="tag unk">unattributed</span>` : ""}</td>
+        <td>${DAY_LABEL[l.day]}</td><td>${esc(l.table)}</td>
+        <td><span class="tag ${INTENT_CLS[l.source]}">${INTENT_LABEL[l.source]}</span></td>
+        <td><span class="tag ${l.tier}">${TIER_LABEL[l.tier]}</span></td>
+        <td>${l.covers}</td>
+        <td>${l.adultAce}${l.kidAce ? ` <span class="muted">+${l.kidAce} kid</span>` : ""}</td>
+        <td>${usd(RATES[l.tier])}</td>
+        <td><b>${usd(l.amount)}</b>${flag ? ` <span class="st rev" style="margin-left:4px">review</span>` : ""}</td>
+        <td class="muted" style="font-size:11px">explain →</td></tr>`;
+    });
+  });
+  h += `</tbody><tfoot><tr><td colspan="8" style="text-align:right">Weekend total — provisional</td>
+    <td>${usd(total)}</td><td></td></tr></tfoot></table></div>
+    <div class="foot">Rows marked <span class="st rev">review</span> are where the source extract's stored amount differs from
+      adult covers × tier rate. See Data &amp; Methodology.</div></div>`;
+
+  /* distribution */
+  h += `<div class="sec card"><header><div><div class="ttl">Commission distribution by server</div>
+    <div class="sub">Provisional pilot rates, current selection.</div></div></header>
+    <div class="body"><div id="cDist"></div></div>
+    <div class="foot">Distribution follows converted tables and tier mix, not hours worked or section size.</div></div>`;
+
+  wrap.innerHTML = h;
+  host.appendChild(wrap);
+
+  $("#cDist", wrap).appendChild(rankBars(groups.map(g => ({
+    label: g.server, v: g.sub, fv: usd(g.sub), sub: g.ls.length + " tbl",
+    color: "var(--gold)",
+    tip: tipHTML({
+      title: g.server,
+      rows: [["Provisional commission", usd(g.sub)], ["Converted tables", fmt(g.ls.length)],
+        ["Adult AYCE covers", fmt(g.adult)], ["Avg per table", usd(g.sub / g.ls.length)],
+        ["Share of total", pct(100 * g.sub / (total || 1))]],
+      def: DEFS.comm,
+    }),
+  })), { click: it => { if (SRV[it.label]) openServer(it.label); } }));
+
+  wireLedger(wrap, all);
+  bindInfo(wrap);
+}
+function wireLedger(wrap, all) {
+  const q = $("#ldq", wrap);
+  if (q) q.addEventListener("input", e => {
+    S.ledger.search = e.target.value;
+    const pos = e.target.selectionStart; render();
+    const n = $("#ldq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); }
+  });
+  $$("[data-grp]", wrap).forEach(tr => {
+    const go = () => { const s = tr.dataset.grp; S.ledger.open[s] = S.ledger.open[s] === false; render(); };
+    tr.addEventListener("click", go);
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  $$("[data-x]", wrap).forEach(tr => {
+    const go = () => {
+      const [srv, day, tbl] = tr.dataset.x.split("|");
+      const l = all.find(x => x.server === srv && String(x.day) === day && String(x.table) === tbl);
+      if (l) explainModal(l);
+    };
+    tr.addEventListener("click", go);
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  const ea = $("#expandAll", wrap), ca = $("#collapseAll", wrap);
+  if (ea) ea.addEventListener("click", () => { S.ledger.open = {}; render(); });
+  if (ca) ca.addEventListener("click", () => {
+    const o = {}; all.forEach(l => { o[l.server] = false; }); S.ledger.open = o; render();
+  });
+  const cs = $("#csv", wrap);
+  if (cs) cs.addEventListener("click", () => exportCSV(all));
+  const pb = $("#printBtn", wrap);
+  if (pb) pb.addEventListener("click", () => window.print());
+}
+function exportCSV(rows) {
+  const head = ["Server", "Day", "Table", "Source", "Tier", "Covers", "AdultAYCE", "KidAYCE", "Rate", "Commission", "Basis"];
+  const q = v => { const s = String(v == null ? "" : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const lines = [head.join(",")];
+  rows.slice().sort((a, b) => a.server.localeCompare(b.server) || a.day - b.day).forEach(l => {
+    lines.push([l.server, DAY_LABEL[l.day], l.table, INTENT_LABEL[l.source], TIER_LABEL[l.tier],
+      l.covers, l.adultAce, l.kidAce, RATES[l.tier].toFixed(2), l.amount.toFixed(2),
+      "adultAYCE x rate (provisional)"].map(q).join(","));
+  });
+  lines.push([""].concat(new Array(8).fill("")).join(","));
+  lines.push(["TOTAL", "", "", "", "", "", rows.reduce((a, l) => a + l.adultAce, 0), "", "",
+    r2(rows.reduce((a, l) => a + l.amount, 0)).toFixed(2), "provisional - not payroll"].map(q).join(","));
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ayce-pilot-commission-provisional.csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+function explainModal(l) {
+  const flag = l.stored != null && Math.abs(l.stored - l.amount) > 1e-9;
+  let h = `<div class="mh"><div><h3>How this commission was calculated</h3>
+      <div class="s">${esc(l.server)} · ${DAY_LABEL[l.day]} · table ${esc(l.table)}</div></div>
+    <button class="xbtn" type="button" data-close aria-label="Close">×</button></div><div class="mb">
+    <div class="calcrow"><span class="cl">Recorded intent at greeting</span>
+      <span class="cr"><span class="tag ${INTENT_CLS[l.source]}">${INTENT_LABEL[l.source]}</span></span></div>
+    <div class="calcrow"><span class="cl">Eligible for conversion?</span><span class="cr pos">Yes — undecided and a-la-carte tables are eligible</span></div>
+    <div class="calcrow"><span class="cl">Check contained AYCE items</span><span class="cr pos">Yes — table converted</span></div>
+    <div class="calcrow"><span class="cl">AYCE tier rung</span><span class="cr"><span class="tag ${l.tier}">${TIER_LABEL[l.tier]}</span></span></div>
+    <div class="calcrow"><span class="cl">Guests seated</span><span class="cr">${l.covers}</span></div>
+    <div class="calcrow"><span class="cl">Adult AYCE covers <b>(commission basis)</b></span><span class="cr">${l.adultAce}</span></div>
+    <div class="calcrow"><span class="cl">Children's AYCE covers</span><span class="cr">${l.kidAce} — excluded</span></div>
+    <div class="calcrow"><span class="cl">Rate per adult AYCE cover</span><span class="cr">${usd(RATES[l.tier])}</span></div>
+    <div class="calcrow tot"><span class="cl">${l.adultAce} × ${usd(RATES[l.tier])}</span><span class="cr">${usd(l.amount)}</span></div>`;
+  if (flag) {
+    h += `<div class="note warn"><b>Flagged for review.</b> The source extract stores ${usd(l.stored)} for this table,
+      but ${l.adultAce} adult AYCE covers × ${usd(RATES[l.tier])} = ${usd(l.amount)}. This dashboard applies the stated rule.
+      The difference is ${usd(Math.abs(l.stored - l.amount))}.</div>`;
+  }
+  h += `<div class="note"><b>Why children are excluded:</b> the pilot rate is defined per adult AYCE cover. Children's AYCE
+      covers are rung and counted in AYCE mix, but carry no commission.<br><br>
+      <b>Why pre-decided tables are excluded:</b> a party that booked already intending AYCE was not converted by the server,
+      so the pilot pays nothing on it. Those tables still count toward AYCE mix.</div>
+    <div class="note gold">Provisional figure at unratified pilot rates. Not a payroll document.</div></div>`;
+  openModal(h, "Commission calculation");
+}
+function openModal(html, label) {
+  closeModal();
+  const scrim = document.createElement("div"); scrim.id = "mscrim"; scrim.className = "";
+  scrim.style.cssText = "position:fixed;inset:0;background:rgba(14,18,24,.42);z-index:105;opacity:0;transition:opacity .2s";
+  const m = document.createElement("div");
+  m.className = "modal"; m.id = "modal"; m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true");
+  m.setAttribute("aria-label", label || "Dialog");
+  m.innerHTML = html;
+  document.body.appendChild(scrim); document.body.appendChild(m);
+  requestAnimationFrame(() => { scrim.style.opacity = "1"; m.classList.add("show"); });
+  scrim.addEventListener("click", closeModal);
+  $$("[data-close]", m).forEach(b => b.addEventListener("click", closeModal));
+  const f = $("[data-close]", m); if (f) f.focus();
+  bindInfo(m);
+}
+function closeModal() {
+  const m = $("#modal"), s = $("#mscrim");
+  if (m) { m.classList.remove("show"); setTimeout(() => m.remove(), 200); }
+  if (s) { s.style.opacity = "0"; setTimeout(() => s.remove(), 200); }
+}
+
+/* ============================ DATA & METHODOLOGY ========================== */
+function pgMethod(host) {
+  const q = P.dataQuality, U = P.unattributed;
+  const wrap = document.createElement("div");
+  const matchRate = r1(100 * q.pilotIntentMatched / q.pilotFloorOrders);
+  const attributed = ROWS.length;
+
+  let h = `<div class="sec-h" style="margin-top:2px"><h2>Data &amp; methodology</h2>
+    <span class="d">Sources, exclusions and the exact definitions behind every figure</span></div>`;
+
+  h += `<div class="kstrip" style="margin-bottom:14px">
+    ${kcell("Toast orders scanned", fmt(q.totalOrders), "Jul 10 – Aug 2, all sources")}
+    ${kcell("Floor tables (weekend)", fmt(q.pilotFloorOrders), "dine-in, bar excluded")}
+    ${kcell("Intent matched", fmt(q.pilotIntentMatched), `${pct(matchRate)} of weekend floor tables`)}
+    ${kcell("Unknown intent", fmt(q.pilotIntentUnknown), "excluded from conversion rates")}
+  </div>`;
+
+  /* status board */
+  h += `<div class="g2 sec" style="margin-top:0">
+    <div class="card"><header><div><div class="ttl">Data source status</div></div></header>
+      <div class="tw"><table><tbody>
+        <tr><td>Toast POS — orders, checks, line items, servers, tables</td><td><span class="st ok">Complete</span></td></tr>
+        <tr><td>OpenTable — reservation intent notes</td><td><span class="st partial">Partial — ${pct(matchRate)} matched</span></td></tr>
+        <tr><td>Row-level records available to filter</td><td><span class="st partial">${attributed} of ${q.pilotFloorOrders}</span></td></tr>
+        <tr><td>Commission rates ratified</td><td><span class="st rev">Requires review — provisional</span></td></tr>
+        <tr><td>Ledger amount vs stated rule</td><td><span class="st ${MISMATCHES.length ? "rev" : "ok"}">
+          ${MISMATCHES.length ? MISMATCHES.length + " requires review" : "Reconciled"}</span></td></tr>
+      </tbody></table></div>
+      <div class="foot">Data generated ${esc(P.generated)}.</div></div>
+
+    <div class="card"><header><div><div class="ttl">Exclusions &amp; filters</div></div></header>
+      <div class="tw"><table><tbody>
+        <tr><td>Voided orders</td><td>${fmt(q.voided)}</td><td><span class="st excl">Excluded</span></td></tr>
+        <tr><td>No-table orders (takeout / delivery / online)</td><td>${fmt(q.noTable)}</td><td><span class="st excl">Excluded</span></td></tr>
+        <tr><td>Bar tables 101–116</td><td>${fmt(q.barExcluded)}</td><td><span class="st excl">Excluded</span></td></tr>
+        <tr><td>Unknown intent (weekend floor tables)</td><td>${fmt(q.pilotIntentUnknown)}</td><td><span class="st partial">In mix, out of conversion</span></td></tr>
+        <tr><td>Pre-decided AYCE (weekend)</td><td>${fmt(P.overall.conversion.predecidedTables)}</td><td><span class="st partial">In mix, out of conversion</span></td></tr>
+        <tr><td>AYCE tables where AYCE items ≠ guest count</td><td>${fmt(q.aceCoversNeGuests)}</td><td><span class="st ok">Retained</span></td></tr>
+      </tbody></table></div>
+      <div class="foot">Checks aggregate to one record per table visit — split checks are combined.</div></div>
+  </div>`;
+
+  /* reconciliation */
+  h += `<div class="sec card"><header><div><div class="ttl">Coverage reconciliation</div>
+      <div class="sub">Why filtered results cover ${attributed} tables while headline totals cover ${q.pilotFloorOrders}.</div></div></header>
+    <div class="tw"><table><thead><tr><th>Scope</th><th>Tables</th><th>Guests</th><th>AYCE covers</th>
+      <th>Eligible</th><th>Converted</th><th>F&amp;B revenue</th></tr></thead><tbody>
+      <tr><td>Server-attributed (row-level, filterable)</td><td>${attributed}</td><td>${fmt(P.overall.pilot.guests - U.guests)}</td>
+        <td>${fmt(P.overall.pilot.aceCovers - U.aceCovers)}</td>
+        <td>${P.overall.conversion.eligibleTables - U.eligibleTables}</td>
+        <td>${P.overall.conversion.convertedTables - U.convertedTables}</td>
+        <td>${usd(r2(P.overall.pilot.revenue - U.revenue))}</td></tr>
+      <tr><td>Unattributed — “${esc(U.label)}” <span class="st partial">No row detail</span></td>
+        <td>${U.tables}</td><td>${fmt(U.guests)}</td><td>${fmt(U.aceCovers)}</td>
+        <td>${U.eligibleTables}</td><td>${U.convertedTables}</td><td>${usd(U.revenue)}</td></tr>
+    </tbody><tfoot><tr><td>All floor tables (headline totals)</td><td>${P.overall.pilot.tables}</td>
+      <td>${fmt(P.overall.pilot.guests)}</td><td>${fmt(P.overall.pilot.aceCovers)}</td>
+      <td>${P.overall.conversion.eligibleTables}</td><td>${P.overall.conversion.convertedTables}</td>
+      <td>${usd(P.overall.pilot.revenue)}</td></tr></tfoot></table></div>
+    <div class="foot">“${esc(U.label)}” appears in the source extract's floor totals and commission ledger but has no
+      per-table records, so it cannot be filtered, ranked, or opened in a server drawer. Unfiltered headline figures
+      include it; filtered figures do not, and the filter bar shows a badge whenever that is the case.</div></div>`;
+
+  /* flagged calculation */
+  if (MISMATCHES.length) {
+    h += `<div class="sec card"><header><div><div class="ttl">Flagged for review — ledger amount vs stated rule</div>
+        <div class="sub">Identified while rebuilding this dashboard. Not silently corrected.</div></div></header>
+      <div class="tw"><table><thead><tr><th>Server</th><th>Day</th><th>Table</th><th>Adult AYCE</th><th>Tier</th>
+        <th>Rate</th><th>Rule amount</th><th>Stored amount</th><th>Difference</th></tr></thead><tbody>`;
+    MISMATCHES.forEach(m => {
+      h += `<tr><td>${esc(m.row.server)}</td><td>${DAY_LABEL[m.row.day]}</td><td>${esc(m.row.table)}</td>
+        <td>${m.row.adultAce}</td><td><span class="tag ${m.row.tier}">${TIER_LABEL[m.row.tier]}</span></td>
+        <td>${usd(RATES[m.row.tier])}</td><td><b>${usd(m.rule)}</b></td><td class="muted">${usd(m.stored)}</td>
+        <td class="neg">${usd(r2(m.stored - m.rule))}</td></tr>`;
+    });
+    const dSum = r2(MISMATCHES.reduce((a, m) => a + (m.stored - m.rule), 0));
+    h += `</tbody></table></div>
+      <div class="foot"><b>Effect:</b> this dashboard applies the stated rule (adult AYCE covers × tier rate) throughout, so the
+        weekend provisional total reads ${usd(r2(P.overall.conversion.commission - dSum))} rather than the
+        ${usd(P.overall.conversion.commission)} stored in the source extract — a difference of ${usd(dSum)}.
+        Confirm the correct adult cover count for the flagged table before any figure is used for pay.</div></div>`;
+  }
+
+  /* definitions */
+  h += `<div class="sec"><div class="sec-h"><h2>Definitions</h2>
+    <span class="d">Unchanged from the source extract</span></div>`;
+  const acc = [
+    ["AYCE mix", `<dl>
+      <dt>Cover mix</dt><dd>AYCE items rung ÷ guests seated, floor tables only. The pilot weekend is ${pct(P.overall.pilot.mixCovers)}
+        (${fmt(P.overall.pilot.aceCovers)} ÷ ${fmt(P.overall.pilot.guests)}).</dd>
+      <dt>Table mix</dt><dd>Tables that rang any AYCE item ÷ all tables — ${pct(P.overall.pilot.mixTables)}
+        (${P.overall.pilot.aceTables} ÷ ${P.overall.pilot.tables}).</dd>
+      <dt>Included</dt><dd>Pre-decided AYCE tables and unknown-intent tables both count toward mix.</dd>
+      <dt>Note</dt><dd>${q.aceCoversNeGuests} AYCE tables rang a number of AYCE items different from the seated guest count.
+        Mix uses items rung, so those tables are retained as-is.</dd></dl>`],
+    ["Conversion", `<dl>
+      <dt>Eligible</dt><dd>A table whose recorded intent at greeting was <b>undecided</b> or <b>a la carte</b>.
+        ${P.overall.conversion.eligibleTables} of ${P.overall.pilot.tables} weekend floor tables qualify.</dd>
+      <dt>Converted</dt><dd>An eligible table whose check contains AYCE tier items.</dd>
+      <dt>Table rate</dt><dd>converted ÷ eligible. Shown as “—” when a server has zero eligible tables.</dd>
+      <dt>Cover rate</dt><dd>guests seated at converted tables ÷ guests seated at eligible tables — seated counts, not items rung.</dd>
+      <dt>Excluded</dt><dd>Pre-decided AYCE (${P.overall.conversion.predecidedTables} tables) — the server did not convert them.
+        Unknown intent (${q.pilotIntentUnknown} tables) — no readable intent, so they cannot be scored either way.</dd></dl>`],
+    ["Commission rules", `<dl>
+      <dt>Rate</dt><dd>Classic ${usd(RATES.classic)} · Premium ${usd(RATES.premium)} · Royalty ${usd(RATES.royalty)},
+        per adult AYCE cover.</dd>
+      <dt>Basis</dt><dd>Adult AYCE items rung, not seated guest count.</dd>
+      <dt>Children</dt><dd>Children's AYCE covers earn no commission. They still count toward AYCE mix.</dd>
+      <dt>Pre-decided</dt><dd>Tables that arrived already intending AYCE earn no commission.</dd>
+      <dt>Status</dt><dd><b>Provisional.</b> Rates are unratified and no figure here is a payroll instruction.</dd></dl>`],
+    ["Baseline", `<dl>
+      <dt>Period</dt><dd>Jul 10–30, the three weekends before the pilot.</dd>
+      <dt>Basis</dt><dd>Toast-only AYCE cover mix — ${pct(P.overall.baseline3wk.mixCovers)} across
+        ${fmt(P.overall.baseline3wk.tables)} tables and ${fmt(P.overall.baseline3wk.guests)} guests.</dd>
+      <dt>Server qualification</dt><dd>A server's baseline is shown only with ≥15 baseline tables.
+        ${P.servers.filter(s => !s.q).length} server(s) fall short and display “n/q”.</dd>
+      <dt>Important limit</dt><dd>Intent was not recorded before the pilot, so <b>no conversion baseline exists</b>.
+        Only AYCE mix can be compared with prior weekends.</dd></dl>`],
+    ["Scope &amp; exclusions", `<dl>
+      <dt>Floor tables</dt><dd>Dine-in tables only. Bar tables 101–116 (${fmt(q.barExcluded)} orders) are excluded throughout.</dd>
+      <dt>Voids</dt><dd>${fmt(q.voided)} voided orders excluded.</dd>
+      <dt>Off-premise</dt><dd>${fmt(q.noTable)} orders with no table (takeout, delivery, online) excluded.</dd>
+      <dt>Large party</dt><dd>Six or more seated covers.</dd>
+      <dt>Revenue</dt><dd>Pre-tax food &amp; beverage. AYCE table revenue is the full F&amp;B total of tables that rang AYCE items.</dd>
+      <dt>Split checks</dt><dd>Aggregated to one record per table visit.</dd></dl>`],
+    ["Derived indicators added in this dashboard", `<dl>
+      <dt>Gap to average</dt><dd>eligible × (restaurant average conversion − server conversion) ÷ 100, floored at zero,
+        shown only for servers with ${LB_MIN_GAP}+ eligible tables. Pure arithmetic. It is <b>not</b> an employee evaluation
+        score and assumes nothing about why a table did not convert.</dd>
+      <dt>Sample indicator</dt><dd>Three bars at 15+ eligible tables, two at 8–14, one at 1–7. Describes sample size only.</dd>
+      <dt>Management summary</dt><dd>Generated from the figures by fixed conditional rules — no model or external service.
+        Lines tagged <b>Interpretation</b> are judgement, not measurement.</dd>
+      <dt>Everything else</dt><dd>Carried through from the source extract without recalculation while filters are at default.</dd></dl>`],
+    ["Data freshness &amp; access", `<dl>
+      <dt>Generated</dt><dd>${esc(P.generated)}</dd>
+      <dt>Pilot window</dt><dd>Fri Jul 31 – Sun Aug 2, 2026</dd>
+      <dt>Baseline window</dt><dd>Jul 10 – Jul 30, 2026</dd>
+      <dt>Refresh</dt><dd>Static export. Figures change only when a new extract is generated.</dd>
+      <dt>Passcode</dt><dd>A presentation gate only. It is embedded in this file and provides <b>no security</b> —
+        anyone with the file can read the data. Real protection needs server-side authentication.</dd>
+      <dt>Guest privacy</dt><dd>Guest names, reservation names and order identifiers have been removed from this file.</dd></dl>`],
+  ];
+  acc.forEach((a, i) => {
+    h += `<div class="acc"><button type="button" aria-expanded="${i === 0}" data-acc="${i}">
+      ${a[0]}<span class="ch">▶</span></button>
+      <div class="ab" id="ab${i}" ${i === 0 ? "" : "hidden"}>${a[1]}</div></div>`;
+  });
+  h += `</div>`;
+
+  wrap.innerHTML = h;
+  host.appendChild(wrap);
+  $$("[data-acc]", wrap).forEach(b => b.addEventListener("click", () => {
+    const body = $("#ab" + b.dataset.acc, wrap);
+    const open = b.getAttribute("aria-expanded") === "true";
+    b.setAttribute("aria-expanded", String(!open));
+    body.hidden = open;
+  }));
+  bindInfo(wrap);
+}
+
+/* ================================== SHELL ================================= */
+const PAGES = {
+  overview: { label: "Overview", icon: "◈", fn: pgOverview, title: "Pilot overview" },
+  servers: { label: "Server performance", icon: "◑", fn: pgServers, title: "Server performance" },
+  commission: { label: "Commission", icon: "◆", fn: pgCommission, title: "Commission ledger" },
+  method: { label: "Data & methodology", icon: "◇", fn: pgMethod, title: "Data & methodology" },
+};
+function renderNav() {
+  const n = $("#navlist");
+  n.innerHTML = "";
+  Object.keys(PAGES).forEach(k => {
+    const p = PAGES[k], b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = `<span class="ic">${p.icon}</span><span>${esc(p.label)}</span>`;
+    if (S.page === k) b.setAttribute("aria-current", "page");
+    b.addEventListener("click", () => setPage(k));
+    n.appendChild(b);
+  });
+}
+function setPage(k) {
+  S.page = k; S.openPop = null; persist();
+  $("#side").classList.remove("open");
+  render();
+  const c = $("#content"); if (c) c.scrollIntoView({ block: "start", behavior: reduced() ? "auto" : "smooth" });
+}
+function renderBody() {
+  const host = $("#content");
+  host.innerHTML = "";
+  host.className = "pg";
+  try {
+    PAGES[S.page].fn(host);
+  } catch (err) {
+    host.innerHTML = `<div class="errbox"><b>Something went wrong rendering this view.</b>
+      ${esc(err && err.message ? err.message : String(err))}</div>`;
+    if (window.console) console.error(err);
+  }
+}
+function render() {
+  renderNav();
+  $("#pgtitle").textContent = PAGES[S.page].title;
+  const mt = $("#mtitle"); if (mt) mt.textContent = PAGES[S.page].title;
+  renderFilters($("#filterbar"));
+  renderBody();
+}
+
+/* skeleton */
+function skeleton() {
+  $("#content").innerHTML = `<div class="skel skel-hero"></div><div class="skel skel-k"></div>
+    <div class="g2"><div class="skel skel-c"></div><div class="skel skel-c"></div></div>`;
+}
+
+/* theme */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  LS.set("theme", t);
+  const b = $("#themeLabel"); if (b) b.textContent = t === "dark" ? "Dark" : "Light";
+}
+function initTheme() {
+  const saved = LS.get("theme", null);
+  applyTheme(saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+}
+
+/* global listeners */
+document.addEventListener("click", () => { if (S.openPop) { S.openPop = null; render(); } });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if ($("#modal")) { closeModal(); return; }
+    if (S.server) { closeDrawer(); return; }
+    if (S.openPop) { S.openPop = null; render(); return; }
+    const sd = $("#side"); if (sd && sd.classList.contains("open")) sd.classList.remove("open");
+  }
+});
+addEventListener("scroll", () => { if (tip.style.display === "block") hideTip(); }, { passive: true });
+
+/* boot */
+function boot() {
+  initTheme();
+  restore();
+  $("#themeBtn").addEventListener("click", () => {
+    applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    render();
+  });
+  $("#menuBtn").addEventListener("click", e => { e.stopPropagation(); $("#side").classList.toggle("open"); });
+  $("#side").addEventListener("click", e => e.stopPropagation());
+  $("#genstamp").textContent = P.generated;
+  skeleton();
+  setTimeout(() => { S.ready = true; render(); }, 340);
+}
+
+/* debug / QA hooks — read-only entry points into the same code paths the UI uses */
+window.__ACE_RENDER__ = render;
+window.__ACE_OPEN__ = openServer;
+window.__ACE_CLOSE__ = closeDrawer;
+window.__ACE_CLOSEMODAL__ = closeModal;
+window.__ACE_PERSIST__ = persist;
+
+/* passcode gate — presentation only */
+const PASS = "ACE2026";
+function unlock() {
+  const v = $("#pw").value.trim();
+  if (v === PASS) {
+    $("#gate").style.display = "none";
+    $("#shell").style.visibility = "visible";
+    boot();
+  } else {
+    $("#gerr").textContent = "Incorrect passcode.";
+    $("#pw").select();
+  }
+}
+$("#gform").addEventListener("submit", e => { e.preventDefault(); unlock(); });
+$("#pw").focus();
+
+})();
+</script>
+</body>
+</html>
