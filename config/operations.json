@@ -1,0 +1,34 @@
+{
+  "_comment": "Operational configuration — areas included in food-cost/server metrics, service periods, matching tolerances. Edit here, not in code.",
+  "includedAreas": {
+    "_comment": "Allowlist. A check counts only if it has a table AND its service area (preferred) or revenue center is listed. Bar, takeout, delivery, online ordering are excluded by omission.",
+    "serviceAreaGuids": {
+      "f00f912c-6dfa-4dee-9487-7c85bb249172": "Dining Room",
+      "1b068c92-bf98-4155-a494-273eac8daa27": "Patio"
+    },
+    "revenueCenterGuids": {
+      "f0920112-b291-47e6-8d2b-86626d0d5329": "Dining Room",
+      "924bbacc-68b0-4fe1-9548-90107053992f": "Patio"
+    }
+  },
+  "servicePeriods": {
+    "_comment": "Toast does not expose a reliable daypart on orders; these configurable defaults apply (local restaurant time). Lunch: before cutoff; Dinner: cutoff and later.",
+    "timezone": "America/New_York",
+    "lunchBeforeHour": 16
+  },
+  "baseline": {
+    "_comment": "Food-cost baseline: same weekday + same service period across the prior N weeks, weighted by dollars.",
+    "weeks": 4
+  },
+  "opentableMatch": {
+    "timeToleranceMinutes": 90,
+    "partySizeTolerance": 2
+  },
+  "commission": {
+    "_comment": "Per CONVERTED COVER, not per table. Active only in the pilot window; program currently inactive.",
+    "ratesPerCover": { "classic": 5, "premium": 7.5, "royalty": 10 },
+    "activeFrom": "20260731",
+    "activeTo": "20260802",
+    "programActive": false
+  }
+}
