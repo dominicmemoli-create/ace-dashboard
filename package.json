@@ -9,7 +9,8 @@
     "ingest:toast": "node scripts/ingest-toast.mjs",
     "import:costs": "node scripts/import-costs.mjs",
     "build:metrics": "node scripts/build-metrics.mjs",
-    "serve": "npx serve ."
+    "serve": "npx serve .",
+    "import:opentable": "node scripts/import-opentable.mjs"
   },
   "devDependencies": {
     "vitest": "^3.0.0",

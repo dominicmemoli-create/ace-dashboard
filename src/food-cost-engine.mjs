@@ -304,6 +304,67 @@ export function commissionEligible(table) {
 //   ayce_food_cost% = round cost ÷ entitlement net revenue
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Operational scope: included areas, service periods, comparable baselines.
+// ---------------------------------------------------------------------------
+
+/** A check is in management scope only when it sits at a table in an
+ * allowlisted dining area (dining room / patio). Bar, takeout, delivery and
+ * anything without a recognized floor/patio table are excluded. */
+export function isIncludedCheck(check, opsConfig) {
+  if (!check.tableGuid || check.voided) return false;
+  const areas = opsConfig.includedAreas;
+  if (check.serviceAreaGuid) return check.serviceAreaGuid in areas.serviceAreaGuids;
+  if (check.revenueCenterGuid) return check.revenueCenterGuid in areas.revenueCenterGuids;
+  return false;
+}
+
+/** Local-time hour in the configured restaurant timezone. */
+export function localHour(isoTimestamp, timezone) {
+  const h = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: false })
+    .format(new Date(isoTimestamp));
+  return Number(h) % 24;
+}
+
+/** 'lunch' before the configured cutoff hour, else 'dinner'. */
+export function servicePeriodOf(check, opsConfig) {
+  const sp = opsConfig.servicePeriods;
+  const ts = check.openedDate ?? check.closedDate;
+  if (!ts) return 'dinner';
+  return localHour(ts, sp.timezone) < sp.lunchBeforeHour ? 'lunch' : 'dinner';
+}
+
+export function weekdayOf(yyyymmdd) {
+  const s = String(yyyymmdd);
+  return new Date(Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8))).getUTCDay();
+}
+
+/**
+ * Comparable baseline dates: for each selected date, the prior `weeks`
+ * same-weekday dates that exist in `availableDates`. The selected dates are
+ * NEVER part of their own baseline. Returns { dates: sorted unique list,
+ * requestedPerDate, foundPerDate } so the UI can disclose partial baselines.
+ */
+export function comparableBaselineDates(selectedDates, availableDates, weeks = 4) {
+  const avail = new Set(availableDates.map(String));
+  const selected = new Set(selectedDates.map(String));
+  const out = new Set();
+  const perDate = {};
+  for (const sel of selected) {
+    const wanted = [];
+    const d = new Date(Date.UTC(+sel.slice(0, 4), +sel.slice(4, 6) - 1, +sel.slice(6, 8)));
+    for (let w = 1; w <= weeks; w++) {
+      const prior = new Date(d);
+      prior.setUTCDate(prior.getUTCDate() - 7 * w);
+      const key = prior.toISOString().slice(0, 10).replace(/-/g, '');
+      wanted.push(key);
+      if (avail.has(key) && !selected.has(key)) out.add(key);
+    }
+    perDate[sel] = { requested: wanted, found: wanted.filter((k) => avail.has(k) && !selected.has(k)) };
+  }
+  return { dates: [...out].sort(), perDate };
+}
+
 export const AYCE_ENTITLEMENT_RE = /PER PERSON|\(kids\)/i;
 const ZERO_NET = 0.01; // rung-at-zero tolerance
 
