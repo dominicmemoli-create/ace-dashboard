@@ -292,3 +292,50 @@ export function conversionStats(tables) {
 export function commissionEligible(table) {
   return isConversionEligible(table.intent) && Boolean(table.hasAyceSales) && !table.ambiguousMatch;
 }
+
+// ---------------------------------------------------------------------------
+// AYCE program scope — the tracked food-cost universe.
+// Management tracks ONLY: AYCE tables, and the items rung at $0 as AYCE rounds.
+// À-la-carte priced items (including Royal Feast trays sold at menu price) are
+// out of scope even when they appear on an AYCE check.
+//   AYCE check      = a check containing an AYCE entitlement selection
+//   revenue basis   = entitlement net (the per-person AYCE price)
+//   cost basis      = zero-priced Food-category selections on AYCE checks
+//   ayce_food_cost% = round cost ÷ entitlement net revenue
+// ---------------------------------------------------------------------------
+
+export const AYCE_ENTITLEMENT_RE = /PER PERSON|\(kids\)/i;
+const ZERO_NET = 0.01; // rung-at-zero tolerance
+
+export function isAyceEntitlement(sel) {
+  return AYCE_ENTITLEMENT_RE.test(sel.itemName ?? '');
+}
+
+/**
+ * Filter to the AYCE program universe.
+ * Returns { selections, checks, entitlementNet, entitlementCovers } where
+ * selections = entitlement rows (revenue) + zero-priced Food rounds (cost).
+ */
+export function filterAyceProgram(selections, checks, reference) {
+  const catNames = new Map((reference.salesCategories ?? []).map((c) => [c.guid, c.name]));
+  const ayceCheckGuids = new Set(
+    selections.filter((s) => !s.voided && isAyceEntitlement(s)).map((s) => s.checkGuid));
+  const outChecks = checks.filter((c) => ayceCheckGuids.has(c.checkGuid));
+  const outSelections = [];
+  let entitlementNet = 0, entitlementCovers = 0;
+  for (const s of selections) {
+    if (!ayceCheckGuids.has(s.checkGuid)) continue;
+    if (s.voided) continue;
+    if (isAyceEntitlement(s)) {
+      outSelections.push(s);
+      entitlementNet += selectionNet(s);
+      entitlementCovers += s.quantity ?? 0;
+      continue;
+    }
+    // zero-priced rounds only; à-la-carte priced add-ons are out of tracked scope
+    if ((s.net ?? 0) <= ZERO_NET && (s.gross ?? 0) <= ZERO_NET && catNames.get(s.salesCategoryGuid) === 'Food') {
+      outSelections.push(s);
+    }
+  }
+  return { selections: outSelections, checks: outChecks, entitlementNet, entitlementCovers };
+}

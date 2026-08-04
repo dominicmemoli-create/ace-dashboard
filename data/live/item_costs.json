@@ -1,11 +1,11 @@
 [
   {
     "id": "cost-jumbotron-20260601",
-    "toastItemGuid": "3f62d1cb-c5eb-407d-9437-9ddc2de42d24",
+    "toastItemGuid": "f5f6c8c9-6d79-435d-8707-5a573bbfcb6f",
     "toastSelectionGuid": null,
     "canonicalName": "Jumbotron",
     "aliases": [
-      "FULL HOUSE"
+      "Jumbotron Oysters"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 15,
@@ -14,8 +14,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -33,8 +33,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -52,8 +52,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -69,8 +69,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -79,7 +79,8 @@
     "toastSelectionGuid": null,
     "canonicalName": "King Crab",
     "aliases": [
-      "KING CRAB LEGS"
+      "KING CRAB LEGS",
+      "AYCE KING CRAB LEG (1 leg)"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 30,
@@ -88,16 +89,18 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-blue-crabs-2-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "7b22bdbc-eb6e-4259-95d8-5d46e9d1f225",
     "toastSelectionGuid": null,
     "canonicalName": "Blue Crabs (2)",
-    "aliases": [],
+    "aliases": [
+      "Blue Crabs (AYCE 2)"
+    ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 12,
     "effectiveFrom": "20260601",
@@ -105,8 +108,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -124,8 +127,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -143,17 +146,17 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-surf-and-turf-20260601",
-    "toastItemGuid": "84343351-f3f9-443e-b440-9eba32e1dcf3",
+    "toastItemGuid": "a0221ed0-d2a0-472c-beb4-e0779c0f1040",
     "toastSelectionGuid": null,
     "canonicalName": "Surf and Turf",
     "aliases": [
-      "ROYAL SURF N' TURF (BoneIn Ribeye, King Prawns, Hokkaido Scallops)"
+      "ROYAL SURF N' TURF (AYCE - 20oz)"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 35,
@@ -162,8 +165,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -181,8 +184,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -200,8 +203,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -220,8 +223,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -240,18 +243,19 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-scallops-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "7d758db8-9e1f-46e7-9c9e-9c8d4741bb56",
     "toastSelectionGuid": null,
     "canonicalName": "Scallops",
     "aliases": [
       "Hokkaido Scallops",
-      "HOKKAIDO SCALLOPS"
+      "HOKKAIDO SCALLOPS",
+      "3 pc Scallops"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 8,
@@ -260,18 +264,19 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-king-prawn-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "4cc2991c-136e-43d3-b08f-098245b050d8",
     "toastSelectionGuid": null,
     "canonicalName": "King Prawn",
     "aliases": [
       "KING PRAWNS",
-      "King Prawns"
+      "King Prawns",
+      "AUS KING PRAWNS"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 12,
@@ -280,8 +285,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -301,8 +306,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -320,8 +325,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -339,8 +344,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -360,8 +365,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -380,17 +385,18 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-8-oz-ribeye-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "190e3c67-90f2-4dce-88f2-e9101f392ef4",
     "toastSelectionGuid": null,
     "canonicalName": "8 oz Ribeye",
     "aliases": [
-      "8 oz RIBEYE"
+      "8 oz RIBEYE",
+      "AYCE RIBEYE (8oz)"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 10,
@@ -399,8 +405,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -418,8 +424,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -437,8 +443,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -456,8 +462,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -475,17 +481,18 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-crudo-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "9657228c-ecdd-4bd9-bec8-1e8c5d3c2484",
     "toastSelectionGuid": null,
     "canonicalName": "Crudo",
     "aliases": [
-      "Crudo"
+      "Crudo",
+      "Hamachi Crudo"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 2.5,
@@ -494,8 +501,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -513,8 +520,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -532,8 +539,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -551,8 +558,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -570,8 +577,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -580,7 +587,8 @@
     "toastSelectionGuid": null,
     "canonicalName": "Blackend Wings",
     "aliases": [
-      "Vietnamese Cajun Wings"
+      "Vietnamese Cajun Wings",
+      "Blackened Wings"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 2,
@@ -589,8 +597,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -609,8 +617,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -628,8 +636,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -647,8 +655,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -666,8 +674,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -685,8 +693,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -704,8 +712,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -723,8 +731,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -743,18 +751,19 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-clam-chowder-s-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "77bda1b1-60ac-4fbf-aa06-5fa61be87777",
     "toastSelectionGuid": null,
     "canonicalName": "Clam Chowder (s)",
     "aliases": [
       "Clam Chowder (Cup)",
-      "Clam Chowder (s)"
+      "Clam Chowder (s)",
+      "Clam Chowder CUP (SMALL)"
     ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 2,
@@ -763,8 +772,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -783,8 +792,8 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -802,16 +811,27 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
     "id": "cost-sides-desserts-sauce-20260601",
-    "toastItemGuid": null,
+    "toastItemGuid": "5a026bfb-da3e-476d-84f4-902aff3aa2a0",
     "toastSelectionGuid": null,
     "canonicalName": "Sides/Desserts/Sauce",
-    "aliases": [],
+    "aliases": [
+      "FRIED CHEESECAKE",
+      "SEASONAL BERRY CHEESECAKE",
+      "BEIGNETS",
+      "Vanilla Ice Cream",
+      "MAC & CHEESE",
+      "CAJUN FRIES",
+      "SOUTHERN HUSH PUPPIES",
+      "BRUSSELS SPROUTS",
+      "Boiled Egg (2)",
+      "Jasmine Rice"
+    ],
     "portion": "per recorded Toast selection quantity",
     "costPerUnit": 2,
     "effectiveFrom": "20260601",
@@ -819,8 +839,569 @@
     "source": "rough_workbook",
     "verification": "unverified",
     "notes": "ROUGH estimate from management workbook — not chef-verified",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-classic-oh-dang-prepmod",
+    "toastItemGuid": "ca69a539-0d1a-4d12-b48c-646baada5eb2",
+    "toastSelectionGuid": null,
+    "canonicalName": "Classic Oh Dang!",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-classic-garlic-butter-prepmod",
+    "toastItemGuid": "fc2df8ac-bd77-4932-b59f-9a97b8c8f501",
+    "toastSelectionGuid": null,
+    "canonicalName": "Classic Garlic Butter",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-classic-cajun-prepmod",
+    "toastItemGuid": "239f5f5a-1c9e-400b-9824-0f460fa3f811",
+    "toastSelectionGuid": null,
+    "canonicalName": "Classic Cajun",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-maryland-style-old-bay-butter-prepmod",
+    "toastItemGuid": "213dafb6-c247-477b-97f2-b464fedcb81e",
+    "toastSelectionGuid": null,
+    "canonicalName": "Maryland Style (Old Bay & Butter)",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-lemon-garlic-prepmod",
+    "toastItemGuid": "544134be-e159-4aae-a91d-080249bc9570",
+    "toastSelectionGuid": null,
+    "canonicalName": "Lemon Garlic",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-thai-coconut-dairy-free-prepmod",
+    "toastItemGuid": "b108a6ce-7abe-4a3a-8ab1-da4f65012863",
+    "toastSelectionGuid": null,
+    "canonicalName": "Thai Coconut (Dairy-Free)",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-bayou-mambo-prepmod",
+    "toastItemGuid": "b17e2338-83ed-44ae-9d5a-023cdda84e34",
+    "toastSelectionGuid": null,
+    "canonicalName": "Bayou Mambo",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-extra-side-sauce-prepmod",
+    "toastItemGuid": "ee1f0b57-9be6-4294-963a-736e66a80acc",
+    "toastSelectionGuid": null,
+    "canonicalName": "Extra Side Sauce",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-extra-side-sauce-hosp-prepmod",
+    "toastItemGuid": "c56a27fd-1f93-4960-af78-87f436afba64",
+    "toastSelectionGuid": null,
+    "canonicalName": "Extra Side Sauce Hosp",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-medium-prepmod",
+    "toastItemGuid": "f1af1b8c-a955-4b61-867e-c3136499389e",
+    "toastSelectionGuid": null,
+    "canonicalName": "Medium",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-mild-prepmod",
+    "toastItemGuid": "ec9147bc-631f-4d24-801f-c55b794a81d5",
+    "toastSelectionGuid": null,
+    "canonicalName": "Mild",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-hot-prepmod",
+    "toastItemGuid": "d6fb4b54-57a1-4dbc-861c-ec11d29c3662",
+    "toastSelectionGuid": null,
+    "canonicalName": "Hot",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-extra-hot-prepmod",
+    "toastItemGuid": "35ccf425-cee1-4cd1-a630-ec139c49760d",
+    "toastSelectionGuid": null,
+    "canonicalName": "Extra Hot",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-non-spicy-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "Non Spicy",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-sauce-prepmod",
+    "toastItemGuid": "a283426c-b890-451e-894a-a69b3cb6fc35",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Sauce",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-sauce-no-heat-prepmod",
+    "toastItemGuid": "4213bfd1-e26a-477b-8913-9d9662e5c047",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Sauce No Heat",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-medium-well-prepmod",
+    "toastItemGuid": "b15373cc-7432-4caa-aa00-94767f3b780f",
+    "toastSelectionGuid": null,
+    "canonicalName": "Medium Well",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-med-rare-prepmod",
+    "toastItemGuid": "c4dc6d18-aab6-40d4-a184-174811d816f1",
+    "toastSelectionGuid": null,
+    "canonicalName": "Med Rare",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-medium-rare-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "Medium Rare",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-well-done-prepmod",
+    "toastItemGuid": "8aa1ecb3-d195-42f3-9838-1e23321c3350",
+    "toastSelectionGuid": null,
+    "canonicalName": "Well done",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-well-done-prepmod",
+    "toastItemGuid": "8aa1ecb3-d195-42f3-9838-1e23321c3350",
+    "toastSelectionGuid": null,
+    "canonicalName": "Well Done",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-rare-prepmod",
+    "toastItemGuid": "dc1fc19c-b755-4f7f-b3e9-b3dbfa813796",
+    "toastSelectionGuid": null,
+    "canonicalName": "Rare",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-corn-no-potato-prepmod",
+    "toastItemGuid": "c729f463-9aaf-477f-86a7-838a26730a30",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Corn, No Potato",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-corn-no-potato-prepmod",
+    "toastItemGuid": "c729f463-9aaf-477f-86a7-838a26730a30",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Corn No Potato",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-corn-prepmod",
+    "toastItemGuid": "87e73b13-4093-410d-b667-18c7037f8fa5",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Corn",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-potato-prepmod",
+    "toastItemGuid": "3c6ffc0a-4992-48a0-8d13-fc7bbcd67615",
+    "toastSelectionGuid": null,
+    "canonicalName": "No Potato",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-potatoes-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "No Potatoes",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-sides-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "No Sides",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-fries-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "No Fries",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-no-bread-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "No Bread",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-2-pieces-prepmod",
+    "toastItemGuid": "0011323b-0142-401e-af4e-51a53f2df165",
+    "toastSelectionGuid": null,
+    "canonicalName": "2 Pieces",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-3-pieces-prepmod",
+    "toastItemGuid": "38c98854-ced8-4822-bca3-e5caf6da27aa",
+    "toastSelectionGuid": null,
+    "canonicalName": "3 Pieces",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
+    "updatedBy": "import-script"
+  },
+  {
+    "id": "cost-same-plate-prepmod",
+    "toastItemGuid": null,
+    "toastSelectionGuid": null,
+    "canonicalName": "Same Plate",
+    "aliases": [],
+    "portion": "preparation modifier",
+    "costPerUnit": 0,
+    "effectiveFrom": "20260601",
+    "effectiveTo": null,
+    "source": "manual",
+    "verification": "verified",
+    "notes": "Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -836,8 +1417,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -853,8 +1434,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -870,8 +1451,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -887,8 +1468,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -904,8 +1485,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   },
   {
@@ -921,8 +1502,8 @@
     "source": "manual",
     "verification": "verified",
     "notes": "AYCE entitlement item — food cost flows through the individual AYCE round selections ordered by the table. Direct cost is $0 by design.",
-    "createdAt": "2026-08-04T19:15:06.935Z",
-    "updatedAt": "2026-08-04T19:15:06.935Z",
+    "createdAt": "2026-08-04T19:49:21.417Z",
+    "updatedAt": "2026-08-04T19:49:21.417Z",
     "updatedBy": "import-script"
   }
 ]

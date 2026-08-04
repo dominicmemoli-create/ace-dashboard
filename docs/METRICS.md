@@ -1,6 +1,30 @@
 # Metric definitions (binding)
 
-## Food cost
+## AYCE program food cost — the tracked metric (default view)
+
+Management tracks food cost for **AYCE tables and the items rung at $0 as AYCE
+rounds** — nothing else. À-la-carte items, including Royal Feast trays sold at menu
+price, are priced individually and sit **outside** the tracked program metric.
+
+| Term | Definition |
+|---|---|
+| AYCE check | A check containing an AYCE entitlement selection (`CLASSIC/PREMIUM/ROYALTY PER PERSON`, kids tiers) |
+| Entitlement revenue | Net revenue of the entitlement selections (the per-person AYCE price) |
+| AYCE round | A **$0-rung**, Food-category selection on an AYCE check |
+| AYCE food cost $ | Σ (round quantity × effective unit cost) |
+| **AYCE food cost %** | AYCE food cost $ ÷ entitlement revenue |
+| Cost per AYCE cover | AYCE food cost $ ÷ entitlement covers |
+| Round coverage | % of round **quantity** with a costed item (rounds have no revenue, so coverage is judged on quantity) |
+
+Preparation modifiers (spice level, sauce choice, steak temperature, omissions like
+"No Corn, No Potato") carry an explicit $0 — their cost is inside the item costs.
+Priced add-ons on an AYCE check (a $30 à-la-carte lobster, a Royal Feast tray) are
+excluded from both sides of the program metric.
+
+An **All food (context)** scope remains available on the page for the blended view;
+everything below applies to that mode.
+
+## Food cost (all-food context mode)
 
 | Term | Definition |
 |---|---|

@@ -12,7 +12,7 @@
    ========================================================================== */
 import {
   computeFoodCost, weightedBaselinePct, classifyVariance, DEFAULT_THRESHOLDS,
-  normalizeName,
+  normalizeName, filterAyceProgram,
 } from './food-cost-engine.mjs';
 
 const APP = window.__ACE_APP__;
@@ -131,7 +131,7 @@ const FC_KEY = 'ace.fcSettings';
 function fcSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(FC_KEY) || '{}'); } catch { /* defaults */ }
-  return { ...DEFAULT_THRESHOLDS, ...s };
+  return { ...DEFAULT_THRESHOLDS, scope: 'ayce', ...s };
 }
 function saveFcSettings(next) {
   localStorage.setItem(FC_KEY, JSON.stringify(next));
@@ -194,14 +194,22 @@ function pgFoodCost(host) {
 
 function renderFoodCost(host) {
   const th = fcSettings();
-  const scope = scopedData();
-  const whole = { // baseline universe: full available period, floor only
+  const isAyce = th.scope !== 'all';
+  let scope = scopedData();
+  let whole = { // baseline universe: full available period, floor only
     selections: DATA.selections.filter((s) => {
       const c = CHK().get(s.checkGuid);
       return c && c.tableGuid && !c.voided;
     }),
     checks: DATA.checks.filter((c) => c.tableGuid && !c.voided),
   };
+  let ayceScope = null, ayceWhole = null;
+  if (isAyce) {
+    ayceScope = filterAyceProgram(scope.selections, scope.checks, DATA.reference);
+    ayceWhole = filterAyceProgram(whole.selections, whole.checks, DATA.reference);
+    scope = { selections: ayceScope.selections, checks: ayceScope.checks };
+    whole = { selections: ayceWhole.selections, checks: ayceWhole.checks };
+  }
   const rScope = computeFoodCost(scope.selections, scope.checks, DATA.reference, DATA.costs, { thresholds: th });
   const rBase = computeFoodCost(whole.selections, whole.checks, DATA.reference, DATA.costs, { thresholds: th });
   const basePct = weightedBaselinePct(rBase.total);
@@ -219,30 +227,45 @@ function renderFoodCost(host) {
     if (g) legacyByGuid.set(g, SRV[name]);
   }
 
+  const coverCost = isAyce && ayceScope.entitlementCovers > 0 ? rScope.total.foodCostDollars / ayceScope.entitlementCovers : null;
+  const coverRev = isAyce && ayceScope.entitlementCovers > 0 ? ayceScope.entitlementNet / ayceScope.entitlementCovers : null;
   let h = `
   <section class="hero rise" aria-label="Food cost">
     <div class="hero-top">
       <div class="hero-verdict">
-        <div class="hero-eyebrow">Estimated food cost
+        <div class="hero-eyebrow">${isAyce ? 'AYCE program food cost' : 'Estimated food cost — all food'}
           <span class="verdict-badge ${roughShare.roughPct > 0 ? 'neu' : 'pos'}">${roughShare.roughPct > 0 ? 'PROVISIONAL COSTS' : 'CHEF-CONFIRMED'}</span></div>
         <div class="hero-delta">
           <span class="big">${pct(scopePct)}</span>
-          <span class="unit">of eligible net food revenue<br>in the current selection</span></div>
-        <div class="hero-line">Estimated <b>${usd0(rScope.total.foodCostDollars)}</b> food cost on
-          <b>${usd0(rScope.total.eligibleNetFoodRevenue)}</b> eligible net food revenue ·
-          baseline <b>${pct(basePct)}</b> (weighted, full period) ·
-          variance <b>${variance == null ? '—' : sgn(variance) + ' pts'}</b>.</div>
+          <span class="unit">${isAyce ? 'of AYCE entitlement revenue<br>(the tracked program metric)' : 'of eligible net food revenue<br>in the current selection'}</span></div>
+        <div class="hero-line">${isAyce
+          ? `<b>${usd0(rScope.total.foodCostDollars)}</b> estimated cost of $0-rung AYCE rounds on
+             <b>${fmt(ayceScope.checks.length)}</b> AYCE checks · <b>${usd0(ayceScope.entitlementNet)}</b> entitlement revenue ·
+             <b>${fmt(Math.round(ayceScope.entitlementCovers))}</b> covers · baseline <b>${pct(basePct)}</b> ·
+             variance <b>${variance == null ? '—' : sgn(variance) + ' pts'}</b>.`
+          : `Estimated <b>${usd0(rScope.total.foodCostDollars)}</b> food cost on
+             <b>${usd0(rScope.total.eligibleNetFoodRevenue)}</b> eligible net food revenue ·
+             baseline <b>${pct(basePct)}</b> (weighted, full period) ·
+             variance <b>${variance == null ? '—' : sgn(variance) + ' pts'}</b>.`}</div>
       </div>
       <div class="hero-rail">
+        ${isAyce ? `
+        <div class="hr-cell"><div class="k">Est. cost per AYCE cover</div>
+          <div class="v">${coverCost == null ? '—' : usd(coverCost)}</div>
+          <div class="m">vs ${coverRev == null ? '—' : usd(coverRev)} collected per cover</div></div>
+        <div class="hr-cell"><div class="k">Round coverage (qty)</div>
+          <div class="v">${pct(cov.qtyPct)}</div>
+          <div class="m">of round quantity has a costed item</div></div>`
+        : `
         <div class="hr-cell"><div class="k">Cost-mapping coverage</div>
           <div class="v">${pct(cov.netPct)}</div>
           <div class="m">of food revenue has a costed item</div></div>
-        <div class="hr-cell"><div class="k">Unmatched items</div>
-          <div class="v ${rScope.total.unmatchedItemCount ? 'down' : ''}">${fmt(rScope.total.unmatchedItemCount)}</div>
-          <div class="m">${usd0(rScope.total.unmatchedNet)} revenue not yet costed</div></div>
         <div class="hr-cell"><div class="k">Checks affected</div>
           <div class="v">${fmt(rScope.total.checksAffectedByUnmatched)}</div>
-          <div class="m">contain ≥1 uncosted item</div></div>
+          <div class="m">contain ≥1 uncosted item</div></div>`}
+        <div class="hr-cell"><div class="k">Unmatched items</div>
+          <div class="v ${rScope.total.unmatchedItemCount ? 'down' : ''}">${fmt(rScope.total.unmatchedItemCount)}</div>
+          <div class="m">${isAyce ? `${fmt(Math.round(rScope.total.unmatchedQty))} rounds not yet costed` : `${usd0(rScope.total.unmatchedNet)} revenue not yet costed`}</div></div>
         <div class="hr-cell"><div class="k">Cost basis</div>
           <div class="v">${pct(roughShare.roughPct, 0)}</div>
           <div class="m">of cost dollars from ROUGH workbook values</div></div>
@@ -250,13 +273,16 @@ function renderFoodCost(host) {
     </div>
     <div class="hero-summary">
       <div class="sh">What this is — and is not</div>
-      <p>Estimated food cost from recorded Toast item selections × the item-cost master.
-      It reflects what the kitchen sent to tables per the POS — <b>it is not a waste or
-      inventory measure, and it does not imply a server caused kitchen cost</b>.
+      <p>${isAyce
+        ? `The tracked metric: cost of everything rung <b>at $0 as an AYCE round</b> on AYCE tables,
+           against the per-person AYCE price those tables paid. À-la-carte items — including Royal
+           Feast trays sold at menu price — are priced individually and sit outside this program metric
+           (switch scope below for the all-food view).`
+        : `Estimated food cost from recorded Toast item selections × the item-cost master across ALL food sales.`}
+      It reflects what the kitchen sent per the POS — <b>it is not a waste or inventory measure, and it
+      does not imply a server caused kitchen cost</b>.
       ${roughShare.roughPct > 0 ? `Costs marked <b>rough</b> come from the management workbook and are
-      unverified; the chef's confirmed costs replace them by data import with full effective-date history.` : ''}
-      Revenue basis excludes tax, tips, service charges, gift cards, voided items and
-      non-food categories; discounts reduce revenue at net.</p>
+      unverified; the chef's confirmed costs replace them by data import with full effective-date history.` : ''}</p>
     </div>
   </section>`;
 
@@ -266,6 +292,11 @@ function renderFoodCost(host) {
       <div class="sub">Watch ≥ ${th.watchPts} pts over baseline · Critical ≥ ${th.criticalPts} pts ·
         suppressed under ${th.minChecks} checks or ${usd0(th.minNetFoodSales)} net food sales or ${th.minCoveragePct}% cost coverage.</div></div></header>
     <div class="body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:end">
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-3)">Scope
+        <select id="fcScope" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--bg-1);color:var(--ink-1)">
+          <option value="ayce" ${isAyce ? 'selected' : ''}>AYCE program (tracked)</option>
+          <option value="all" ${isAyce ? '' : 'selected'}>All food (context)</option>
+        </select></label>
       ${numInput('fcWatch', 'Watch (pts over)', th.watchPts)}
       ${numInput('fcCrit', 'Critical (pts over)', th.criticalPts)}
       ${numInput('fcMinChecks', 'Min checks', th.minChecks)}
@@ -278,9 +309,15 @@ function renderFoodCost(host) {
   const rows = [...rScope.perServer.entries()].map(([guid, b]) => {
     const name = emp.get(guid) ?? '(unattributed)';
     const fcPct = b.eligibleNetFoodRevenue > 0 ? (b.foodCostDollars / b.eligibleNetFoodRevenue) * 100 : null;
-    const cls = classifyVariance(b, basePct, th);
+    let cls = classifyVariance(b, basePct, th);
+    // AYCE mode: rounds carry $0 net, so coverage fairness is judged on QUANTITY
+    const qtyCov = b.totalQty > 0 ? (b.matchedQty / b.totalQty) * 100 : null;
+    if (isAyce && cls.status !== 'insufficient_sample' && qtyCov != null && qtyCov < th.minCoveragePct) {
+      cls = { status: 'insufficient_coverage', variancePts: null };
+    }
     const legacy = legacyByGuid.get(guid);
-    const covPct = b.eligibleNetFoodRevenue > 0 ? (b.matchedNet / b.eligibleNetFoodRevenue) * 100 : null;
+    const covPct = isAyce ? qtyCov
+      : (b.eligibleNetFoodRevenue > 0 ? (b.matchedNet / b.eligibleNetFoodRevenue) * 100 : null);
     return {
       name, guid, checks: b.checks.size, net: b.eligibleNetFoodRevenue, cost: b.foodCostDollars,
       fcPct, covPct, status: cls.status, variance: cls.variancePts,
@@ -344,11 +381,12 @@ function renderFoodCost(host) {
   /* unmatched queue */
   h += `<div class="card sec"><header><div>
       <div class="ttl">Unmatched-item review queue (${fmt(rScope.unmatchedQueue.length)})</div>
-      <div class="sub">Items with recorded sales but no cost record. They are excluded from cost dollars —
-      never assigned $0 — so the true food-cost % is understated until they are costed.</div></div></header>
+      <div class="sub">${isAyce
+        ? 'AYCE rounds with no cost record — the chef punch list. They are excluded from cost dollars (never assigned $0), so the true AYCE food-cost % is understated until they are costed.'
+        : 'Items with recorded sales but no cost record. They are excluded from cost dollars — never assigned $0 — so the true food-cost % is understated until they are costed.'}</div></div></header>
     <div class="body" style="overflow-x:auto"><table class="tb" style="width:100%;font-size:13px;border-collapse:collapse">
       <thead><tr><th style="text-align:left">Item (as rung in Toast)</th><th>Qty</th><th>Net revenue</th><th>Checks</th></tr></thead><tbody>
-      ${rScope.unmatchedQueue.slice(0, 25).map((u) => `<tr style="border-top:1px solid var(--border-2)">
+      ${[...rScope.unmatchedQueue].sort((a, b) => isAyce ? b.qty - a.qty : b.net - a.net).slice(0, 25).map((u) => `<tr style="border-top:1px solid var(--border-2)">
         <td style="text-align:left;padding:4px 8px">${esc(u.name)}</td>
         <td style="text-align:right">${fmt(Math.round(u.qty))}</td>
         <td style="text-align:right">${usd0(u.net)}</td>
@@ -400,6 +438,7 @@ function renderFoodCost(host) {
 
   document.getElementById('fcApply')?.addEventListener('click', () => {
     const next = {
+      scope: document.getElementById('fcScope')?.value === 'all' ? 'all' : 'ayce',
       watchPts: numVal('fcWatch', th.watchPts),
       criticalPts: numVal('fcCrit', th.criticalPts),
       minChecks: numVal('fcMinChecks', th.minChecks),

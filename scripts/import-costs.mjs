@@ -94,8 +94,45 @@ const AYCE_PROGRAM_ITEMS = [
   'CLASSIC (kids)', 'PREMIUM (kids)', 'ROYALTY (kids)',
 ];
 
+// Preparation modifiers rung at $0 on AYCE checks: spice level, sauce choice,
+// steak temperature, omissions, plating counts. Their cost is carried inside the
+// item costs (a boil's sauce is part of the boil) — explicit $0, documented,
+// so they never pollute the unmatched review queue.
+const PREP_MODIFIER_ITEMS = [
+  'Classic Oh Dang!', 'Classic Garlic Butter', 'Classic Cajun',
+  'Maryland Style (Old Bay & Butter)', 'Lemon Garlic', 'Thai Coconut (Dairy-Free)',
+  'Bayou Mambo', 'Extra Side Sauce', 'Extra Side Sauce Hosp',
+  'Medium', 'Mild', 'Hot', 'Extra Hot', 'Non Spicy',
+  'No Sauce', 'No Sauce No Heat',
+  'Medium Well', 'Med Rare', 'Medium Rare', 'Well done', 'Well Done', 'Rare',
+  'No Corn, No Potato', 'No Corn No Potato', 'No Corn', 'No Potato', 'No Potatoes',
+  'No Sides', 'No Fries', 'No Bread',
+  '2 Pieces', '3 Pieces', 'Same Plate',
+];
+
 function ensureAyceProgramRecords(existing, nameToGuid, now) {
   let added = 0;
+  for (const name of PREP_MODIFIER_ITEMS) {
+    if (existing.some((r) => r.canonicalName === name && r.effectiveTo === null)) continue;
+    existing.push({
+      id: `cost-${normalizeName(name).replace(/ /g, '-')}-prepmod`,
+      toastItemGuid: nameToGuid.get(normalizeName(name)) ?? null,
+      toastSelectionGuid: null,
+      canonicalName: name,
+      aliases: [],
+      portion: 'preparation modifier',
+      costPerUnit: 0,
+      effectiveFrom: '20260601',
+      effectiveTo: null,
+      source: 'manual',
+      verification: 'verified',
+      notes: 'Preparation/heat/omission modifier — cost is carried in the item costs. $0 by design.',
+      createdAt: now,
+      updatedAt: now,
+      updatedBy: 'import-script',
+    });
+    added++;
+  }
   for (const name of AYCE_PROGRAM_ITEMS) {
     if (existing.some((r) => r.canonicalName === name && r.effectiveTo === null)) continue;
     existing.push({

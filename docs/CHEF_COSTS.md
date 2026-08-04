@@ -18,9 +18,15 @@ WDT,10.40,per Whole Dang Thang,
 - `canonical_name`: the name from the food-cost workbook (left column). New items are
   welcome — use the menu name.
 - `cost`: dollars to the cent, your plate cost for that portion.
-- Combo trays we still need: **Tray A / Tray B / Full House / Three-of-a-Kind /
-  Pocket Pair / One-Outter / Go All-In** — these are currently uncosted and shown in
-  the unmatched queue.
+- The tracked metric is the **AYCE program**: everything rung at $0 as an AYCE round.
+  The current punch list of uncosted rounds, by volume:
+  **Tray A~ (321 rounds!), Tray B~ (120), Tray C~/D~/F, 1 pc crab cake,
+  EZ-Peel Shrimp ½ lb, Jumbo White Shrimp ½ lb, Fresh Garlic Noodles,
+  ¼ lb / ½ lb Andouille Sausage, drinks included with AYCE (lemonade, sweet tea)**.
+  Tray A alone is the single biggest gap in the numbers.
+- Royal Feast trays sold **at menu price** (Full House, Three-of-a-Kind, Pocket Pair,
+  One-Outter, Go All-In) are à-la-carte and outside the tracked program — cost them
+  only if you also want the all-food context view to be exact.
 - Do **not** cost `CLASSIC/PREMIUM/ROYALTY PER PERSON` — those are the AYCE price
   buttons; their food cost flows through the individual rounds you already cost.
 

@@ -12,17 +12,21 @@ Click **Food cost** in the left nav.
 - "This is no longer a static report — this is **real item-level data from the Toast
   API**: 9,246 item selections across the pilot weekend, pulled by our own ingestion
   script."
-- Headline: **~16.9% estimated food cost** on the AYCE program weekend, on **83%
-  cost-mapping coverage**. Point at the PROVISIONAL badge: "these are the rough
-  workbook costs — when the chef hands us exact costs, they import as data, take
-  effect from that day forward, and history stays intact."
-- Server table: everyone within a few points of the weighted baseline this weekend —
-  no Watch/Critical flags. "The system flags 10 points over baseline as Watch, 15 as
-  Critical, and it refuses to flag anyone on a thin sample or thin cost coverage —
-  fairness is built in."
+- Headline — the tracked program metric: **~36% AYCE food cost** — the kitchen sent
+  an estimated **$14.7k of food as $0-rung AYCE rounds** against **$41.0k of AYCE
+  entitlement revenue** on 136 AYCE checks / 315 covers. Per cover: **~$46.60
+  estimated cost vs $130.24 collected**. Royal Feast trays are à-la-carte priced and
+  deliberately outside this metric.
+- Point at the PROVISIONAL badge: "rough workbook costs — when the chef hands us
+  exact costs, they import as data, take effect from that day forward, and history
+  stays intact." And the round coverage: ~81% of round quantity is costed — **Tray A
+  (321 rounds) is the single biggest uncosted item**, so expect the true % to rise.
+- Server table: variance vs the weighted baseline, Watch at +10 pts, Critical at
+  +15 pts, and the system refuses to flag anyone on a thin sample or thin cost
+  coverage — fairness is built in.
 - Scatter: up-and-right is the goal — high AYCE mix with controlled cost.
-- Unmatched queue: "full transparency on what we can't cost yet — mostly combo trays.
-  That's the chef's punch list, worth ~$11.5k of revenue."
+- Scope selector: flip to "All food (context)" for the blended view (~26%) — then
+  flip back: "the program metric is what we manage to."
 
 ## 3 · Living system, not a one-off (2 min)
 - Top bar freshness badge: "data through Aug 2, synced Aug 4."
@@ -40,9 +44,10 @@ page: Supabase project, OpenTable approval, chef costs, payroll source decision.
 credential exists in the code; nothing claims to be connected that isn't.
 
 ## Anticipated questions
-- **"Is 16.9% good?"** It's the AYCE-weekend floor number on rough costs and 83%
-  coverage — treat it as a baseline to beat, not a final verdict. Chef costs + tray
-  costs will move it.
+- **"Is 36% good?"** It's rough costs at 81% round coverage — treat it as a floor,
+  not a verdict: Tray A/B/C/D costs will push it up, chef-exact costs will move it
+  either way. The per-cover framing ($46.60 cost vs $130.24 collected) is the
+  margin conversation.
 - **"Can servers see this?"** Not yet — the server portal ships only after real
   authentication and row-level security tests pass. Deliberately.
 - **"Is this waste?"** No — it's what the POS says the kitchen sent. Waste needs
