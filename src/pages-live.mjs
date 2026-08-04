@@ -347,10 +347,13 @@ function conversionStatsFor(dates) {
   const rows = DATA.intents.filter((r) => set.has(r.businessDate));
   const st = { total: rows.length, eligible: 0, converted: 0, unknown: 0, review: 0, mixed: 0, predecided: 0, ambiguous: 0 };
   for (const r of rows) {
-    if (r.mixedMenuException) { st.mixed++; continue; }
-    if (r.intent === 'REVIEW_REQUIRED') { st.review++; continue; }
-    if (r.intent === 'UNKNOWN') { st.unknown++; continue; }
-    if (r.intent === 'PREDECIDED_AYCE') { st.predecided++; continue; }
+    if (r.excluded) continue;                       // MOD-excluded via correction
+    const intent = r.intentEffective ?? r.intent;   // MOD correction overrides, audit preserved
+    const resolved = r.reviewStatus === 'confirmed';
+    if (r.mixedMenuException && !resolved) { st.mixed++; continue; }
+    if (intent === 'REVIEW_REQUIRED') { st.review++; continue; }
+    if (intent === 'UNKNOWN') { st.unknown++; continue; }
+    if (intent === 'PREDECIDED_AYCE') { st.predecided++; continue; }
     if (r.matchStatus === 'ambiguous') { st.ambiguous++; continue; } // never counts either way
     if (r.matchStatus !== 'matched') { st.unknown++; continue; }     // unmatched can't prove conversion
     st.eligible++;
@@ -524,6 +527,7 @@ function pgReview(host) {
 function renderReview(host) {
   const items = [];
   for (const r of DATA.intents) {
+    if (r.reviewStatus === 'confirmed') continue; // resolved by an applied MOD correction
     if (r.mixedMenuException) items.push({ kind: 'MIXED_MENU_EXCEPTION', r, why: `Half/Half tag — table ${r.tableTokens.join(',')}` });
     if (r.intent === 'REVIEW_REQUIRED') items.push({ kind: 'CONFLICTING_INTENT', r, why: `tags: ${r.relevantTags.join(' + ')}` });
     if (r.matchStatus === 'ambiguous') items.push({ kind: 'AMBIGUOUS_MATCH', r, why: `confidence ${r.matchConfidence} — table ${r.tableTokens.join(',')}` });
