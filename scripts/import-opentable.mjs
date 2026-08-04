@@ -62,7 +62,19 @@ async function main() {
     const checks = JSON.parse(fs.readFileSync(checksPath, 'utf8'));
     const tv = toastVisits(checks, reference, opsFilter)
       .map((v) => ({ ...v, serverName: emp.get(v.serverGuid) ?? '' }));
-    all.push(...matchVisits(rows, tv, cfg));
+    const matched = matchVisits(rows, tv, cfg);
+    // annotate conversion facts: did the matched Toast visit ring an AYCE
+    // entitlement, and which server owns it (final-owner attribution)?
+    const selections = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'live', `selections_${date}.json`), 'utf8'));
+    const ayceOrders = new Set(selections.filter((s) => !s.voided && /PER PERSON|\(kids\)/i.test(s.itemName ?? '')).map((s) => s.orderGuid));
+    const orderServer = new Map(checks.map((c) => [c.orderGuid, c.serverGuid]));
+    for (const r of matched) {
+      if (r.matchedOrderGuid) {
+        r.hasAyceSales = ayceOrders.has(r.matchedOrderGuid);
+        r.matchedServerGuid = orderServer.get(r.matchedOrderGuid) ?? null;
+      }
+    }
+    all.push(...matched);
   }
 
   const st = { matched: 0, ambiguous: 0, unmatched: 0 };

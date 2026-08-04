@@ -1,0 +1,41 @@
+name: Nightly Toast ingestion
+# Target: ~6:00 AM America/New_York for the previous completed business day.
+# GitHub cron is UTC-fixed, so we fire at both 10:00 and 11:00 UTC and let the
+# job itself check whether it is 6 AM in New York — correct across DST.
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 6 AM EDT
+    - cron: '0 11 * * *'   # 6 AM EST
+  workflow_dispatch:        # manual retry (Actions tab → Run workflow)
+    inputs:
+      businessDate:
+        description: 'Business date YYYYMMDD (default: yesterday NY time)'
+        required: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: DST gate — proceed only at 6 AM New York (or manual dispatch)
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          NY_HOUR=$(TZ=America/New_York date +%H)
+          if [ "$NY_HOUR" = "06" ]; then echo "run=true" >> "$GITHUB_OUTPUT";
+          else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Not 6 AM in New York (hour=$NY_HOUR) — skipping duplicate DST slot."; fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with: { node-version: 22, cache: npm }
+      - name: Install
+        if: steps.gate.outputs.run == 'true'
+        run: npm ci
+      - name: Ingest previous business day (+ baseline gaps) into Supabase
+        if: steps.gate.outputs.run == 'true'
+        env:
+          TOAST_CLIENT_ID: ${{ secrets.TOAST_CLIENT_ID }}
+          TOAST_CLIENT_SECRET: ${{ secrets.TOAST_CLIENT_SECRET }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/nightly.mjs ${{ inputs.businessDate }}

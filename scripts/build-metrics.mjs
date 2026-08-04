@@ -31,10 +31,20 @@ export function buildMetricsForDate(date, selections, checks, reference, costs) 
     const ayce = filterAyceProgram(sel, inScope, reference);
     const fc = computeFoodCost(ayce.selections, ayce.checks, reference, costs);
 
+    // guests are recorded per ORDER (table visit); split checks repeat the
+    // value, so count each order once
+    const seenOrders = new Set();
+    let guests = 0;
+    for (const c of inScope) {
+      if (seenOrders.has(c.orderGuid)) continue;
+      seenOrders.add(c.orderGuid);
+      guests += c.numberOfGuests || 0;
+    }
     const base = {
       businessDate: date, weekday: weekdayOf(date), period,
       checks: inScope.length,
-      guests: inScope.reduce((a, c) => a + (c.numberOfGuests || 0), 0),
+      visits: seenOrders.size,
+      guests,
       floorNet: round2(inScope.reduce((a, c) => a + (c.amount || 0), 0)),
       ayceChecks: ayce.checks.length,
       entitlementNet: round2(ayce.entitlementNet),
