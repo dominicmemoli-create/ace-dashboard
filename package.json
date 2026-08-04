@@ -1,0 +1,18 @@
+{
+  "name": "ace-dashboard",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chasin' Tails AYCE operational dashboard — pilot analytics, food cost, ingestion",
+  "scripts": {
+    "test": "vitest run",
+    "ingest:toast": "node scripts/ingest-toast.mjs",
+    "import:costs": "node scripts/import-costs.mjs",
+    "build:metrics": "node scripts/build-metrics.mjs",
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "xlsx": "^0.18.5"
+  }
+}
