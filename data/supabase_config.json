@@ -1,0 +1,5 @@
+{
+  "url": "https://cdqbiwgxezaoaibypvsi.supabase.co",
+  "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkcWJpd2d4ZXphb2FpYnlwdnNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MTQ1MzEsImV4cCI6MjEwMDQ5MDUzMX0.gt77LMv4WMu_1R1Ko3ZxIW-PgNuPPKMkrvRp6wjLQ-k",
+  "note": "anon key is public by design; access is limited by row-level security"
+}

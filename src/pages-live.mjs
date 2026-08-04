@@ -35,23 +35,81 @@ async function fetchJson(url) {
   return res.json();
 }
 
+/** Supabase REST reader — paginates past PostgREST's per-request row cap. */
+async function sbRows(cfg, table, select) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const res = await fetch(`${cfg.url}/rest/v1/${table}?select=${select}`, {
+      headers: {
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`,
+        Range: `${from}-${from + 999}`,
+      },
+    });
+    if (!res.ok && res.status !== 206) throw new Error(`${table}: HTTP ${res.status}`);
+    const batch = await res.json();
+    out.push(...batch);
+    if (batch.length < 1000) break;
+  }
+  return out;
+}
+
+async function loadFromSupabase(cfg) {
+  const [man, ref, costs] = await Promise.all([
+    sbRows(cfg, 'ace_manifest', '*'),
+    sbRows(cfg, 'ace_reference', 'payload'),
+    sbRows(cfg, 'ace_item_costs', 'payload'),
+  ]);
+  if (!man.length || !ref.length) throw new Error('Supabase tables empty');
+  DATA.manifest = {
+    restaurantGuid: man[0].restaurant_guid,
+    dates: man[0].dates,
+    lastToastSync: man[0].last_toast_sync,
+  };
+  DATA.reference = ref[0].payload;
+  DATA.costs = costs.map((r) => r.payload);
+  const [checks, selections] = await Promise.all([
+    sbRows(cfg, 'ace_checks', 'payload'),
+    sbRows(cfg, 'ace_selections', 'payload'),
+  ]);
+  DATA.checks = checks.map((r) => r.payload);
+  DATA.selections = selections.map((r) => r.payload);
+  DATA.source = 'supabase';
+}
+
+async function loadFromStatic() {
+  DATA.manifest = await fetchJson('data/live/manifest.json');
+  const [reference, costs] = await Promise.all([
+    fetchJson('data/live/reference.json'),
+    fetchJson('data/live/item_costs.json'),
+  ]);
+  DATA.reference = reference;
+  DATA.costs = costs;
+  const per = await Promise.all(DATA.manifest.dates.map((d) => Promise.all([
+    fetchJson(`data/live/selections_${d}.json`),
+    fetchJson(`data/live/checks_${d}.json`),
+  ])));
+  DATA.selections = per.flatMap(([s]) => s);
+  DATA.checks = per.flatMap(([, c]) => c);
+  DATA.source = 'static';
+}
+
 function loadLive() {
   if (DATA.loading) return DATA.loading;
   DATA.loading = (async () => {
     try {
-      DATA.manifest = await fetchJson('data/live/manifest.json');
-      const [reference, costs] = await Promise.all([
-        fetchJson('data/live/reference.json'),
-        fetchJson('data/live/item_costs.json'),
-      ]);
-      DATA.reference = reference;
-      DATA.costs = costs;
-      const per = await Promise.all(DATA.manifest.dates.map((d) => Promise.all([
-        fetchJson(`data/live/selections_${d}.json`),
-        fetchJson(`data/live/checks_${d}.json`),
-      ])));
-      DATA.selections = per.flatMap(([s]) => s);
-      DATA.checks = per.flatMap(([, c]) => c);
+      let cfg = null;
+      try { cfg = await fetchJson('data/supabase_config.json'); } catch { /* no config — static mode */ }
+      if (cfg?.url && cfg?.anonKey) {
+        try {
+          await loadFromSupabase(cfg);
+        } catch (sbErr) {
+          console.warn('Supabase unavailable, falling back to static data:', sbErr?.message);
+          await loadFromStatic();
+        }
+      } else {
+        await loadFromStatic();
+      }
       restoreLocalImports();
       DATA.loaded = true;
       renderFreshness();
@@ -171,8 +229,10 @@ function renderFreshness() {
   const dates = DATA.manifest.dates;
   const last = dates[dates.length - 1];
   const synced = new Date(DATA.manifest.lastToastSync);
-  el.textContent = `Toast data through ${fmtDate(last)} · synced ${synced.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
-  el.title = 'Item-selection data pulled from the Toast API by the ingestion script. OpenTable: manual intent log only (no automated sync yet).';
+  el.textContent = `${DATA.source === 'supabase' ? 'Supabase DB' : 'Static data'} · Toast through ${fmtDate(last)} · synced ${synced.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+  el.title = DATA.source === 'supabase'
+    ? 'Live from the Supabase Postgres database (RLS-protected). Toast item-selection data via the ingestion script.'
+    : 'Static repository data files. Supabase not reachable from this page load.';
 }
 function fmtDate(yyyymmdd) {
   const s = String(yyyymmdd);
