@@ -1,0 +1,16 @@
+{
+  "_comment": "Feature flags. Flip only after the gate conditions in docs/RUNBOOK.md are met.",
+  "server_portal": {
+    "enabled": false,
+    "gate": "Supabase Auth live + RLS test suite passing (test 20-22)"
+  },
+  "payroll": {
+    "enabled": false,
+    "gate": "Verified payroll source + field definitions configured + RLS payroll tests passing"
+  },
+  "commission_program": {
+    "enabled": false,
+    "gate": "Management decision. Pilot weekend (Jul 31 - Aug 2, 2026) ran the program; no commission accrues outside that window unless re-enabled here with an effective date.",
+    "pilot_window": ["20260731", "20260802"]
+  }
+}

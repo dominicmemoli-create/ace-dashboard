@@ -1,0 +1,21 @@
+name: CI
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Verify no secrets committed
+        run: |
+          ! grep -rE "TOAST_CLIENT_SECRET\s*=\s*[A-Za-z0-9]" --include="*.mjs" --include="*.js" --include="*.html" . --exclude-dir=node_modules
+          test -f .env && exit 1 || true
