@@ -19,11 +19,11 @@ WDT,10.40,per Whole Dang Thang,
   welcome — use the menu name.
 - `cost`: dollars to the cent, your plate cost for that portion.
 - The tracked metric is the **AYCE program**: everything rung at $0 as an AYCE round.
-  The current punch list of uncosted rounds, by volume:
-  **Tray A~ (321 rounds!), Tray B~ (120), Tray C~/D~/F, 1 pc crab cake,
-  EZ-Peel Shrimp ½ lb, Jumbo White Shrimp ½ lb, Fresh Garlic Noodles,
-  ¼ lb / ½ lb Andouille Sausage, drinks included with AYCE (lemonade, sweet tea)**.
-  Tray A alone is the single biggest gap in the numbers.
+  Tray A–F markers are kitchen batching terms (same-pot instruction) and carry $0 by
+  design. The remaining punch list of uncosted rounds, by volume:
+  **1 pc crab cake (97), EZ-Peel Shrimp ½ lb (61), Fresh Garlic Noodles (49),
+  ¼ lb / ½ lb Andouille Sausage (44), Jumbo White Shrimp ½ lb (23),
+  drinks included with AYCE (lemonade, sweet tea, sodas)**.
 - Royal Feast trays sold **at menu price** (Full House, Three-of-a-Kind, Pocket Pair,
   One-Outter, Go All-In) are à-la-carte and outside the tracked program — cost them
   only if you also want the all-food context view to be exact.

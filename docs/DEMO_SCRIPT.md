@@ -19,8 +19,9 @@ Click **Food cost** in the left nav.
   deliberately outside this metric.
 - Point at the PROVISIONAL badge: "rough workbook costs — when the chef hands us
   exact costs, they import as data, take effect from that day forward, and history
-  stays intact." And the round coverage: ~81% of round quantity is costed — **Tray A
-  (321 rounds) is the single biggest uncosted item**, so expect the true % to rise.
+  stays intact." Round coverage is **~90% of round quantity**; what's left uncosted
+  is small (crab cake singles, half-pound shrimp portions, garlic noodles, included
+  drinks).
 - Server table: variance vs the weighted baseline, Watch at +10 pts, Critical at
   +15 pts, and the system refuses to flag anyone on a thin sample or thin cost
   coverage — fairness is built in.
@@ -44,10 +45,9 @@ page: Supabase project, OpenTable approval, chef costs, payroll source decision.
 credential exists in the code; nothing claims to be connected that isn't.
 
 ## Anticipated questions
-- **"Is 36% good?"** It's rough costs at 81% round coverage — treat it as a floor,
-  not a verdict: Tray A/B/C/D costs will push it up, chef-exact costs will move it
-  either way. The per-cover framing ($46.60 cost vs $130.24 collected) is the
-  margin conversation.
+- **"Is 36% good?"** It's rough workbook costs at 90% round coverage — a solid
+  first read, refined the day the chef's exact costs import. The per-cover framing
+  ($46.60 cost vs $130.24 collected) is the margin conversation.
 - **"Can servers see this?"** Not yet — the server portal ships only after real
   authentication and row-level security tests pass. Deliberately.
 - **"Is this waste?"** No — it's what the POS says the kitchen sent. Waste needs

@@ -15,13 +15,13 @@ then commit/push `data/live/`, and merge the branch to `main` to deploy
 
 ## 🟠 This week (biggest value per effort)
 
-**2. Chef's exact costs — especially the trays.** CSV, one row per item:
+**2. Chef's exact costs.** CSV, one row per item:
 `canonical_name,cost,portion,notes` (template: `imports/item_costs_template.csv`).
+(Tray A–F are kitchen batching markers — already $0 by design, nothing needed.)
 Priority order by impact on the numbers:
-- **Tray A~** (321 rounds in the pilot — the single biggest gap)
-- **Tray B~ / C~ / D~ / F**
-- 1 pc crab cake · ½-lb shrimp portions · Fresh Garlic Noodles · Andouille (¼/½ lb)
-- Then corrections to any rough workbook value
+- 1 pc crab cake (97 rounds) · ½-lb shrimp portions (84) · Fresh Garlic Noodles (49)
+  · Andouille ¼/½ lb (44) · included drinks (lemonade/tea/soda)
+- Then corrections to any rough workbook value — every current cost is "rough"
 Hand the chef `docs/CHEF_COSTS.md` — it's written for them. Import per
 `docs/RUNBOOK.md` (one command, or drag-drop on the Data Import page).
 
@@ -62,5 +62,5 @@ estimates presented as paychecks.
 Branch `feature/live-food-cost-dashboard` (pushed, CI green, 49 tests).
 Tracked metric live: **AYCE food cost ≈ 36% of entitlement revenue**
 ($14.7k est. round cost / $41.0k AYCE revenue · $46.60/cover vs $130.24 collected ·
-81% round coverage — rises when tray costs land). Royal Feasts: à-la-carte, out of
-scope, by your definition.
+90% round coverage). Royal Feasts: à-la-carte, out of scope. Tray A–F: batching
+markers, $0 by design.

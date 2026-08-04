@@ -108,6 +108,9 @@ const PREP_MODIFIER_ITEMS = [
   'No Corn, No Potato', 'No Corn No Potato', 'No Corn', 'No Potato', 'No Potatoes',
   'No Sides', 'No Fries', 'No Bread',
   '2 Pieces', '3 Pieces', 'Same Plate',
+  // Tray markers: kitchen instruction to boil multiple items in the same pot.
+  // Pure routing/plating terms — zero effect on item cost (per management).
+  'Tray A', 'Tray B', 'Tray C', 'Tray D', 'Tray E', 'Tray F',
 ];
 
 function ensureAyceProgramRecords(existing, nameToGuid, now) {
