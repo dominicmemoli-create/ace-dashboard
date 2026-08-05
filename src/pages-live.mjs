@@ -354,12 +354,12 @@ function fmtEt(iso) {
   } catch { return '—'; }
 }
 function renderFreshness() {
-  const bar = document.querySelector('#topbar .tb-row');
+  const bar = document.querySelector('#topbar .tb-meta') || document.querySelector('#topbar .tb-row');
   if (!bar || !DATA.manifest) return;
   let el = document.getElementById('freshness');
   if (!el) {
     el = document.createElement('span');
-    el.id = 'freshness'; el.className = 'prov'; el.style.marginLeft = '8px';
+    el.id = 'freshness';
     bar.appendChild(el);
   }
   const dates = opDates();
@@ -370,8 +370,8 @@ function renderFreshness() {
   const lastImport = (DATA.importRuns ?? []).find((r) => r.status === 'success');
   const otBehind = !!(last && (!otLast || otLast < last));
   const needsUpdate = staleDays > 1 || otBehind;
+  el.className = `prov${needsUpdate ? ' warn' : ''}`;
   el.textContent = `${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} · sales through ${fmtDate(last)} · OpenTable through ${fmtDate(otLast)}${needsUpdate ? ' · Update needed' : ''}`;
-  el.style.color = needsUpdate ? 'var(--neg, #e0705c)' : '';
   el.title = [
     `Sales data through ${fmtDate(last)} (business date)`,
     `OpenTable data through ${fmtDate(otLast)} (business date)`,
@@ -398,31 +398,31 @@ function opsControls(state, onchange) {
   const el = document.createElement('div');
   el.className = 'card';
   el.style.marginBottom = '14px';
-  el.innerHTML = `<div class="body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
-    <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Date range
-      <select id="opsPreset" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+  el.innerHTML = `<div class="body fieldrow">
+    <label class="field"><span>Date range</span>
+      <select class="ctl" id="opsPreset">
         ${presets.map(([v, l]) => `<option value="${v}" ${state.preset === v ? 'selected' : ''}>${l}</option>`).join('')}
       </select></label>
-    <label id="opsFromWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'};flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">From
-      <select id="opsFrom" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" id="opsFromWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'}"><span>From</span>
+      <select class="ctl" id="opsFrom">
         ${avail.map((d) => `<option value="${d}" ${state.from === d ? 'selected' : ''}>${fmtDate(d)}</option>`).join('')}
       </select></label>
-    <label id="opsToWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'};flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">To
-      <select id="opsTo" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" id="opsToWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'}"><span>To</span>
+      <select class="ctl" id="opsTo">
         ${avail.map((d) => `<option value="${d}" ${(state.to ?? avail[avail.length - 1]) === d ? 'selected' : ''}>${fmtDate(d)}</option>`).join('')}
       </select></label>
-    <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Service period
-      <select id="opsPeriod" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field"><span>Service period</span>
+      <select class="ctl" id="opsPeriod">
         <option value="all" ${state.period === 'all' ? 'selected' : ''}>Lunch + dinner</option>
         <option value="lunch" ${state.period === 'lunch' ? 'selected' : ''}>Lunch (before ${DATA.ops.servicePeriods.lunchBeforeHour - 12} PM)</option>
         <option value="dinner" ${state.period === 'dinner' ? 'selected' : ''}>Dinner</option>
       </select></label>
-    <span class="sub" style="margin-left:auto;text-align:right;line-height:1.5">
-      <span style="display:block">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
-      <span style="display:block">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
-    </span>
+    <div class="rangenote sub" role="status">
+      <span class="rn-1">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
+      <span class="rn-2">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
+    </div>
   </div>
-  ${range.invalid ? `<div class="errbox" role="alert" style="margin:0 18px 14px"><b>Check the custom range.</b>
+  ${range.invalid ? `<div class="errbox" role="alert" style="margin:0 var(--sp-5) var(--sp-5)"><b>Check the custom range.</b>
     ${esc(range.invalid.message)} <button class="btn ghost sm" type="button" id="opsSwap" style="margin-left:8px">Swap dates</button></div>` : ''}`;
   const apply = () => {
     const next = {
@@ -531,7 +531,14 @@ function renderOps(host) {
       <td>${usd0(r.entitlementNet)}</td>
       <td>${usd0(r.roundCost)}</td>
       <td><b>${pct(r.fc)}</b></td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody>
+    <tfoot><tr><td>Total</td><td>${range.dates.length} day${range.dates.length === 1 ? '' : 's'}</td>
+      <td>${fmt(t.checks)}</td><td>${fmt(t.guests)}</td><td>${usd0(t.floorNet)}</td>
+      <td>${fmt(Math.round(t.entitlementCovers))}</td><td>${usd0(t.entitlementNet)}</td>
+      <td>${usd0(t.roundCost)}</td><td>${pct(fc)}</td></tr></tfoot>
+    </table></div>
+    <div class="foot">Totals are the range aggregate; the food-cost % is weighted (total estimated cost ÷ total
+    AYCE sales), never an average of the daily percentages.</div>`;
   host.appendChild(tbl);
 }
 
@@ -639,9 +646,9 @@ function renderServersLive(host) {
   const card = document.createElement('div');
   card.className = 'card sec';
   card.innerHTML = `<header><div><div class="ttl">Server performance — ${esc(range.label)}</div>
-    <div class="sub">AYCE program only. Conversion counts recorded-and-connected tables; tables without a
-    recorded choice still appear in every sales and cost figure — only conversion leaves them out.
-    Click a server for the check-by-check detail. Alerts stay off below ${th.minChecks} AYCE checks or ${usd0(th.minNetFoodSales)} AYCE sales.</div></div></header>
+    <div class="sub">AYCE program only. Select a row for the check-by-check detail.</div></div>
+    <span class="sp"></span>
+    <span class="badge mute nowrap">${rows.length} server${rows.length === 1 ? '' : 's'}</span></header>
     <div class="toolbar">
       <div class="srch"><span class="si" aria-hidden="true">⌕</span>
         <input type="search" id="srvQ" placeholder="Search server…" aria-label="Search servers" value="${esc(view.search)}"></div>
@@ -651,19 +658,21 @@ function renderServersLive(host) {
     <caption class="sr">Server performance for the selected range: AYCE checks, covers, sales, food-cost percentages, conversion and status per server</caption>
     <thead><tr>
       ${srvTh('name', 'Server', view, 'style="text-align:left"')}
-      ${srvTh('checks', 'AYCE checks', view)}
-      ${srvTh('covers', 'AYCE covers', view)}
+      ${srvTh('checks', 'Checks', view, '', 'AYCE checks attributed to this server in the selected range.')}
+      ${srvTh('covers', 'Covers', view, '', 'AYCE covers (entitlement quantities) rung on this server\u2019s checks.')}
       ${srvTh('sales', 'AYCE sales', view)}
       ${srvTh('fc', 'Food cost %', view, '', 'Weighted mean: total estimated food cost ÷ total AYCE sales for this server. Represents the actual financial impact.')}
-      ${srvTh('median', 'Median check %', view, '', "The middle check's food-cost %. Shows the typical table and is not distorted by one expensive 'whale' table. Shown alongside — never instead of — the weighted mean.")}
-      <th scope="col">Restaurant baseline<button class="inf" type="button" aria-label="Definition of restaurant baseline" data-tip="The restaurant-wide weighted food-cost % for the same weekday and service period over the previous ${DATA.ops.baseline.weeks} weeks. The same reference for every server — not a per-server figure.">i</button></th>
+      ${srvTh('median', 'Median %', view, '', "The middle check's food-cost %. Shows the typical table and is not distorted by one expensive 'whale' table. Shown alongside — never instead of — the weighted mean.")}
+      <th scope="col">Baseline<button class="inf" type="button" aria-label="Definition of restaurant baseline" data-tip="The restaurant-wide weighted food-cost % for the same weekday and service period over the previous ${DATA.ops.baseline.weeks} weeks. The same reference for every server — not a per-server figure.">i</button></th>
       ${srvTh('conv', 'Conversion', view)}
-      <th scope="col">Cost status</th>
+      <th scope="col">Status</th>
       <th scope="col">Sample</th>
     </tr></thead><tbody id="srvBody"></tbody></table></div>
-    <div class="foot">This table never implies a server caused kitchen waste — it reflects what was rung for their
-    AYCE tables. “Median check %” and the drill-down load from the check-level records.
-    Pilot-weekend history (with commission) lives under Pilot Review.</div>`;
+    <div class="foot">Conversion counts recorded-and-connected tables only; tables without a recorded choice still
+    appear in every sales and cost figure — only conversion leaves them out. Alerts stay off below ${th.minChecks}
+    AYCE checks or ${usd0(th.minNetFoodSales)} AYCE sales. This table never implies a server caused kitchen waste —
+    it reflects what was rung for their AYCE tables. “Median check %” and the drill-down load from the check-level
+    records. Pilot-weekend history (with commission) lives under Pilot Review.</div>`;
   host.appendChild(card);
 
   const paintRows = () => {
@@ -681,7 +690,7 @@ function renderServersLive(host) {
       <td>${usd0(r.a.entitlementNet)}</td>
       <td><b>${pct(r.p)}</b></td>
       <td>${r.median === undefined ? '<span class="muted">…</span>' : r.median === null ? '—'
-        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="verdict-badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
+        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
       <td>${pct(base.pct)}</td>
       <td>${r.conv.eligible ? `${pct((r.conv.converted / r.conv.eligible) * 100, 0)} <span class="muted">(${r.conv.converted}/${r.conv.eligible})</span>` : '<span class="muted" title="No recorded-and-connected eligible tables — conversion unavailable, not zero">n/a</span>'}</td>
       <td style="text-align:center">${costBadge(r)}</td>
@@ -746,19 +755,19 @@ function srvTh(key, label, view, thAttrs = '', tip = null) {
     tip ? `<button class="inf" type="button" aria-label="Definition of ${esc(label)}" data-tip="${esc(tip)}">i</button>` : ''}</th>`;
 }
 function costBadge(r) {
-  if (r.lowCoverage) return '<span class="verdict-badge" title="Too many uncosted items for a fair comparison">Costs missing</span>';
-  if (r.smallSample) return '<span class="verdict-badge pos" title="Below the sample threshold — estimate shown for completeness, alerts suppressed">Small sample — no alert</span>';
+  if (r.lowCoverage) return '<span class="badge neu" title="Too many uncosted items for a fair comparison">Costs missing</span>';
+  if (r.smallSample) return '<span class="badge mute" title="Below the sample threshold — the estimate is shown for completeness and alerts are suppressed">No alert</span>';
   const map = {
     no_alert: ['pos', 'No alert'], watch: ['neu', 'Watch'], critical: ['neg', 'Critical'],
-    no_baseline: ['', '—'],
+    no_baseline: ['mute', '—'],
   };
-  const [cls, label] = map[r.cost] ?? ['', r.cost];
-  return `<span class="verdict-badge ${cls}">${label}</span>`;
+  const [cls, label] = map[r.cost] ?? ['mute', r.cost];
+  return `<span class="badge ${cls}">${label}</span>`;
 }
 function sampleBadge(r) {
   return r.smallSample
-    ? '<span class="verdict-badge" title="Below the sample threshold — figures shown for completeness, alerts suppressed">Small sample</span>'
-    : '<span class="verdict-badge pos">OK</span>';
+    ? '<span class="badge mute" title="Below the sample threshold — figures shown for completeness, alerts suppressed">Small</span>'
+    : '<span class="badge pos">OK</span>';
 }
 
 async function loadPagesDeployment(el) {
@@ -882,7 +891,7 @@ function openServerDrawer(guid, row, range, periods, base) {
             <td>${fmt(Math.round(c.itemQty))}</td>
             <td>${usd0(c.entitlementNet)}</td>
             <td>${usd(c.foodCostDollars)}</td>
-            <td><b>${pct(c.pctOfSales)}</b>${outlier(c) ? ' <span class="verdict-badge neu" title="Above the outlier line (Q3 + 1.5×IQR)">outlier</span>' : ''}</td>
+            <td><b>${pct(c.pctOfSales)}</b>${outlier(c) ? ' <span class="badge neu" title="Above the outlier line (Q3 + 1.5×IQR)">outlier</span>' : ''}</td>
             <td>${usd(c.costPerCover)}</td>
             <td><button class="btn ghost sm" type="button" data-citems="${i}" aria-expanded="false" aria-label="Show ordered items for this check">items</button></td>
           </tr>
@@ -1045,12 +1054,12 @@ function renderFoodCost(host) {
   const drivers = [...itemAgg.values()].filter((x) => x.matched && x.cost > 0).sort((a, b) => b.cost - a.cost).slice(0, 14);
   const unmatched = [...itemAgg.values()].filter((x) => !x.matched).sort((a, b) => b.qty - a.qty).slice(0, 20);
   const tierBadge = (d) => {
-    if (d.tier === 'mixed') return '<span class="verdict-badge neu" title="The cost source for this item changed within the selected range (e.g. a chef confirmation took effect mid-range)">mixed sources</span>';
-    if (d.tier === 'confirmed' || d.verification === 'verified') return '<span class="verdict-badge pos">chef-confirmed</span>';
-    if (d.tier === 'fallback_2') return '<span class="verdict-badge neu">$2 fallback</span>';
-    if (d.tier === 'override') return '<span class="verdict-badge neu">portion override</span>';
-    if (d.tier === 'explicit_temp') return '<span class="verdict-badge neu">explicit temp</span>';
-    return '<span class="verdict-badge neu">temp estimate</span>';
+    if (d.tier === 'mixed') return '<span class="badge neu" title="The cost source for this item changed within the selected range (e.g. a chef confirmation took effect mid-range)">mixed sources</span>';
+    if (d.tier === 'confirmed' || d.verification === 'verified') return '<span class="badge pos">chef-confirmed</span>';
+    if (d.tier === 'fallback_2') return '<span class="badge neu">$2 fallback</span>';
+    if (d.tier === 'override') return '<span class="badge neu">portion override</span>';
+    if (d.tier === 'explicit_temp') return '<span class="badge neu">explicit temp</span>';
+    return '<span class="badge neu">temp estimate</span>';
   };
   const two = document.createElement('div');
   two.className = 'sec g2';
@@ -1089,10 +1098,10 @@ function pgPilot(host) {
     ['overview', 'Overview'], ['servers', 'Server performance'], ['commission', 'Commission ledger'],
   ];
   host.innerHTML = `
-    <div class="note gold" style="margin-bottom:14px"><b>Frozen history.</b> The pilot weekend
+    <div class="alert warn"><b>Frozen history.</b> The pilot weekend
     (Jul 31 – Aug 2, 2026) is preserved exactly as reported. The commission program ended Aug 2 —
     figures here are informational and no new commission accrues.</div>
-    <div class="seg" style="display:inline-flex;margin-bottom:16px" role="tablist" aria-label="Pilot Review sections">
+    <div class="seg tabbar" role="tablist" aria-label="Pilot Review sections">
       ${tabs.map(([k, l]) => `<button type="button" role="tab" id="ptab-${k}" data-ptab="${k}"
         aria-selected="${k === tab}" aria-controls="pilotBody" tabindex="${k === tab ? 0 : -1}">${l}</button>`).join('')}
     </div>
@@ -1141,7 +1150,7 @@ function pgHelp(host) {
     h.innerHTML = `
     <section class="hero rise"><div class="hero-top"><div class="hero-verdict">
       <div class="hero-eyebrow">How This Works</div>
-      <div class="hero-delta"><span class="big" style="font-size:34px;letter-spacing:-1px">Three data sources.<br>Three simple jobs.</span></div>
+      <div class="hero-delta"><span class="big" style="font-size:26px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
     </div></div></section>
 
     <div class="sec g3">
@@ -1246,13 +1255,20 @@ let LEGACY = null;
 function registerPages() {
   LEGACY = { ...PAGES };
   for (const k of Object.keys(PAGES)) delete PAGES[k];
-  PAGES.ops = { label: 'Overview', icon: '◈', fn: pgOps, title: 'Operations overview', group: 'Operations' };
-  PAGES.servers = { label: 'Server Performance', icon: '◑', fn: pgServersLive, title: 'Server performance', group: 'Operations' };
-  PAGES.foodcost = { label: 'AYCE Food Cost', icon: '◐', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations' };
-  PAGES.update = { label: 'Update Dashboard', icon: '⬆', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations' };
-  PAGES.fixes = { label: 'Fixes Needed', icon: '▣', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0 };
-  PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true };
-  PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help' };
+  PAGES.ops = { label: 'Overview', icon: '◈', fn: pgOps, title: 'Operations overview', group: 'Operations',
+    desc: 'AYCE mix, food cost and conversion for the selected range — dining room and patio only.' };
+  PAGES.servers = { label: 'Server Performance', icon: '◑', fn: pgServersLive, title: 'Server performance', group: 'Operations',
+    desc: 'AYCE checks, sales, food cost and conversion per server. Open a row for check-level detail.' };
+  PAGES.foodcost = { label: 'AYCE Food Cost', icon: '◐', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations',
+    desc: 'Estimated cost of AYCE food recorded in Toast against AYCE sales collected.' };
+  PAGES.update = { label: 'Update Dashboard', icon: '⬆', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations',
+    desc: 'Keep Toast sales, OpenTable guest status and food costs current.' };
+  PAGES.fixes = { label: 'Fixes Needed', icon: '▣', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0,
+    desc: 'The short list of visits that genuinely need a decision — one card at a time.' };
+  PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true,
+    desc: 'Frozen pilot weekend, Jul 31 – Aug 2, 2026. Commission figures are informational.' };
+  PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help',
+    desc: 'Where the numbers come from, in plain language, with the technical detail one click away.' };
 
   // land on Operations Overview unless the visitor SAVED a page earlier;
   // stale saved pages from previous versions map to their nearest new home

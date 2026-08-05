@@ -19,12 +19,17 @@ export function notify(msg, kind = 'ok') {
   if (!host) {
     host = document.createElement('div');
     host.id = 'acetoast';
-    host.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;align-items:center';
+    // one persistent live region: screen readers announce each message that
+    // lands in it without the container itself stealing focus
+    host.setAttribute('aria-live', 'polite');
+    host.setAttribute('aria-atomic', 'false');
     document.body.appendChild(host);
   }
   const t = document.createElement('div');
-  t.setAttribute('role', 'status');
-  t.style.cssText = `background:${kind === 'err' ? 'var(--neg)' : 'var(--nav-bg)'};color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-3);max-width:min(560px,90vw)`;
+  t.className = `toastmsg${kind === 'err' ? ' err' : ''}`;
+  // the container is already a polite live region, so ordinary confirmations
+  // need no role of their own; errors escalate to assertive
+  if (kind === 'err') t.setAttribute('role', 'alert');
   t.textContent = msg;
   host.appendChild(t);
   setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 450); }, kind === 'err' ? 6000 : 3500);
