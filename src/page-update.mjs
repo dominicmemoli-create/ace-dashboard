@@ -1,15 +1,15 @@
-// Update Dashboard — the one place managers keep data current.
+// Update Dashboard — the one place visitors keep data current.
 // Three status cards (Toast Sales · OpenTable Guest Status · Food Costs),
 // a compact green/yellow/red system panel, and complete in-browser upload
 // workflows. Writes go through the protected database functions with the
-// signed-in user's identity; no commands, no JSON, no configuration.
-import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs';
-import { toastVisits, matchVisits } from './ot-matcher.mjs';
-import { triageIntents } from './triage.mjs';
-import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs';
-import { buildMetricsForDate } from './metrics-builder.mjs';
-import { rpc, restGet } from './auth.mjs';
-import { requireOperator, notify, currentUser } from './manager-mode.mjs';
+// public session identity; no commands, no JSON, no configuration.
+import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260805-open-access';
+import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260805-open-access';
+import { triageIntents } from './triage.mjs?v=20260805-open-access';
+import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260805-open-access';
+import { buildMetricsForDate } from './metrics-builder.mjs?v=20260805-open-access';
+import { rpc, restGet } from './auth.mjs?v=20260805-open-access';
+import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260805-open-access';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }
@@ -93,14 +93,18 @@ export function systemStatus(DATA, badge) {
         : 'The last upload did not finish. Try the upload again — nothing was half-saved.',
     };
   }
-  if (t.state === 'attention') {
-    return { color: 'yellow', head: 'One update is needed', action: 'Toast is behind. Press Retry Toast Update below.' };
-  }
   const needs = [];
+  if (t.state === 'attention') needs.push('Toast is behind. Press Retry Toast Update below.');
   if (ot.behind) needs.push(`Upload the OpenTable file for ${longDate(ot.toastLast)}.`);
   if (badge > 0) needs.push(`${badge} item${badge === 1 ? '' : 's'} under Fixes Needed ${badge === 1 ? 'needs' : 'need'} a decision.`);
-  if (c.roughShare > 0) needs.push('Food costs are still temporary estimates — upload the chef’s confirmed costs when ready.');
-  if (needs.length) return { color: 'yellow', head: 'One update is needed', action: needs.join(' ') };
+  if (c.roughShare > 0) needs.push('Rough costs — waiting for chef confirmation.');
+  if (needs.length) {
+    return {
+      color: 'yellow',
+      head: needs.length === 1 ? 'One update needs attention' : `${needs.length} updates need attention`,
+      action: needs.join(' '),
+    };
+  }
   return { color: 'green', head: 'Everything is up to date', action: 'Toast is current, guest status is loaded, and there is nothing waiting on a decision.' };
 }
 
@@ -150,13 +154,13 @@ export function pgUpdate(host) {
       <div class="sub">Occasional — when the chef confirms costs</div></div></header>
       <div class="body">
         <div style="margin-bottom:10px">${c.roughShare > 0
-          ? `<span class="st partial">Temporary estimates in use</span>`
+          ? `<span class="st partial">Rough costs — waiting for chef confirmation</span>`
           : `<span class="st ok">Chef-confirmed</span>`}</div>
         <div class="calcrow"><span class="cl">Last updated</span><span class="cr">${fmtWhen(c.lastUpdated)}${c.lastUpdatedBy ? ` · ${esc(c.lastUpdatedBy.split('@')[0])}` : ''}</span></div>
         <div class="calcrow"><span class="cl">AYCE items with costs entered</span><span class="cr">${c.coverage == null ? '—' : c.coverage.toFixed(0) + '%'}</span></div>
         <div class="note" style="margin-top:12px">${c.roughShare > 0
-          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use temporary estimates. Numbers stay marked
-             provisional until the chef's confirmed costs are uploaded — uploading here replaces the temporary
+          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use rough costs. Numbers stay marked
+             "waiting for chef confirmation" until the chef's confirmed costs are uploaded — uploading here replaces the rough
              values item by item.`
           : 'Costs are chef-confirmed. Upload a new file whenever prices change.'}</div>
         <div style="margin-top:12px"><button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button></div>
@@ -167,8 +171,6 @@ export function pgUpdate(host) {
 
   renderToastActions(host.querySelector('#toastActions'), t);
   host.querySelector('#otUploadBtn').addEventListener('click', () => {
-    // Signed-out visitors are prompted for the magic link right here, at the
-    // moment of the write attempt — there is no separate mode to enter first.
     if (!requireOperator('Uploading the OpenTable file')) return;
     startOpenTableFlow(host.querySelector('#upStage'));
   });
@@ -186,7 +188,7 @@ function renderToastActions(el, t) {
     <div class="acc" style="margin-top:10px"><button type="button" aria-expanded="false" id="advTgl">
       Advanced<span class="ch">▶</span></button>
       <div class="ab" hidden id="advBody">
-        <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">Business date to update
+        <label for="advDate" style="display:flex;flex-direction:column;gap:4px;font-size:12px">Business date to update
           <input id="advDate" type="date" style="padding:7px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);max-width:200px"></label>
         <div style="margin-top:8px"><button class="btn ghost sm" id="retryDateBtn" type="button">Update this date</button></div>
       </div></div>
@@ -384,7 +386,7 @@ async function handleOpenTableFile(file, stage) {
     <div class="calcrow"><span class="cl">Guest status recorded</span><span class="cr">${fmt(recorded)}</span></div>
     <div class="calcrow"><span class="cl">Guest status not recorded</span><span class="cr">${fmt(unmarked)}</span></div>
     <div class="calcrow"><span class="cl">Duplicate rows already loaded</span><span class="cr">${fmt(dup)}</span></div>
-    <div class="calcrow"><span class="cl">Possible issues requiring a manager decision</span><span class="cr">${fmt(issues)}</span></div>
+    <div class="calcrow"><span class="cl">Possible issues requiring a decision</span><span class="cr">${fmt(issues)}</span></div>
     ${notCompleted ? `<div class="note" style="margin-top:10px">${fmt(notCompleted)} canceled or no-show rows are ignored automatically — that's normal.</div>` : ''}
     <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
       <button class="bigbtn" id="otGo" type="button">Update Dashboard</button>
@@ -404,7 +406,7 @@ async function handleOpenTableFile(file, stage) {
       });
       const connected = all.filter((s) => s.intent !== 'UNKNOWN' && s.matchStatus === 'matched').length;
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().displayName || currentUser().email || 'public-site visitor')}.<br>
         ${fmt(connected)} visits connected to Toast.<br>
         ${fmt(unmarked)} visits had no recorded starting choice — they still count in sales, covers and food
         cost; only conversion rates leave them out.<br>
@@ -446,7 +448,7 @@ export function startCostFlow(stageHost) {
       <b>canonical_name</b> (or “item” / “name”) and <b>cost</b> (or “cost_per_portion” / “unit_cost”);
       optional <b>portion</b> and <b>notes</b> columns. The management workbook layout (names in column B,
       costs in column C) is also understood. Costs are dollars per portion, above $0.
-      Chef-confirmed values replace the temporary estimates item by item, and past days keep the costs
+      Chef-confirmed values replace rough costs item by item, and past days keep the costs
       that were in effect at the time. Uploading the same file twice is safe.</div>
     <div id="cStage"></div>`);
   const dz = body.querySelector('#cDz');
@@ -527,7 +529,7 @@ async function handleCostFile(file, stage) {
       ${rejected.length ? `<div class="note warn" style="margin-top:10px"><b>${rejected.length} row${rejected.length === 1 ? ' was' : 's were'} rejected</b> and will not be saved:
         ${rejected.slice(0, 8).map((r) => `line ${r.line}${r.name ? ` (${esc(r.name)})` : ''} — ${esc(r.why)}`).join('; ')}${rejected.length > 8 ? ` and ${rejected.length - 8} more` : ''}.</div>` : ''}
       ${workbookHeuristic ? `<div class="note" style="margin-top:10px">This file has no header row, so it was read using the known
-        management-workbook layout (item names in column B, costs in column C). Only rows that fit that shape are
+        known workbook layout (item names in column B, costs in column C). Only rows that fit that shape are
         listed above — check the "Items recognized" count against the workbook before confirming.</div>` : ''}
       ${(diff.changed.length || diff.added.length) ? `
         <div style="max-height:210px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:8px">
@@ -587,9 +589,9 @@ async function handleCostFile(file, stage) {
         ? `<br>${res.skipped.length} row${res.skipped.length === 1 ? '' : 's'} skipped by the database: ${esc(res.skipped.map((s) => `${s.name} (${s.why})`).join('; '))}.`
         : '';
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().displayName || currentUser().email || 'public-site visitor')}.<br>
         ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.
-        Chef-confirmed values now replace the temporary estimates for those items.${skippedNote}<br>
+        Chef-confirmed values now replace rough costs for those items.${skippedNote}<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;
       notify('Food costs updated.');
       CTX.refreshData();

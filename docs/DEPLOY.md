@@ -1,28 +1,31 @@
 # Deployment
 
-## Frontend (current: GitHub Pages)
+## Frontend: GitHub Pages
 
-GitHub Pages serves the repo root of `main` (`.nojekyll` present). Deploy = merge to
-`main`, push. CI runs vitest on every push; merge only on green.
+GitHub Pages serves the repo root of `main` (`.nojekyll` present). Use a branch
+and PR; do not push directly to `main`.
 
 ```bash
 git checkout main
-git merge feature/live-food-cost-dashboard
+git merge <reviewed-branch>
 git push origin main
 ```
 
-Rollback: revert the merge commit, or point visitors at `legacy/index.html` (always
-the shipped pilot report).
+Rollback: revert the merge commit, or point visitors at `legacy/index.html`
+(always the shipped pilot report).
 
 ## Verify after deploy
 
-1. Load the site, passcode in, confirm the freshness badge shows the expected dates.
-2. Food Cost page renders numbers (fetches `data/live/*.json` — check the browser
-   network tab for 404s if blank).
-3. `npm test` locally must be green at the deployed commit.
+1. Load the site, passcode in, confirm the freshness badge shows sales and
+   OpenTable dates separately.
+2. Open Advanced Details and confirm the deployed commit matches the expected
+   GitHub Pages deployment SHA.
+3. Confirm Fixes Needed does not surface frozen Jul 31-Aug 2 pilot records.
+4. `npm test` must be green at the deployed commit.
 
-## Backend (Supabase — when provisioned)
+## Backend: Supabase
 
-See docs/RUNBOOK.md "Backend phase". Frontend stays on Pages; it will read from
-Supabase with the anon key once RLS is live, replacing the static JSON fetches in
-`src/pages-live.mjs → loadLive()` (single function to swap).
+The frontend reads shared Supabase data with the anon key. Current temporary
+writes use the anon RPC allowlist in `supabase/migrations/0006_public_access_rpc.sql`.
+Apply migrations with `scripts/admin/apply-sql.mjs`; rotate Vault credentials
+with `scripts/admin/set-github-token.mjs`.

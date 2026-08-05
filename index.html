@@ -2135,7 +2135,7 @@ function pgCommission(host) {
     wrap.innerHTML = h; host.appendChild(wrap); wireLedger(wrap, all); return;
   }
 
-  h += `<div class="tw"><table><thead><tr><th>Server</th><th>Day</th><th>Table</th><th>Source</th>
+  h += `<div class="tw"><table><caption class="sr">Pilot commission ledger by server, day, table, source, tier, covers, rate and provisional amount</caption><thead><tr><th>Server</th><th>Day</th><th>Table</th><th>Source</th>
     <th>Tier</th><th>Covers</th><th>Adult AYCE</th><th>Rate</th><th>Amount</th><th></th></tr></thead><tbody>`;
   groups.forEach(g => {
     const open = S.ledger.open[g.server] !== false;
@@ -2613,6 +2613,6 @@ $("#pw").focus();
 
 })();
 </script>
-<script type="module" src="src/pages-live.mjs"></script>
+<script type="module" src="src/pages-live.mjs?v=20260805-open-access"></script>
 </body>
 </html>

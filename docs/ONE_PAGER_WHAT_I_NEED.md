@@ -31,7 +31,7 @@ Snow Crab (1),7.82,per cluster,
   (cost flows through rounds) · Royal Feasts at menu price (à-la-carte, out of scope).
 
 When he hands it over, one command imports it (`docs/RUNBOOK.md`), history stays
-intact via effective dating, and the PROVISIONAL badge clears. If his sheet has
+intact via effective dating, and the rough-cost label clears. If his sheet has
 per-ingredient sub-lines, send it anyway — I'll extend the cost model to roll
 ingredient lines up per item (that's the "reconfigure the calculations" step, and
 the schema is ready for it).

@@ -1,7 +1,7 @@
 // Chef cost-file handling shared by the browser Food Costs upload.
 // Parsing + preview diff only — the authoritative write (effective dating,
 // close-and-append, audit fields) happens server-side in ace_upload_costs().
-import { parseCsv } from './opentable.mjs';
+import { parseCsv } from './opentable.mjs?v=20260805-open-access';
 
 export function normalizeName(name) {
   return String(name ?? '')
@@ -105,7 +105,7 @@ export function attachAliases(rows, aliasMap) {
 }
 
 /**
- * Preview diff against the current cost master (what the manager confirms).
+ * Preview diff against the current cost master (what the visitor confirms).
  * `costRecords` are the normalized records from ace_item_costs payloads.
  */
 export function diffCosts(incoming, costRecords, effectiveFrom) {

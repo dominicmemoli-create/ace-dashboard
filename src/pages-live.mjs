@@ -29,13 +29,13 @@ import {
   comparableBaselineDates, weekdayOf, DEFAULT_THRESHOLDS,
   computeFoodCost, filterAyceProgram, isIncludedCheck, servicePeriodOf,
   perCheckCostStats,
-} from './food-cost-engine.mjs';
-import { resolveRange } from './date-range.mjs';
-import { toastVisits, scorePair } from './ot-matcher.mjs';
-import { triageIntents } from './triage.mjs';
-import { initManagerMode } from './manager-mode.mjs';
-import { initUpdatePage, pgUpdate } from './page-update.mjs';
-import { initFixesPage, pgFixes } from './page-fixes.mjs';
+} from './food-cost-engine.mjs?v=20260805-open-access';
+import { resolveRange } from './date-range.mjs?v=20260805-open-access';
+import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260805-open-access';
+import { triageIntents } from './triage.mjs?v=20260805-open-access';
+import { initManagerMode } from './manager-mode.mjs?v=20260805-open-access';
+import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260805-open-access';
+import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260805-open-access';
 
 const APP = window.__ACE_APP__;
 if (!APP) throw new Error('pages-live: legacy shell did not expose __ACE_APP__');
@@ -149,8 +149,8 @@ function loadLive() {
  * exclusions — one scorePair call covers all of them). Rows imported under
  * the old, wider rules can carry connections today's rules would never make:
  *   - ambiguous suggestions → marked staleSuggestion (auto-excluded, no card)
- *   - automatic 'matched' rows → demoted in-memory to 'ambiguous' so they
- *     leave conversion and appear as a likely-match card for a person.
+ *   - automatic 'matched' rows → marked staleSuggestion too, so they leave
+ *     conversion without creating new work for a visitor.
  * Manual connections and confirmed decisions are never touched, and the
  * stored rows themselves are untouched — this is an in-memory annotation.
  */
@@ -179,11 +179,9 @@ async function reverifyStoredMatches() {
       const v = valid.get(r.matchedOrderGuid);
       const s = v ? scorePair(r, v, cfg) : null;   // null → fails the current rules
       if (s) { r.matchEvidence = s.evidence; continue; }   // still sound — keep, with fresh evidence
-      if (r.matchStatus === 'matched') {
-        r.matchStatus = 'ambiguous';               // out of conversion; a person confirms or excludes
-      } else {
-        r.staleSuggestion = true;                  // never was reliable — no card, no conversion
-      }
+      r.matchStatus = 'ambiguous';                 // out of conversion
+      r.matchEvidence = null;
+      r.staleSuggestion = true;                    // no active card; current rules reject it
     }
   }
 }
@@ -243,7 +241,7 @@ async function rangeDetail(dates, periods) {
   for (const r of DATA.intents) {
     // only reliable connections attribute a recorded intent to a check —
     // ambiguous suggestions stay "Unknown" until a person confirms them
-    if (r.matchStatus === 'matched' && r.matchedOrderGuid && !r.excluded) intentByOrder.set(r.matchedOrderGuid, r);
+    if (r.matchStatus === 'matched' && r.matchedOrderGuid && !r.excluded && !r.staleSuggestion) intentByOrder.set(r.matchedOrderGuid, r);
   }
   const out = [];
   const missingDates = [];
@@ -366,16 +364,21 @@ function renderFreshness() {
   }
   const dates = opDates();
   const last = dates[dates.length - 1];
+  const otDates = [...new Set((DATA.intents ?? []).map((r) => r.businessDate))].sort();
+  const otLast = otDates[otDates.length - 1] ?? null;
   const staleDays = Math.floor((Date.now() - Date.parse(`${last?.slice(0, 4)}-${last?.slice(4, 6)}-${last?.slice(6, 8)}T12:00:00-04:00`)) / 86400000);
   const lastImport = (DATA.importRuns ?? []).find((r) => r.status === 'success');
-  el.textContent = `${DATA.source === 'supabase' ? 'Live data' : 'Backup data'} · through ${fmtDate(last)}${staleDays > 1 ? ' · Update needed' : ''}`;
-  el.style.color = staleDays > 1 ? 'var(--neg, #e0705c)' : '';
+  const otBehind = !!(last && (!otLast || otLast < last));
+  const needsUpdate = staleDays > 1 || otBehind;
+  el.textContent = `${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} · sales through ${fmtDate(last)} · OpenTable through ${fmtDate(otLast)}${needsUpdate ? ' · Update needed' : ''}`;
+  el.style.color = needsUpdate ? 'var(--neg, #e0705c)' : '';
   el.title = [
     `Sales data through ${fmtDate(last)} (business date)`,
+    `OpenTable data through ${fmtDate(otLast)} (business date)`,
     `Last Toast sync: ${fmtEt(DATA.manifest?.lastToastSync)}`,
     `Last upload: ${lastImport ? `${lastImport.kind} · ${fmtEt(lastImport.created_at)}` : 'none recorded'}`,
     DATA.source === 'supabase'
-      ? 'Loading live from the shared database; Toast refreshes automatically every morning (~6 AM ET).'
+      ? 'Loading from the shared database; Toast refreshes automatically every morning (~6 AM ET).'
       : 'Showing saved backup data — the shared database was unreachable from this page load.',
   ].join('\n');
 }
@@ -482,7 +485,7 @@ function renderOps(host) {
   <section class="hero rise"><div class="hero-top">
     <div class="hero-verdict">
       <div class="hero-eyebrow">Operations — ${esc(range.label)}
-        <span class="verdict-badge neu">LIVE DATA</span></div>
+        <span class="verdict-badge neu">${DATA.source === 'supabase' ? 'SHARED DATA' : 'BACKUP DATA'} THROUGH ${esc(fmtDate(range.dates[range.dates.length - 1]))}</span></div>
       <div class="hero-delta"><span class="big">${pct(t.guests ? (t.entitlementCovers / t.guests) * 100 : null)}</span>
         <span class="unit">AYCE cover mix<br>${fmt(Math.round(t.entitlementCovers))} AYCE covers of ${fmt(t.guests)} guests</span></div>
       <div class="hero-line"><b>${fmt(t.checks)}</b> dining-room &amp; patio checks · <b>${usd0(t.floorNet)}</b> net floor sales ·
@@ -541,7 +544,7 @@ function renderOps(host) {
  *   review            — conflicting recorded choices (pending decision)
  *   notConnected      — recorded choice, no reliable Toast connection
  *   ambiguous         — recorded choice, candidate not confirmed
- *   excluded          — manager-excluded records
+ *   excluded          — visitor-excluded records
  * Half/Half is metadata and never affects any bucket.
  */
 function conversionStatsFor(dates, periods = null) {
@@ -555,11 +558,12 @@ function conversionStatsFor(dates, periods = null) {
   const st = { total: rows.length, eligible: 0, converted: 0, unknown: 0, review: 0, predecided: 0, ambiguous: 0, notConnected: 0, excluded: 0, halfHalf: 0 };
   for (const r of rows) {
     if (r.halfHalf || r.mixedMenuException) st.halfHalf++;   // metadata tally only
-    if (r.excluded) { st.excluded++; continue; }             // manager-excluded via correction
-    const intent = r.intentEffective ?? r.intent;            // manager correction overrides, audit preserved
+    if (r.excluded) { st.excluded++; continue; }             // visitor-excluded via correction
+    const intent = r.intentEffective ?? r.intent;            // visitor correction overrides, audit preserved
     if (intent === 'REVIEW_REQUIRED') { st.review++; continue; }
     if (intent === 'UNKNOWN' || intent == null) { st.unknown++; continue; }
     if (intent === 'PREDECIDED_AYCE') { st.predecided++; continue; }
+    if (r.staleSuggestion) { st.notConnected++; continue; }
     if (r.matchStatus === 'ambiguous') { st.ambiguous++; continue; }   // never counts either way
     if (r.matchStatus !== 'matched') { st.notConnected++; continue; }  // unconnected can't prove conversion
     st.eligible++;
@@ -600,7 +604,7 @@ function renderServersLive(host) {
     if (periods.length !== 2 && !periods.includes(periodOf(r))) continue;
     const intent = r.intentEffective ?? r.intent;
     if (!['UNDECIDED', 'ALC'].includes(intent)) continue;
-    if (r.matchStatus !== 'matched' || !r.matchedServerGuid) continue;
+    if (r.staleSuggestion || r.matchStatus !== 'matched' || !r.matchedServerGuid) continue;
     const c = convByServer.get(r.matchedServerGuid) ?? { eligible: 0, converted: 0 };
     c.eligible++;
     if (r.hasAyceSales) c.converted++;
@@ -619,6 +623,7 @@ function renderServersLive(host) {
       const v = p - base.pct;
       cost = v >= th.criticalPts ? 'critical' : v >= th.watchPts ? 'watch' : 'no_alert';
     }
+    if (smallSample) cost = 'no_alert';
     const conv = convByServer.get(guid) ?? { eligible: 0, converted: 0 };
     return { guid, name: emp.get(guid) ?? '(unattributed)', a, p, cov, smallSample, lowCoverage, cost, conv, median: undefined };
   });
@@ -742,6 +747,7 @@ function srvTh(key, label, view, thAttrs = '', tip = null) {
 }
 function costBadge(r) {
   if (r.lowCoverage) return '<span class="verdict-badge" title="Too many uncosted items for a fair comparison">Costs missing</span>';
+  if (r.smallSample) return '<span class="verdict-badge pos" title="Below the sample threshold — estimate shown for completeness, alerts suppressed">Small sample — no alert</span>';
   const map = {
     no_alert: ['pos', 'No alert'], watch: ['neu', 'Watch'], critical: ['neg', 'Critical'],
     no_baseline: ['', '—'],
@@ -753,6 +759,22 @@ function sampleBadge(r) {
   return r.smallSample
     ? '<span class="verdict-badge" title="Below the sample threshold — figures shown for completeness, alerts suppressed">Small sample</span>'
     : '<span class="verdict-badge pos">OK</span>';
+}
+
+async function loadPagesDeployment(el) {
+  if (!el) return;
+  try {
+    const res = await fetch('https://api.github.com/repos/dominicmemoli-create/ace-dashboard/deployments?environment=github-pages&per_page=1', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const deployments = await res.json();
+    const dep = deployments?.[0];
+    const sha = dep?.sha ? String(dep.sha) : '';
+    el.innerHTML = sha
+      ? `<code>${esc(sha.slice(0, 12))}</code>${dep.ref ? ` · ${esc(dep.ref)}` : ''}`
+      : 'No GitHub Pages deployment reported';
+  } catch {
+    el.textContent = 'Unavailable from the GitHub API';
+  }
 }
 
 /* ----------------------------------------------------- server drill-down -- */
@@ -952,7 +974,7 @@ function renderFoodCost(host) {
   <section class="hero rise"><div class="hero-top">
     <div class="hero-verdict">
       <div class="hero-eyebrow">AYCE food cost — ${esc(range.label)}
-        <span class="verdict-badge ${provisional ? 'neu' : 'pos'}">${provisional ? 'PROVISIONAL — temporary estimates in use' : 'CHEF-CONFIRMED'}</span></div>
+        <span class="verdict-badge ${provisional ? 'neu' : 'pos'}">${provisional ? 'Rough costs — waiting for chef confirmation' : 'CHEF-CONFIRMED'}</span></div>
       <div class="hero-delta"><span class="big">${pct(scopePct)}</span>
         <span class="unit">est. cost of AYCE food sent ÷<br>AYCE sales collected</span></div>
       <div class="hero-line"><b>${usd0(t.roundCost)}</b> estimated cost of recorded AYCE rounds ·
@@ -969,7 +991,7 @@ function renderFoodCost(host) {
       <div class="hr-cell"><div class="k">Genuine AYCE items costed</div><div class="v">${pct(qtyCov)}</div>
         <div class="m">modifiers &amp; drinks removed from the denominator</div></div>
       <div class="hr-cell"><div class="k">Chef-confirmed share</div><div class="v">${tiersKnown ? pct(totalCost > 0 ? (tiers.confirmed / totalCost) * 100 : null, 0) : '—'}</div>
-        <div class="m">${tiersKnown ? 'of cost dollars; the rest are temporary estimates' : 'available after the next data rebuild'}</div></div>
+        <div class="m">${tiersKnown ? 'of cost dollars; the rest are rough costs awaiting chef confirmation' : 'available after the next data rebuild'}</div></div>
     </div>
   </div>
   <div class="hero-summary"><div class="sh">Definition</div>
@@ -989,13 +1011,13 @@ function renderFoodCost(host) {
       <span class="sub" style="display:block">${hint}</span></span>
       <span class="cr">${usd0(dollars)} <span class="muted">(${pct(totalCost > 0 ? (dollars / totalCost) * 100 : null, 0)})</span></span></div>` : '';
   src.innerHTML = `<header><div><div class="ttl">Where the cost estimate comes from</div>
-    <div class="sub">Exact costs, temporary estimates and gaps are kept separate — a headline coverage number
+    <div class="sub">Exact costs, rough costs and gaps are kept separate — a headline coverage number
     never hides which kind is underneath.</div></div></header>
     <div class="body">
       ${tiersKnown ? '' : '<div class="note gold" style="margin-bottom:8px">The cost-source split appears after the next data rebuild; the totals above are unaffected.</div>'}
       ${tierRow('Chef-confirmed costs', tiers.confirmed, 'exact recipe costs uploaded by the chef', 'pos')}
-      ${tierRow('Explicit temporary costs', tiers.explicit_temp + tiers.override, 'management’s stated interim costs (incl. portion overrides such as ½-lb shrimp $2.50, 1-pc crab cake $4)', 'neu')}
-      ${tierRow('Workbook estimates', tiers.rough_estimate, 'rough per-item estimates from the management workbook', 'neu')}
+      ${tierRow('Explicit temporary costs', tiers.explicit_temp + tiers.override, 'stated interim costs (incl. portion overrides such as ½-lb shrimp $2.50, 1-pc crab cake $4)', 'neu')}
+      ${tierRow('Workbook estimates', tiers.rough_estimate, 'rough per-item estimates from the cost workbook', 'neu')}
       ${tierRow('$2 menu fallback', tiers.fallback_2, 'supplied-menu items awaiting a real cost — flat $2 placeholder', 'neu')}
       <div class="calcrow"><span class="cl">True missing food items
         <span class="sub" style="display:block">genuine items with no cost — left OUT of the estimate, never $0</span></span>
@@ -1004,7 +1026,7 @@ function renderFoodCost(host) {
         <span class="sub" style="display:block">Toast modifiers, preparation notes, kitchen markers and trivial drinks — no cost, no coverage effect</span></span>
         <span class="cr">${fmt(Math.round(t.excludedModifierQty))} modifier rows · ${fmt(Math.round(t.excludedDrinkQty))} drink rows</span></div>
     </div>
-    <div class="foot">Food cost stays labeled provisional until chef-confirmed recipe costs are uploaded
+    <div class="foot">Food cost stays labeled "Rough costs — waiting for chef confirmation" until chef-confirmed recipe costs are uploaded
       (Update Dashboard → Food Costs). The headline, server table and every drill-down use this same
       calculation pipeline.</div>`;
   host.appendChild(src);
@@ -1158,13 +1180,13 @@ function pgHelp(host) {
         <dd>The short list of visits that genuinely need a decision — a conflicting starting choice or one likely
           table connection to confirm. Everything unclear is excluded automatically instead of becoming work.</dd>
         <dt style="font-weight:650;white-space:nowrap">Who can do what</dt>
-        <dd>Every approved operator has the same capabilities: upload files, update food costs, resolve fixes and
-          retry Toast updates. Sign-in is by emailed link — no passwords — and is only asked for when saving a change.</dd>
+        <dd>Every visitor who passes the presentation gate can upload files, update food costs, resolve fixes and
+          retry Toast updates. The database accepts only those narrow public actions and records a public session id for each write.</dd>
       </dl></div></div>
 
     <div class="sec">
       <div class="acc"><button type="button" aria-expanded="false" id="advDetTgl">
-        Advanced Details — data &amp; methodology (for technical operators)<span class="ch">▶</span></button>
+        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">▶</span></button>
         <div class="ab" hidden id="advDetBody"></div></div>
     </div>`;
 
@@ -1188,14 +1210,15 @@ function pgHelp(host) {
           `${conv.review} conflicting`,
           `${conv.notConnected} recorded but not connected`,
           `${conv.ambiguous} ambiguous connection`,
-          `${conv.excluded} manager-excluded`,
+          `${conv.excluded} visitor-excluded`,
         ];
         const censusSum = conv.eligible + conv.predecided + conv.unknown + conv.review + conv.notConnected + conv.ambiguous + conv.excluded;
         const wrap = document.createElement('div');
         wrap.innerHTML = `
         <table class="tb" style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:14px">
         <caption class="sr">Technical data and methodology details</caption><tbody>
-          ${mrow('Data source', DATA.source === 'supabase' ? 'Live shared database' : 'Static fallback files (database unreachable)')}
+          ${mrow('Data source', DATA.source === 'supabase' ? 'Shared database' : 'Static fallback files (database unreachable)')}
+          ${mrow('Deployed commit', '<span id="deploySha">Checking GitHub Pages...</span>')}
           ${mrow('Data freshness (all times ET)', `Sales through ${fmtDate(dates[dates.length - 1])} · last Toast sync ${fmtEt(DATA.manifest?.lastToastSync)} · last upload ${lastImport ? `${esc(lastImport.kind)} ${fmtEt(lastImport.created_at)}` : '—'} · pilot extract generated ${esc(String(window.__ACE__?.generated ?? '—'))}`)}
           ${mrow('Last update run', lastRun ? `${esc(lastRun.runId ?? '')} · ${esc(lastRun.status ?? '')}${lastRun.error ? ' · ' + esc(lastRun.error) : ''}` : '—')}
           ${mrow('Included areas', Object.values(DATA.ops.includedAreas.serviceAreaGuids).join(', ') + ' — bar, takeout, delivery and non-table revenue excluded')}
@@ -1206,11 +1229,12 @@ function pgHelp(host) {
           ${mrow('Food-cost precedence', 'Toast modifiers/notes and trivial drinks excluded → chef-confirmed costs → explicit portion overrides (½-lb shrimp $2.50, 1-pc crab cake $4) → explicit temporary costs → workbook estimates → $2 supplied-menu fallback → true missing (never $0).')}
           ${mrow('Recent imports', (DATA.importRuns ?? []).slice(0, 5).map((r) => `${esc(r.kind)} · ${fmtEt(r.created_at)} · ${esc(r.status)}${r.counts?.inserted != null ? ` · ${r.counts.inserted} new` : ''}${r.created_by_email ? ` · ${esc(r.created_by_email.split('@')[0])}` : ''}`).join('<br>') || '—')}
           ${mrow('Commission', `Pilot rates $5/$7.50/$10 per converted COVER, active ${fmtDate(DATA.ops.commission.activeFrom)}–${fmtDate(DATA.ops.commission.activeTo)} only. Program inactive — no new accrual.`)}
-          ${mrow('Access model', 'The passcode screen is a presentation gate, not authentication. Writes require sign-in (magic link) as an approved operator; authorization is enforced in security-definer database functions. Service credentials never reach the browser.')}
-          ${mrow('CLI fallback', 'Administrator command-line tools remain in scripts/ (see docs/TECHNICAL_RUNBOOK.md). Operators never need them.')}
+          ${mrow('Access model', 'The passcode screen is a presentation gate. Public writes are limited to an anon RPC allowlist for uploads, fixes and Toast retry; each write carries a public session id into the audit tables. Service credentials never reach the browser.')}
+          ${mrow('CLI fallback', 'Administrator command-line tools remain in scripts/ (see docs/TECHNICAL_RUNBOOK.md) for credentials, backfills and operational recovery.')}
         </tbody></table>
         <div id="legacyMethod"></div>`;
         body.appendChild(wrap);
+        loadPagesDeployment(wrap.querySelector('#deploySha'));
         try { LEGACY.method.fn(wrap.querySelector('#legacyMethod')); } catch { /* legacy content optional */ }
       }
     });

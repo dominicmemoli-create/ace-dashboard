@@ -1,6 +1,6 @@
 // UI-facing contracts from the management brief that are testable without a
 // browser: operational inclusion of unknown-intent tables, custom-range
-// validation, unauthenticated write blocking, unique fix-card ids, and
+// validation, public RPC write shape, unique fix-card ids, and
 // filter/tab persistence across async refreshes.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -129,12 +129,30 @@ describe('19 — fix cards produce no duplicate DOM ids', () => {
   });
 });
 
-describe('20 — unauthenticated users cannot perform writes', () => {
-  it('rpc() refuses to call any write endpoint without a session', async () => {
+describe('20 — public writes go only through the anon RPC allowlist', () => {
+  it('rpc() sends the anon token and a public session id', async () => {
     initAuth({ url: 'https://example.invalid', anonKey: 'anon' });
-    await expect(rpc('ace_upload_costs', {})).rejects.toThrow(/sign in/i);
+    const oldFetch = globalThis.fetch;
+    let captured = null;
+    globalThis.fetch = async (url, opts) => {
+      captured = { url: String(url), opts, body: JSON.parse(opts.body) };
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    try {
+      await rpc('ace_upload_costs', { p_records: [] });
+    } finally {
+      globalThis.fetch = oldFetch;
+    }
+    expect(captured.url).toBe('https://example.invalid/rest/v1/rpc/ace_upload_costs');
+    expect(captured.opts.method).toBe('POST');
+    expect(captured.opts.headers.Authorization).toBe('Bearer anon');
+    expect(captured.body.p_records).toEqual([]);
+    expect(captured.body.p_actor_session_id).toMatch(/^session-[a-z0-9-]+/i);
   });
-  it('there is no unauthenticated write path in the browser code', () => {
+  it('there is no direct table write path in the browser code', () => {
     for (const f of ['src/page-update.mjs', 'src/page-fixes.mjs']) {
       const src = read(f);
       // every mutation goes through rpc(); no direct POST/PATCH to tables

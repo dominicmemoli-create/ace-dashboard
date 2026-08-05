@@ -3,16 +3,16 @@
 // bar/takeout/delivery) is excluded from the QUEUE automatically and
 // summarized honestly: unmarked visits still count in every operational
 // figure — only conversion leaves them out. Half/Half is a guest-mix note and
-// never creates work. Decisions save straight to the shared database with the
-// signed-in user's identity and are reversible from the audit history.
+// never creates work. Decisions save straight to the shared database with a
+// public session id and are reversible from the audit history.
 //
 // Accessibility: every field id is unique per card (no duplicate DOM ids),
 // decisions are native radio groups inside a fieldset, and the queue offers
 // filters by issue type, date and server with the global count always shown
 // next to the filtered count.
-import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs';
-import { rpc, restGet } from './auth.mjs';
-import { requireOperator, notify } from './manager-mode.mjs';
+import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260805-open-access';
+import { rpc, restGet } from './auth.mjs?v=20260805-open-access';
+import { requireOperator, notify } from './manager-mode.mjs?v=20260805-open-access';
 
 let CTX = null;
 export function initFixesPage(ctx) { CTX = ctx; }
@@ -160,7 +160,8 @@ export function pgFixes(host) {
     list.innerHTML = `<div class="empty sec"><div class="et">Nothing matches this filter</div>
       <div class="es">${actionable.length} open item${actionable.length === 1 ? '' : 's'} exist${actionable.length === 1 ? 's' : ''} outside the current filter.</div></div>`;
   } else {
-    visible.forEach((item, i) => list.appendChild(fixCard(item, i)));
+    list.innerHTML = `<div class="note sec" style="margin-top:12px">Showing 1 of ${visible.length} open item${visible.length === 1 ? '' : 's'}${filtered ? ' in this filter' : ''}. Save or change the filters to move through the queue.</div>`;
+    list.appendChild(fixCard(visible[0], 0));
   }
   renderDecided(host.querySelector('#doneList'));
 }
@@ -187,12 +188,11 @@ function fixCard(item, idx) {
       ? matchWhy(r, ev)
     : item.kind === KIND.TRANSFER
       ? 'The table changed hands during service — confirm who it belongs to.'
-      : 'An operator asked for another look at this visit.';
+      : 'A visitor asked for another look at this visit.';
 
   el.innerHTML = `
     <div class="fk">
       <span class="verdict-badge ${kindCls}">${esc(kindLabel)}</span>
-      ${item.pilot ? '<span class="verdict-badge neu">Pilot weekend — touches frozen history</span>' : ''}
     </div>
     <div class="facts">
       <div class="fact"><div class="k">Date</div><div class="v">${esc(midDate(r.businessDate))}</div></div>
@@ -405,7 +405,7 @@ function renderDecided(host) {
       <td style="text-align:left">${esc(midDate(r.businessDate))}</td>
       <td style="text-align:left">${esc(r.tableTokens?.join(', ') || '—')}</td>
       <td style="text-align:left">${esc(describeDecision(r))}</td>
-      <td style="text-align:left">${esc((r.correction.user ?? '').split('@')[0])}</td>
+      <td style="text-align:left">${esc(r.correction.user || 'public-site visitor')}</td>
       <td><button class="btn ghost sm" type="button" data-undo="${i}"
         aria-label="Undo the decision for ${esc(midDate(r.businessDate))} table ${esc(r.tableTokens?.join(', ') || '')}">Undo</button></td></tr>`).join('')}
     </tbody></table></div></div>`;
