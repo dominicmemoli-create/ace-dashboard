@@ -711,10 +711,14 @@ function registerPages() {
   PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true };
   PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help' };
 
-  // stale saved pages from earlier versions → nearest new home
-  const remap = { overview: 'pilot', commission: 'pilot', method: 'help', review: 'fixes', import: 'update' };
-  if (remap[S.page]) S.page = remap[S.page];
-  if (!PAGES[S.page]) S.page = 'ops';
+  // land on Operations Overview unless the visitor SAVED a page earlier;
+  // stale saved pages from previous versions map to their nearest new home
+  const remap = { overview: 'pilot', servers: 'servers', commission: 'pilot', method: 'help', review: 'fixes', import: 'update' };
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('ace.page')); } catch { /* fresh visitor */ }
+  if (saved && PAGES[saved]) S.page = saved;
+  else if (saved && remap[saved]) S.page = remap[saved];
+  else S.page = 'ops';
 }
 registerPages();
 
