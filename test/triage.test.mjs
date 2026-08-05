@@ -1,6 +1,6 @@
 // Fixes Needed triage — acceptance tests 10-16 and 20 from the manager-product
 // brief. The binding rule: unknown/unmarked/unreliable records are excluded
-// automatically and NEVER create management work; only clear, actionable
+// automatically and NEVER create visitor work; only clear, actionable
 // exceptions enter the queue.
 import { describe, it, expect } from 'vitest';
 import { triageIntents, classifyRecord, exclusionSummaryLines, KIND, MIN_CANDIDATE_CONFIDENCE } from '../src/triage.mjs';
@@ -94,6 +94,12 @@ describe('actionable issues (do appear)', () => {
     expect(actionable).toHaveLength(0);
     expect(excluded.markedNotConnected).toBe(1);
   });
+  it('a stale automatic match is auto-excluded instead of revived as a likely match', () => {
+    const { actionable, excluded } = triageIntents([
+      rec({ matchStatus: 'matched', matchedOrderGuid: 'old-guid', matchConfidence: 0.9, staleSuggestion: true })]);
+    expect(actionable).toHaveLength(0);
+    expect(excluded.markedNotConnected).toBe(1);
+  });
   it('transfers appear when detected', () => {
     const { actionable } = triageIntents([rec({ transferDetected: true })]);
     expect(actionable).toHaveLength(1);
@@ -113,7 +119,7 @@ describe('queue lifecycle', () => {
     expect(actionable).toHaveLength(0);
     expect(excluded.resolved).toBe(1);
   });
-  it('manager-excluded items stay out of the queue', () => {
+  it('visitor-excluded items stay out of the queue', () => {
     const { actionable, excluded } = triageIntents([
       rec({ intent: 'REVIEW_REQUIRED', reviewStatus: 'confirmed', excluded: true })]);
     expect(actionable).toHaveLength(0);
@@ -133,21 +139,23 @@ describe('badge + prioritization', () => {
     ]);
     expect(badge).toBe(1);
   });
-  it('pilot-window items sort first, then conflict > match > transfer', () => {
-    const { actionable } = triageIntents([
+  it('pilot-window items are frozen; active queue sorts conflict > reopened > match > transfer', () => {
+    const { actionable, excluded } = triageIntents([
       rec({ matchStatus: 'ambiguous', matchedOrderGuid: 'g', matchConfidence: 0.6 }),   // match, recent
       rec({ transferDetected: true }),                                                   // transfer
       rec({ intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }),                // conflict
+      rec({ reopened: true, reviewStatus: 'pending_review' }),                           // reopened
       rec({ businessDate: '20260801', intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }), // pilot conflict
     ]);
-    expect(actionable[0].pilot).toBe(true);
-    expect(actionable.slice(1).map((a) => a.kind)).toEqual([KIND.CONFLICT, KIND.MATCH, KIND.TRANSFER]);
+    expect(excluded.frozenPilot).toBe(1);
+    expect(actionable.map((a) => a.kind)).toEqual([KIND.CONFLICT, KIND.REOPENED, KIND.MATCH, KIND.TRANSFER]);
   });
   it('exclusion summaries are honest: unmarked visits still count operationally', () => {
-    const lines = exclusionSummaryLines({ unmarked: 62, markedNotConnected: 3 });
+    const lines = exclusionSummaryLines({ unmarked: 62, markedNotConnected: 3, frozenPilot: 2 });
     expect(lines[0]).toMatch(/^62 visits did not have a recorded starting choice/);
     expect(lines[0]).toMatch(/still count in tables, covers, sales and food cost/);
     expect(lines[0]).toMatch(/only conversion rates leave them out/);
+    expect(lines.join(' ')).toMatch(/Jul 31-Aug 2 pilot window is frozen/);
     // never again claim they "do not affect anyone's numbers"
     expect(lines.join(' ')).not.toMatch(/do(n't| not) affect anyone/i);
     expect(lines.join(' ')).not.toMatch(/error|fail|attention/i);
@@ -161,6 +169,7 @@ describe('conversion protection', () => {
       rec({ intent: 'UNKNOWN' }),
       rec({ matchStatus: 'unmatched', matchedOrderGuid: null }),
       rec({ matchStatus: 'ambiguous', matchedOrderGuid: null }),
+      rec({ businessDate: '20260801', intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }),
     ]) {
       const c = classifyRecord(r);
       expect(c.actionable).toBe(false);

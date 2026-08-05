@@ -1,6 +1,6 @@
 // UI-facing contracts from the management brief that are testable without a
 // browser: operational inclusion of unknown-intent tables, custom-range
-// validation, unauthenticated write blocking, unique fix-card ids, and
+// validation, public RPC write shape, unique fix-card ids, and
 // filter/tab persistence across async refreshes.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -129,12 +129,101 @@ describe('19 — fix cards produce no duplicate DOM ids', () => {
   });
 });
 
-describe('20 — unauthenticated users cannot perform writes', () => {
-  it('rpc() refuses to call any write endpoint without a session', async () => {
-    initAuth({ url: 'https://example.invalid', anonKey: 'anon' });
-    await expect(rpc('ace_upload_costs', {})).rejects.toThrow(/sign in/i);
+describe('20 — writes go only through authenticated RPC calls', () => {
+  // vitest runs in plain node: give auth.mjs the one browser API it persists to
+  if (typeof globalThis.localStorage === 'undefined') {
+    const store = new Map();
+    globalThis.localStorage = {
+      getItem: (k) => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => store.set(k, String(v)),
+      removeItem: (k) => store.delete(k),
+      clear: () => store.clear(),
+    };
+  }
+  const CFG = { url: 'https://example.invalid', publishableKey: 'sb_publishable_test' };
+  const SESSION = {
+    access_token: 'manager-jwt',
+    refresh_token: 'r',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+  };
+
+  it('rpc() refuses to call anything while signed out', async () => {
+    initAuth(CFG);
+    localStorage.removeItem('ace.auth.session');
+    const oldFetch = globalThis.fetch;
+    let called = false;
+    globalThis.fetch = async () => { called = true; return new Response('{}', { status: 200 }); };
+    try {
+      await expect(rpc('ace_upload_costs', { p_records: [] })).rejects.toThrow(/sign in/i);
+    } finally {
+      globalThis.fetch = oldFetch;
+    }
+    expect(called).toBe(false);   // nothing even reaches the network
   });
-  it('there is no unauthenticated write path in the browser code', () => {
+
+  it('rpc() sends the signed-in session token, never the publishable key', async () => {
+    initAuth(CFG);
+    localStorage.setItem('ace.auth.session', JSON.stringify(SESSION));
+    const oldFetch = globalThis.fetch;
+    let captured = null;
+    globalThis.fetch = async (url, opts) => {
+      captured = { url: String(url), opts, body: JSON.parse(opts.body) };
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    try {
+      await rpc('ace_upload_costs', { p_records: [] });
+    } finally {
+      globalThis.fetch = oldFetch;
+      localStorage.removeItem('ace.auth.session');
+    }
+    expect(captured.url).toBe('https://example.invalid/rest/v1/rpc/ace_upload_costs');
+    expect(captured.opts.method).toBe('POST');
+    expect(captured.opts.headers.Authorization).toBe('Bearer manager-jwt');
+    expect(captured.opts.headers.apikey).toBe('sb_publishable_test');
+    expect(captured.body.p_records).toEqual([]);
+    expect(captured.body.p_actor_session_id).toBeUndefined();
+  });
+
+  it('a 401 clears the session and asks the manager to sign in again', async () => {
+    initAuth(CFG);
+    localStorage.setItem('ace.auth.session', JSON.stringify(SESSION));
+    const oldFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(JSON.stringify({ message: 'JWT expired' }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+    try {
+      await expect(rpc('ace_save_review_fix', {})).rejects.toThrow(/session expired/i);
+    } finally {
+      globalThis.fetch = oldFetch;
+    }
+    expect(localStorage.getItem('ace.auth.session')).toBeNull();
+  });
+
+  it('database refusals surface as plain language, not error codes', async () => {
+    initAuth(CFG);
+    localStorage.setItem('ace.auth.session', JSON.stringify(SESSION));
+    const oldFetch = globalThis.fetch;
+    const cases = [
+      ['not_authorized', /approved manager list/i],
+      ['pilot_history_frozen', /frozen/i],
+      ['retry_cooldown', /10 minutes/i],
+    ];
+    try {
+      for (const [code, expected] of cases) {
+        globalThis.fetch = async () => new Response(JSON.stringify({ message: code }), {
+          status: 400, headers: { 'Content-Type': 'application/json' },
+        });
+        await expect(rpc('ace_retry_toast_update', {})).rejects.toThrow(expected);
+      }
+    } finally {
+      globalThis.fetch = oldFetch;
+      localStorage.removeItem('ace.auth.session');
+    }
+  });
+  it('there is no direct table write path in the browser code', () => {
     for (const f of ['src/page-update.mjs', 'src/page-fixes.mjs']) {
       const src = read(f);
       // every mutation goes through rpc(); no direct POST/PATCH to tables

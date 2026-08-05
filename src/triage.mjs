@@ -1,4 +1,4 @@
-// Fixes Needed triage — decides which OpenTable records deserve a management
+// Fixes Needed triage — decides which OpenTable records deserve a visitor
 // decision and which are excluded automatically without creating work.
 //
 // BINDING RULES (mirrors the management brief):
@@ -17,7 +17,7 @@
 //     1. conflicting recognized tags (REVIEW_REQUIRED)
 //     2. one strong Toast candidate that failed the automatic threshold
 //     3. detected table transfers needing attribution confirmation
-//     4. items a manager reopened
+//     4. items a visitor reopened
 //   Records without a recorded choice never enter conversion (numerator or
 //   denominator) — their conversion is displayed as unavailable, not zero.
 //
@@ -35,12 +35,12 @@ export const KIND = {
   CONFLICT: 'CONFLICTING_CHOICE',   // conflicting recognized tags
   MATCH: 'LIKELY_MATCH',            // strong single candidate, small discrepancy
   TRANSFER: 'TRANSFER',             // table transfer attribution
-  REOPENED: 'REOPENED',             // manager asked to look again
+  REOPENED: 'REOPENED',             // visitor asked to look again
 };
 
 const KIND_PRIORITY = { [KIND.CONFLICT]: 1, [KIND.REOPENED]: 2, [KIND.MATCH]: 3, [KIND.TRANSFER]: 4 };
 
-function inPilotWindow(businessDate) {
+export function inPilotWindow(businessDate) {
   return businessDate >= PILOT_WINDOW.from && businessDate <= PILOT_WINDOW.to;
 }
 
@@ -54,6 +54,7 @@ function inPilotWindow(businessDate) {
 export function classifyRecord(r) {
   if (r.excluded) return { actionable: false, reason: 'resolved_excluded' };
   if (r.reviewStatus === 'confirmed') return { actionable: false, reason: 'resolved' };
+  if (inPilotWindow(r.businessDate)) return { actionable: false, reason: 'frozen_pilot' };
   if (r.reopened) return { actionable: true, kind: KIND.REOPENED };
   if (r.intent === 'REVIEW_REQUIRED') return { actionable: true, kind: KIND.CONFLICT };
   if (r.intent === 'UNKNOWN' || r.intent == null) {
@@ -63,10 +64,11 @@ export function classifyRecord(r) {
   }
   if (r.transferDetected) return { actionable: true, kind: KIND.TRANSFER };
   // recognized single starting choice from here on
-  if (r.matchStatus === 'matched') return { actionable: false, reason: 'connected' };
   // staleSuggestion: a stored candidate that fails the CURRENT matching rules
   // (outside the ±25-minute window, $0 / Host To Go / excluded-area order).
   // Set by the live re-verification pass — never a human task.
+  if (r.staleSuggestion) return { actionable: false, reason: 'marked_not_connected' };
+  if (r.matchStatus === 'matched') return { actionable: false, reason: 'connected' };
   if (r.matchStatus === 'ambiguous' && r.matchedOrderGuid && !r.staleSuggestion
       && (r.matchConfidence ?? 0) >= MIN_CANDIDATE_CONFIDENCE) {
     return { actionable: true, kind: KIND.MATCH };
@@ -77,9 +79,9 @@ export function classifyRecord(r) {
 
 /**
  * Triage a set of intent records into the actionable queue + exclusion summary.
- * Sort order: pilot-window items first (could affect historical pilot
- * commission), then conflicting tags, reopened, likely matches, transfers;
- * newest date first inside a group.
+ * Sort order: conflicting tags, reopened, likely matches, transfers; newest
+ * date first inside a group. Pilot-window records are frozen history and never
+ * enter this active queue.
  */
 export function triageIntents(rows) {
   const actionable = [];
@@ -87,8 +89,9 @@ export function triageIntents(rows) {
     unmarked: 0,             // no recorded starting choice (out of conversion only)
     markedNotConnected: 0,   // recorded choice but no reliable Toast candidate
     connected: 0,            // recorded and connected — counts normally
-    resolved: 0,             // decided by a manager already
-    resolvedExcluded: 0,     // manager chose to exclude
+    resolved: 0,             // decided by a visitor already
+    resolvedExcluded: 0,     // visitor chose to exclude
+    frozenPilot: 0,          // historical Pilot Review window; no active fixes
   };
   for (const r of rows ?? []) {
     const c = classifyRecord(r);
@@ -98,11 +101,11 @@ export function triageIntents(rows) {
     else if (c.reason === 'marked_not_connected') excluded.markedNotConnected++;
     else if (c.reason === 'connected') excluded.connected++;
     else if (c.reason === 'resolved_excluded') excluded.resolvedExcluded++;
+    else if (c.reason === 'frozen_pilot') excluded.frozenPilot++;
     else excluded.resolved++;
   }
   actionable.sort((a, b) =>
-    (b.pilot - a.pilot)
-    || (KIND_PRIORITY[a.kind] - KIND_PRIORITY[b.kind])
+    (KIND_PRIORITY[a.kind] - KIND_PRIORITY[b.kind])
     || (b.r.businessDate < a.r.businessDate ? -1 : b.r.businessDate > a.r.businessDate ? 1 : 0));
   return { actionable, excluded, badge: actionable.length };
 }
@@ -120,6 +123,10 @@ export function exclusionSummaryLines(excluded) {
   if (excluded.markedNotConnected) {
     lines.push(`${excluded.markedNotConnected} visit${excluded.markedNotConnected === 1 ? '' : 's'} had a recorded choice but no reliable Toast table connection, `
       + `so ${excluded.markedNotConnected === 1 ? 'it' : 'they'} cannot be scored for conversion. Sales figures are unaffected.`);
+  }
+  if (excluded.frozenPilot) {
+    lines.push(`${excluded.frozenPilot} Pilot Review visit${excluded.frozenPilot === 1 ? '' : 's'} ${excluded.frozenPilot === 1 ? 'is' : 'are'} historical notes only. `
+      + `The Jul 31-Aug 2 pilot window is frozen, so no active fix is created.`);
   }
   return lines;
 }

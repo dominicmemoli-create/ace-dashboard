@@ -29,13 +29,14 @@ import {
   comparableBaselineDates, weekdayOf, DEFAULT_THRESHOLDS,
   computeFoodCost, filterAyceProgram, isIncludedCheck, servicePeriodOf,
   perCheckCostStats,
-} from './food-cost-engine.mjs';
-import { resolveRange } from './date-range.mjs';
-import { toastVisits, scorePair } from './ot-matcher.mjs';
-import { triageIntents } from './triage.mjs';
-import { initManagerMode } from './manager-mode.mjs';
-import { initUpdatePage, pgUpdate } from './page-update.mjs';
-import { initFixesPage, pgFixes } from './page-fixes.mjs';
+} from './food-cost-engine.mjs?v=20260806-manager-auth';
+import { resolveRange } from './date-range.mjs?v=20260806-manager-auth';
+import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260806-manager-auth';
+import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
+import { initManagerMode } from './manager-mode.mjs?v=20260806-manager-auth';
+import { hasConfig, browserKey } from './auth.mjs?v=20260806-manager-auth';
+import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260806-manager-auth';
+import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260806-manager-auth';
 
 const APP = window.__ACE_APP__;
 if (!APP) throw new Error('pages-live: legacy shell did not expose __ACE_APP__');
@@ -67,14 +68,16 @@ async function fetchJson(url) {
 // skipping rows past the first 1000.
 const PK_ORDER = {
   ace_metrics: 'unique_key', ace_item_metrics: 'unique_key', ace_intents: 'row_hash',
-  ace_item_costs: 'id', ace_checks: 'check_guid', ace_selections: 'selection_guid',
+  ace_item_costs: 'id', ace_item_costs_public: 'id',
+  ace_checks: 'check_guid', ace_selections: 'selection_guid',
 };
 async function sbRows(cfg, table, select, filter = '') {
   const out = [];
   const order = !/[&?]order=/.test(filter) && PK_ORDER[table] ? `&order=${PK_ORDER[table]}` : '';
   for (let from = 0; ; from += 1000) {
+    const key = browserKey(cfg);
     const res = await fetch(`${cfg.url}/rest/v1/${table}?select=${select}${filter}${order}`, {
-      headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}`, Range: `${from}-${from + 999}` },
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + 999}` },
     });
     if (!res.ok && res.status !== 206) throw new Error(`${table}: HTTP ${res.status}`);
     const batch = await res.json();
@@ -96,16 +99,19 @@ function loadLive() {
       DATA.ops = await fetchJson('config/operations.json');
       const cfg = await configReady;
       let db = false;
-      if (cfg?.url && cfg?.anonKey) {
+      if (hasConfig(cfg)) {
         try {
+          // Public dashboard reads go through the sanitized views: identical
+          // numbers, without operator emails or uploaded file names. Manager
+          // flows read the base tables with a signed-in token (see auth.mjs).
           const [man, ref, costs, metrics, items, intents, imports, ing] = await Promise.all([
             sbRows(cfg, 'ace_manifest', '*'),
             sbRows(cfg, 'ace_reference', 'payload'),
-            sbRows(cfg, 'ace_item_costs', 'payload'),
+            sbRows(cfg, 'ace_item_costs_public', 'payload'),
             sbRows(cfg, 'ace_metrics', 'payload'),
             sbRows(cfg, 'ace_item_metrics', 'payload'),
             sbRows(cfg, 'ace_intents', 'payload'),
-            sbRows(cfg, 'ace_import_runs', 'kind,file_name,counts,status,error,created_by_email,created_at', '&order=created_at.desc&limit=40'),
+            sbRows(cfg, 'ace_import_runs_public', 'kind,counts,status,error,created_at', '&order=created_at.desc&limit=40'),
             sbRows(cfg, 'ace_ingestion_runs', 'payload', '&order=run_id.desc&limit=25'),
           ]);
           if (!metrics.length) throw new Error('ace_metrics empty');
@@ -149,8 +155,8 @@ function loadLive() {
  * exclusions — one scorePair call covers all of them). Rows imported under
  * the old, wider rules can carry connections today's rules would never make:
  *   - ambiguous suggestions → marked staleSuggestion (auto-excluded, no card)
- *   - automatic 'matched' rows → demoted in-memory to 'ambiguous' so they
- *     leave conversion and appear as a likely-match card for a person.
+ *   - automatic 'matched' rows → marked staleSuggestion too, so they leave
+ *     conversion without creating new work for a visitor.
  * Manual connections and confirmed decisions are never touched, and the
  * stored rows themselves are untouched — this is an in-memory annotation.
  */
@@ -179,11 +185,9 @@ async function reverifyStoredMatches() {
       const v = valid.get(r.matchedOrderGuid);
       const s = v ? scorePair(r, v, cfg) : null;   // null → fails the current rules
       if (s) { r.matchEvidence = s.evidence; continue; }   // still sound — keep, with fresh evidence
-      if (r.matchStatus === 'matched') {
-        r.matchStatus = 'ambiguous';               // out of conversion; a person confirms or excludes
-      } else {
-        r.staleSuggestion = true;                  // never was reliable — no card, no conversion
-      }
+      r.matchStatus = 'ambiguous';                 // out of conversion
+      r.matchEvidence = null;
+      r.staleSuggestion = true;                    // no active card; current rules reject it
     }
   }
 }
@@ -243,7 +247,7 @@ async function rangeDetail(dates, periods) {
   for (const r of DATA.intents) {
     // only reliable connections attribute a recorded intent to a check —
     // ambiguous suggestions stay "Unknown" until a person confirms them
-    if (r.matchStatus === 'matched' && r.matchedOrderGuid && !r.excluded) intentByOrder.set(r.matchedOrderGuid, r);
+    if (r.matchStatus === 'matched' && r.matchedOrderGuid && !r.excluded && !r.staleSuggestion) intentByOrder.set(r.matchedOrderGuid, r);
   }
   const out = [];
   const missingDates = [];
@@ -356,26 +360,31 @@ function fmtEt(iso) {
   } catch { return '—'; }
 }
 function renderFreshness() {
-  const bar = document.querySelector('#topbar .tb-row');
+  const bar = document.querySelector('#topbar .tb-meta') || document.querySelector('#topbar .tb-row');
   if (!bar || !DATA.manifest) return;
   let el = document.getElementById('freshness');
   if (!el) {
     el = document.createElement('span');
-    el.id = 'freshness'; el.className = 'prov'; el.style.marginLeft = '8px';
+    el.id = 'freshness';
     bar.appendChild(el);
   }
   const dates = opDates();
   const last = dates[dates.length - 1];
+  const otDates = [...new Set((DATA.intents ?? []).map((r) => r.businessDate))].sort();
+  const otLast = otDates[otDates.length - 1] ?? null;
   const staleDays = Math.floor((Date.now() - Date.parse(`${last?.slice(0, 4)}-${last?.slice(4, 6)}-${last?.slice(6, 8)}T12:00:00-04:00`)) / 86400000);
   const lastImport = (DATA.importRuns ?? []).find((r) => r.status === 'success');
-  el.textContent = `${DATA.source === 'supabase' ? 'Live data' : 'Backup data'} · through ${fmtDate(last)}${staleDays > 1 ? ' · Update needed' : ''}`;
-  el.style.color = staleDays > 1 ? 'var(--neg, #e0705c)' : '';
+  const otBehind = !!(last && (!otLast || otLast < last));
+  const needsUpdate = staleDays > 1 || otBehind;
+  el.className = `prov${needsUpdate ? ' warn' : ''}`;
+  el.textContent = `${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} · sales through ${fmtDate(last)} · OpenTable through ${fmtDate(otLast)}${needsUpdate ? ' · Update needed' : ''}`;
   el.title = [
     `Sales data through ${fmtDate(last)} (business date)`,
+    `OpenTable data through ${fmtDate(otLast)} (business date)`,
     `Last Toast sync: ${fmtEt(DATA.manifest?.lastToastSync)}`,
     `Last upload: ${lastImport ? `${lastImport.kind} · ${fmtEt(lastImport.created_at)}` : 'none recorded'}`,
     DATA.source === 'supabase'
-      ? 'Loading live from the shared database; Toast refreshes automatically every morning (~6 AM ET).'
+      ? 'Loading from the shared database; Toast refreshes automatically every morning (~6 AM ET).'
       : 'Showing saved backup data — the shared database was unreachable from this page load.',
   ].join('\n');
 }
@@ -395,31 +404,31 @@ function opsControls(state, onchange) {
   const el = document.createElement('div');
   el.className = 'card';
   el.style.marginBottom = '14px';
-  el.innerHTML = `<div class="body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
-    <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Date range
-      <select id="opsPreset" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+  el.innerHTML = `<div class="body fieldrow">
+    <label class="field"><span>Date range</span>
+      <select class="ctl" id="opsPreset">
         ${presets.map(([v, l]) => `<option value="${v}" ${state.preset === v ? 'selected' : ''}>${l}</option>`).join('')}
       </select></label>
-    <label id="opsFromWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'};flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">From
-      <select id="opsFrom" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" id="opsFromWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'}"><span>From</span>
+      <select class="ctl" id="opsFrom">
         ${avail.map((d) => `<option value="${d}" ${state.from === d ? 'selected' : ''}>${fmtDate(d)}</option>`).join('')}
       </select></label>
-    <label id="opsToWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'};flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">To
-      <select id="opsTo" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" id="opsToWrap" style="display:${state.preset === 'custom' ? 'flex' : 'none'}"><span>To</span>
+      <select class="ctl" id="opsTo">
         ${avail.map((d) => `<option value="${d}" ${(state.to ?? avail[avail.length - 1]) === d ? 'selected' : ''}>${fmtDate(d)}</option>`).join('')}
       </select></label>
-    <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Service period
-      <select id="opsPeriod" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field"><span>Service period</span>
+      <select class="ctl" id="opsPeriod">
         <option value="all" ${state.period === 'all' ? 'selected' : ''}>Lunch + dinner</option>
         <option value="lunch" ${state.period === 'lunch' ? 'selected' : ''}>Lunch (before ${DATA.ops.servicePeriods.lunchBeforeHour - 12} PM)</option>
         <option value="dinner" ${state.period === 'dinner' ? 'selected' : ''}>Dinner</option>
       </select></label>
-    <span class="sub" style="margin-left:auto;text-align:right;line-height:1.5">
-      <span style="display:block">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
-      <span style="display:block">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
-    </span>
+    <div class="rangenote sub" role="status">
+      <span class="rn-1">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
+      <span class="rn-2">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
+    </div>
   </div>
-  ${range.invalid ? `<div class="errbox" role="alert" style="margin:0 18px 14px"><b>Check the custom range.</b>
+  ${range.invalid ? `<div class="errbox" role="alert" style="margin:0 var(--sp-5) var(--sp-5)"><b>Check the custom range.</b>
     ${esc(range.invalid.message)} <button class="btn ghost sm" type="button" id="opsSwap" style="margin-left:8px">Swap dates</button></div>` : ''}`;
   const apply = () => {
     const next = {
@@ -482,7 +491,7 @@ function renderOps(host) {
   <section class="hero rise"><div class="hero-top">
     <div class="hero-verdict">
       <div class="hero-eyebrow">Operations — ${esc(range.label)}
-        <span class="verdict-badge neu">LIVE DATA</span></div>
+        <span class="verdict-badge neu">${DATA.source === 'supabase' ? 'SHARED DATA' : 'BACKUP DATA'} THROUGH ${esc(fmtDate(range.dates[range.dates.length - 1]))}</span></div>
       <div class="hero-delta"><span class="big">${pct(t.guests ? (t.entitlementCovers / t.guests) * 100 : null)}</span>
         <span class="unit">AYCE cover mix<br>${fmt(Math.round(t.entitlementCovers))} AYCE covers of ${fmt(t.guests)} guests</span></div>
       <div class="hero-line"><b>${fmt(t.checks)}</b> dining-room &amp; patio checks · <b>${usd0(t.floorNet)}</b> net floor sales ·
@@ -528,7 +537,14 @@ function renderOps(host) {
       <td>${usd0(r.entitlementNet)}</td>
       <td>${usd0(r.roundCost)}</td>
       <td><b>${pct(r.fc)}</b></td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody>
+    <tfoot><tr><td>Total</td><td>${range.dates.length} day${range.dates.length === 1 ? '' : 's'}</td>
+      <td>${fmt(t.checks)}</td><td>${fmt(t.guests)}</td><td>${usd0(t.floorNet)}</td>
+      <td>${fmt(Math.round(t.entitlementCovers))}</td><td>${usd0(t.entitlementNet)}</td>
+      <td>${usd0(t.roundCost)}</td><td>${pct(fc)}</td></tr></tfoot>
+    </table></div>
+    <div class="foot">Totals are the range aggregate; the food-cost % is weighted (total estimated cost ÷ total
+    AYCE sales), never an average of the daily percentages.</div>`;
   host.appendChild(tbl);
 }
 
@@ -541,7 +557,7 @@ function renderOps(host) {
  *   review            — conflicting recorded choices (pending decision)
  *   notConnected      — recorded choice, no reliable Toast connection
  *   ambiguous         — recorded choice, candidate not confirmed
- *   excluded          — manager-excluded records
+ *   excluded          — visitor-excluded records
  * Half/Half is metadata and never affects any bucket.
  */
 function conversionStatsFor(dates, periods = null) {
@@ -555,11 +571,12 @@ function conversionStatsFor(dates, periods = null) {
   const st = { total: rows.length, eligible: 0, converted: 0, unknown: 0, review: 0, predecided: 0, ambiguous: 0, notConnected: 0, excluded: 0, halfHalf: 0 };
   for (const r of rows) {
     if (r.halfHalf || r.mixedMenuException) st.halfHalf++;   // metadata tally only
-    if (r.excluded) { st.excluded++; continue; }             // manager-excluded via correction
-    const intent = r.intentEffective ?? r.intent;            // manager correction overrides, audit preserved
+    if (r.excluded) { st.excluded++; continue; }             // visitor-excluded via correction
+    const intent = r.intentEffective ?? r.intent;            // visitor correction overrides, audit preserved
     if (intent === 'REVIEW_REQUIRED') { st.review++; continue; }
     if (intent === 'UNKNOWN' || intent == null) { st.unknown++; continue; }
     if (intent === 'PREDECIDED_AYCE') { st.predecided++; continue; }
+    if (r.staleSuggestion) { st.notConnected++; continue; }
     if (r.matchStatus === 'ambiguous') { st.ambiguous++; continue; }   // never counts either way
     if (r.matchStatus !== 'matched') { st.notConnected++; continue; }  // unconnected can't prove conversion
     st.eligible++;
@@ -600,7 +617,7 @@ function renderServersLive(host) {
     if (periods.length !== 2 && !periods.includes(periodOf(r))) continue;
     const intent = r.intentEffective ?? r.intent;
     if (!['UNDECIDED', 'ALC'].includes(intent)) continue;
-    if (r.matchStatus !== 'matched' || !r.matchedServerGuid) continue;
+    if (r.staleSuggestion || r.matchStatus !== 'matched' || !r.matchedServerGuid) continue;
     const c = convByServer.get(r.matchedServerGuid) ?? { eligible: 0, converted: 0 };
     c.eligible++;
     if (r.hasAyceSales) c.converted++;
@@ -619,6 +636,7 @@ function renderServersLive(host) {
       const v = p - base.pct;
       cost = v >= th.criticalPts ? 'critical' : v >= th.watchPts ? 'watch' : 'no_alert';
     }
+    if (smallSample) cost = 'no_alert';
     const conv = convByServer.get(guid) ?? { eligible: 0, converted: 0 };
     return { guid, name: emp.get(guid) ?? '(unattributed)', a, p, cov, smallSample, lowCoverage, cost, conv, median: undefined };
   });
@@ -634,9 +652,9 @@ function renderServersLive(host) {
   const card = document.createElement('div');
   card.className = 'card sec';
   card.innerHTML = `<header><div><div class="ttl">Server performance — ${esc(range.label)}</div>
-    <div class="sub">AYCE program only. Conversion counts recorded-and-connected tables; tables without a
-    recorded choice still appear in every sales and cost figure — only conversion leaves them out.
-    Click a server for the check-by-check detail. Alerts stay off below ${th.minChecks} AYCE checks or ${usd0(th.minNetFoodSales)} AYCE sales.</div></div></header>
+    <div class="sub">AYCE program only. Select a row for the check-by-check detail.</div></div>
+    <span class="sp"></span>
+    <span class="badge mute nowrap">${rows.length} server${rows.length === 1 ? '' : 's'}</span></header>
     <div class="toolbar">
       <div class="srch"><span class="si" aria-hidden="true">⌕</span>
         <input type="search" id="srvQ" placeholder="Search server…" aria-label="Search servers" value="${esc(view.search)}"></div>
@@ -646,19 +664,21 @@ function renderServersLive(host) {
     <caption class="sr">Server performance for the selected range: AYCE checks, covers, sales, food-cost percentages, conversion and status per server</caption>
     <thead><tr>
       ${srvTh('name', 'Server', view, 'style="text-align:left"')}
-      ${srvTh('checks', 'AYCE checks', view)}
-      ${srvTh('covers', 'AYCE covers', view)}
+      ${srvTh('checks', 'Checks', view, '', 'AYCE checks attributed to this server in the selected range.')}
+      ${srvTh('covers', 'Covers', view, '', 'AYCE covers (entitlement quantities) rung on this server\u2019s checks.')}
       ${srvTh('sales', 'AYCE sales', view)}
       ${srvTh('fc', 'Food cost %', view, '', 'Weighted mean: total estimated food cost ÷ total AYCE sales for this server. Represents the actual financial impact.')}
-      ${srvTh('median', 'Median check %', view, '', "The middle check's food-cost %. Shows the typical table and is not distorted by one expensive 'whale' table. Shown alongside — never instead of — the weighted mean.")}
-      <th scope="col">Restaurant baseline<button class="inf" type="button" aria-label="Definition of restaurant baseline" data-tip="The restaurant-wide weighted food-cost % for the same weekday and service period over the previous ${DATA.ops.baseline.weeks} weeks. The same reference for every server — not a per-server figure.">i</button></th>
+      ${srvTh('median', 'Median %', view, '', "The middle check's food-cost %. Shows the typical table and is not distorted by one expensive 'whale' table. Shown alongside — never instead of — the weighted mean.")}
+      <th scope="col">Baseline<button class="inf" type="button" aria-label="Definition of restaurant baseline" data-tip="The restaurant-wide weighted food-cost % for the same weekday and service period over the previous ${DATA.ops.baseline.weeks} weeks. The same reference for every server — not a per-server figure.">i</button></th>
       ${srvTh('conv', 'Conversion', view)}
-      <th scope="col">Cost status</th>
+      <th scope="col">Status</th>
       <th scope="col">Sample</th>
     </tr></thead><tbody id="srvBody"></tbody></table></div>
-    <div class="foot">This table never implies a server caused kitchen waste — it reflects what was rung for their
-    AYCE tables. “Median check %” and the drill-down load from the check-level records.
-    Pilot-weekend history (with commission) lives under Pilot Review.</div>`;
+    <div class="foot">Conversion counts recorded-and-connected tables only; tables without a recorded choice still
+    appear in every sales and cost figure — only conversion leaves them out. Alerts stay off below ${th.minChecks}
+    AYCE checks or ${usd0(th.minNetFoodSales)} AYCE sales. This table never implies a server caused kitchen waste —
+    it reflects what was rung for their AYCE tables. “Median check %” and the drill-down load from the check-level
+    records. Pilot-weekend history (with commission) lives under Pilot Review.</div>`;
   host.appendChild(card);
 
   const paintRows = () => {
@@ -676,7 +696,7 @@ function renderServersLive(host) {
       <td>${usd0(r.a.entitlementNet)}</td>
       <td><b>${pct(r.p)}</b></td>
       <td>${r.median === undefined ? '<span class="muted">…</span>' : r.median === null ? '—'
-        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="verdict-badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
+        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
       <td>${pct(base.pct)}</td>
       <td>${r.conv.eligible ? `${pct((r.conv.converted / r.conv.eligible) * 100, 0)} <span class="muted">(${r.conv.converted}/${r.conv.eligible})</span>` : '<span class="muted" title="No recorded-and-connected eligible tables — conversion unavailable, not zero">n/a</span>'}</td>
       <td style="text-align:center">${costBadge(r)}</td>
@@ -741,18 +761,35 @@ function srvTh(key, label, view, thAttrs = '', tip = null) {
     tip ? `<button class="inf" type="button" aria-label="Definition of ${esc(label)}" data-tip="${esc(tip)}">i</button>` : ''}</th>`;
 }
 function costBadge(r) {
-  if (r.lowCoverage) return '<span class="verdict-badge" title="Too many uncosted items for a fair comparison">Costs missing</span>';
+  if (r.lowCoverage) return '<span class="badge neu" title="Too many uncosted items for a fair comparison">Costs missing</span>';
+  if (r.smallSample) return '<span class="badge mute" title="Below the sample threshold — the estimate is shown for completeness and alerts are suppressed">No alert</span>';
   const map = {
     no_alert: ['pos', 'No alert'], watch: ['neu', 'Watch'], critical: ['neg', 'Critical'],
-    no_baseline: ['', '—'],
+    no_baseline: ['mute', '—'],
   };
-  const [cls, label] = map[r.cost] ?? ['', r.cost];
-  return `<span class="verdict-badge ${cls}">${label}</span>`;
+  const [cls, label] = map[r.cost] ?? ['mute', r.cost];
+  return `<span class="badge ${cls}">${label}</span>`;
 }
 function sampleBadge(r) {
   return r.smallSample
-    ? '<span class="verdict-badge" title="Below the sample threshold — figures shown for completeness, alerts suppressed">Small sample</span>'
-    : '<span class="verdict-badge pos">OK</span>';
+    ? '<span class="badge mute" title="Below the sample threshold — figures shown for completeness, alerts suppressed">Small</span>'
+    : '<span class="badge pos">OK</span>';
+}
+
+async function loadPagesDeployment(el) {
+  if (!el) return;
+  try {
+    const res = await fetch('https://api.github.com/repos/dominicmemoli-create/ace-dashboard/deployments?environment=github-pages&per_page=1', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const deployments = await res.json();
+    const dep = deployments?.[0];
+    const sha = dep?.sha ? String(dep.sha) : '';
+    el.innerHTML = sha
+      ? `<code>${esc(sha.slice(0, 12))}</code>${dep.ref ? ` · ${esc(dep.ref)}` : ''}`
+      : 'No GitHub Pages deployment reported';
+  } catch {
+    el.textContent = 'Unavailable from the GitHub API';
+  }
 }
 
 /* ----------------------------------------------------- server drill-down -- */
@@ -860,7 +897,7 @@ function openServerDrawer(guid, row, range, periods, base) {
             <td>${fmt(Math.round(c.itemQty))}</td>
             <td>${usd0(c.entitlementNet)}</td>
             <td>${usd(c.foodCostDollars)}</td>
-            <td><b>${pct(c.pctOfSales)}</b>${outlier(c) ? ' <span class="verdict-badge neu" title="Above the outlier line (Q3 + 1.5×IQR)">outlier</span>' : ''}</td>
+            <td><b>${pct(c.pctOfSales)}</b>${outlier(c) ? ' <span class="badge neu" title="Above the outlier line (Q3 + 1.5×IQR)">outlier</span>' : ''}</td>
             <td>${usd(c.costPerCover)}</td>
             <td><button class="btn ghost sm" type="button" data-citems="${i}" aria-expanded="false" aria-label="Show ordered items for this check">items</button></td>
           </tr>
@@ -952,7 +989,7 @@ function renderFoodCost(host) {
   <section class="hero rise"><div class="hero-top">
     <div class="hero-verdict">
       <div class="hero-eyebrow">AYCE food cost — ${esc(range.label)}
-        <span class="verdict-badge ${provisional ? 'neu' : 'pos'}">${provisional ? 'PROVISIONAL — temporary estimates in use' : 'CHEF-CONFIRMED'}</span></div>
+        <span class="verdict-badge ${provisional ? 'neu' : 'pos'}">${provisional ? 'Rough costs — waiting for chef confirmation' : 'CHEF-CONFIRMED'}</span></div>
       <div class="hero-delta"><span class="big">${pct(scopePct)}</span>
         <span class="unit">est. cost of AYCE food sent ÷<br>AYCE sales collected</span></div>
       <div class="hero-line"><b>${usd0(t.roundCost)}</b> estimated cost of recorded AYCE rounds ·
@@ -969,7 +1006,7 @@ function renderFoodCost(host) {
       <div class="hr-cell"><div class="k">Genuine AYCE items costed</div><div class="v">${pct(qtyCov)}</div>
         <div class="m">modifiers &amp; drinks removed from the denominator</div></div>
       <div class="hr-cell"><div class="k">Chef-confirmed share</div><div class="v">${tiersKnown ? pct(totalCost > 0 ? (tiers.confirmed / totalCost) * 100 : null, 0) : '—'}</div>
-        <div class="m">${tiersKnown ? 'of cost dollars; the rest are temporary estimates' : 'available after the next data rebuild'}</div></div>
+        <div class="m">${tiersKnown ? 'of cost dollars; the rest are rough costs awaiting chef confirmation' : 'available after the next data rebuild'}</div></div>
     </div>
   </div>
   <div class="hero-summary"><div class="sh">Definition</div>
@@ -989,13 +1026,13 @@ function renderFoodCost(host) {
       <span class="sub" style="display:block">${hint}</span></span>
       <span class="cr">${usd0(dollars)} <span class="muted">(${pct(totalCost > 0 ? (dollars / totalCost) * 100 : null, 0)})</span></span></div>` : '';
   src.innerHTML = `<header><div><div class="ttl">Where the cost estimate comes from</div>
-    <div class="sub">Exact costs, temporary estimates and gaps are kept separate — a headline coverage number
+    <div class="sub">Exact costs, rough costs and gaps are kept separate — a headline coverage number
     never hides which kind is underneath.</div></div></header>
     <div class="body">
       ${tiersKnown ? '' : '<div class="note gold" style="margin-bottom:8px">The cost-source split appears after the next data rebuild; the totals above are unaffected.</div>'}
       ${tierRow('Chef-confirmed costs', tiers.confirmed, 'exact recipe costs uploaded by the chef', 'pos')}
-      ${tierRow('Explicit temporary costs', tiers.explicit_temp + tiers.override, 'management’s stated interim costs (incl. portion overrides such as ½-lb shrimp $2.50, 1-pc crab cake $4)', 'neu')}
-      ${tierRow('Workbook estimates', tiers.rough_estimate, 'rough per-item estimates from the management workbook', 'neu')}
+      ${tierRow('Explicit temporary costs', tiers.explicit_temp + tiers.override, 'stated interim costs (incl. portion overrides such as ½-lb shrimp $2.50, 1-pc crab cake $4)', 'neu')}
+      ${tierRow('Workbook estimates', tiers.rough_estimate, 'rough per-item estimates from the cost workbook', 'neu')}
       ${tierRow('$2 menu fallback', tiers.fallback_2, 'supplied-menu items awaiting a real cost — flat $2 placeholder', 'neu')}
       <div class="calcrow"><span class="cl">True missing food items
         <span class="sub" style="display:block">genuine items with no cost — left OUT of the estimate, never $0</span></span>
@@ -1004,7 +1041,7 @@ function renderFoodCost(host) {
         <span class="sub" style="display:block">Toast modifiers, preparation notes, kitchen markers and trivial drinks — no cost, no coverage effect</span></span>
         <span class="cr">${fmt(Math.round(t.excludedModifierQty))} modifier rows · ${fmt(Math.round(t.excludedDrinkQty))} drink rows</span></div>
     </div>
-    <div class="foot">Food cost stays labeled provisional until chef-confirmed recipe costs are uploaded
+    <div class="foot">Food cost stays labeled "Rough costs — waiting for chef confirmation" until chef-confirmed recipe costs are uploaded
       (Update Dashboard → Food Costs). The headline, server table and every drill-down use this same
       calculation pipeline.</div>`;
   host.appendChild(src);
@@ -1023,12 +1060,12 @@ function renderFoodCost(host) {
   const drivers = [...itemAgg.values()].filter((x) => x.matched && x.cost > 0).sort((a, b) => b.cost - a.cost).slice(0, 14);
   const unmatched = [...itemAgg.values()].filter((x) => !x.matched).sort((a, b) => b.qty - a.qty).slice(0, 20);
   const tierBadge = (d) => {
-    if (d.tier === 'mixed') return '<span class="verdict-badge neu" title="The cost source for this item changed within the selected range (e.g. a chef confirmation took effect mid-range)">mixed sources</span>';
-    if (d.tier === 'confirmed' || d.verification === 'verified') return '<span class="verdict-badge pos">chef-confirmed</span>';
-    if (d.tier === 'fallback_2') return '<span class="verdict-badge neu">$2 fallback</span>';
-    if (d.tier === 'override') return '<span class="verdict-badge neu">portion override</span>';
-    if (d.tier === 'explicit_temp') return '<span class="verdict-badge neu">explicit temp</span>';
-    return '<span class="verdict-badge neu">temp estimate</span>';
+    if (d.tier === 'mixed') return '<span class="badge neu" title="The cost source for this item changed within the selected range (e.g. a chef confirmation took effect mid-range)">mixed sources</span>';
+    if (d.tier === 'confirmed' || d.verification === 'verified') return '<span class="badge pos">chef-confirmed</span>';
+    if (d.tier === 'fallback_2') return '<span class="badge neu">$2 fallback</span>';
+    if (d.tier === 'override') return '<span class="badge neu">portion override</span>';
+    if (d.tier === 'explicit_temp') return '<span class="badge neu">explicit temp</span>';
+    return '<span class="badge neu">temp estimate</span>';
   };
   const two = document.createElement('div');
   two.className = 'sec g2';
@@ -1067,10 +1104,10 @@ function pgPilot(host) {
     ['overview', 'Overview'], ['servers', 'Server performance'], ['commission', 'Commission ledger'],
   ];
   host.innerHTML = `
-    <div class="note gold" style="margin-bottom:14px"><b>Frozen history.</b> The pilot weekend
+    <div class="alert warn"><b>Frozen history.</b> The pilot weekend
     (Jul 31 – Aug 2, 2026) is preserved exactly as reported. The commission program ended Aug 2 —
     figures here are informational and no new commission accrues.</div>
-    <div class="seg" style="display:inline-flex;margin-bottom:16px" role="tablist" aria-label="Pilot Review sections">
+    <div class="seg tabbar" role="tablist" aria-label="Pilot Review sections">
       ${tabs.map(([k, l]) => `<button type="button" role="tab" id="ptab-${k}" data-ptab="${k}"
         aria-selected="${k === tab}" aria-controls="pilotBody" tabindex="${k === tab ? 0 : -1}">${l}</button>`).join('')}
     </div>
@@ -1119,7 +1156,7 @@ function pgHelp(host) {
     h.innerHTML = `
     <section class="hero rise"><div class="hero-top"><div class="hero-verdict">
       <div class="hero-eyebrow">How This Works</div>
-      <div class="hero-delta"><span class="big" style="font-size:34px;letter-spacing:-1px">Three data sources.<br>Three simple jobs.</span></div>
+      <div class="hero-delta"><span class="big" style="font-size:26px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
     </div></div></section>
 
     <div class="sec g3">
@@ -1158,13 +1195,14 @@ function pgHelp(host) {
         <dd>The short list of visits that genuinely need a decision — a conflicting starting choice or one likely
           table connection to confirm. Everything unclear is excluded automatically instead of becoming work.</dd>
         <dt style="font-weight:650;white-space:nowrap">Who can do what</dt>
-        <dd>Every approved operator has the same capabilities: upload files, update food costs, resolve fixes and
-          retry Toast updates. Sign-in is by emailed link — no passwords — and is only asked for when saving a change.</dd>
+        <dd>Anyone who passes the presentation gate can view the dashboard. Uploading files, updating food costs,
+          resolving fixes and retrying Toast updates require signing in with an approved manager email — the
+          database checks that on every write and records who made it.</dd>
       </dl></div></div>
 
     <div class="sec">
       <div class="acc"><button type="button" aria-expanded="false" id="advDetTgl">
-        Advanced Details — data &amp; methodology (for technical operators)<span class="ch">▶</span></button>
+        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">▶</span></button>
         <div class="ab" hidden id="advDetBody"></div></div>
     </div>`;
 
@@ -1188,14 +1226,15 @@ function pgHelp(host) {
           `${conv.review} conflicting`,
           `${conv.notConnected} recorded but not connected`,
           `${conv.ambiguous} ambiguous connection`,
-          `${conv.excluded} manager-excluded`,
+          `${conv.excluded} visitor-excluded`,
         ];
         const censusSum = conv.eligible + conv.predecided + conv.unknown + conv.review + conv.notConnected + conv.ambiguous + conv.excluded;
         const wrap = document.createElement('div');
         wrap.innerHTML = `
         <table class="tb" style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:14px">
         <caption class="sr">Technical data and methodology details</caption><tbody>
-          ${mrow('Data source', DATA.source === 'supabase' ? 'Live shared database' : 'Static fallback files (database unreachable)')}
+          ${mrow('Data source', DATA.source === 'supabase' ? 'Shared database' : 'Static fallback files (database unreachable)')}
+          ${mrow('Deployed commit', '<span id="deploySha">Checking GitHub Pages...</span>')}
           ${mrow('Data freshness (all times ET)', `Sales through ${fmtDate(dates[dates.length - 1])} · last Toast sync ${fmtEt(DATA.manifest?.lastToastSync)} · last upload ${lastImport ? `${esc(lastImport.kind)} ${fmtEt(lastImport.created_at)}` : '—'} · pilot extract generated ${esc(String(window.__ACE__?.generated ?? '—'))}`)}
           ${mrow('Last update run', lastRun ? `${esc(lastRun.runId ?? '')} · ${esc(lastRun.status ?? '')}${lastRun.error ? ' · ' + esc(lastRun.error) : ''}` : '—')}
           ${mrow('Included areas', Object.values(DATA.ops.includedAreas.serviceAreaGuids).join(', ') + ' — bar, takeout, delivery and non-table revenue excluded')}
@@ -1206,11 +1245,12 @@ function pgHelp(host) {
           ${mrow('Food-cost precedence', 'Toast modifiers/notes and trivial drinks excluded → chef-confirmed costs → explicit portion overrides (½-lb shrimp $2.50, 1-pc crab cake $4) → explicit temporary costs → workbook estimates → $2 supplied-menu fallback → true missing (never $0).')}
           ${mrow('Recent imports', (DATA.importRuns ?? []).slice(0, 5).map((r) => `${esc(r.kind)} · ${fmtEt(r.created_at)} · ${esc(r.status)}${r.counts?.inserted != null ? ` · ${r.counts.inserted} new` : ''}${r.created_by_email ? ` · ${esc(r.created_by_email.split('@')[0])}` : ''}`).join('<br>') || '—')}
           ${mrow('Commission', `Pilot rates $5/$7.50/$10 per converted COVER, active ${fmtDate(DATA.ops.commission.activeFrom)}–${fmtDate(DATA.ops.commission.activeTo)} only. Program inactive — no new accrual.`)}
-          ${mrow('Access model', 'The passcode screen is a presentation gate, not authentication. Writes require sign-in (magic link) as an approved operator; authorization is enforced in security-definer database functions. Service credentials never reach the browser.')}
-          ${mrow('CLI fallback', 'Administrator command-line tools remain in scripts/ (see docs/TECHNICAL_RUNBOOK.md). Operators never need them.')}
+          ${mrow('Access model', 'The passcode screen is a presentation gate and authorizes nothing. Anonymous visitors have read-only access to the published dashboard data. Every write requires a signed-in, approved manager (Supabase Auth magic link) and is authorized in the database, so a direct API call is refused the same way. Audit rows carry the authenticated user id and email. Service credentials never reach the browser.')}
+          ${mrow('CLI fallback', 'Administrator command-line tools remain in scripts/ (see docs/TECHNICAL_RUNBOOK.md) for credentials, backfills and operational recovery.')}
         </tbody></table>
         <div id="legacyMethod"></div>`;
         body.appendChild(wrap);
+        loadPagesDeployment(wrap.querySelector('#deploySha'));
         try { LEGACY.method.fn(wrap.querySelector('#legacyMethod')); } catch { /* legacy content optional */ }
       }
     });
@@ -1222,13 +1262,20 @@ let LEGACY = null;
 function registerPages() {
   LEGACY = { ...PAGES };
   for (const k of Object.keys(PAGES)) delete PAGES[k];
-  PAGES.ops = { label: 'Overview', icon: '◈', fn: pgOps, title: 'Operations overview', group: 'Operations' };
-  PAGES.servers = { label: 'Server Performance', icon: '◑', fn: pgServersLive, title: 'Server performance', group: 'Operations' };
-  PAGES.foodcost = { label: 'AYCE Food Cost', icon: '◐', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations' };
-  PAGES.update = { label: 'Update Dashboard', icon: '⬆', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations' };
-  PAGES.fixes = { label: 'Fixes Needed', icon: '▣', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0 };
-  PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true };
-  PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help' };
+  PAGES.ops = { label: 'Overview', icon: '◈', fn: pgOps, title: 'Operations overview', group: 'Operations',
+    desc: 'AYCE mix, food cost and conversion for the selected range — dining room and patio only.' };
+  PAGES.servers = { label: 'Server Performance', icon: '◑', fn: pgServersLive, title: 'Server performance', group: 'Operations',
+    desc: 'AYCE checks, sales, food cost and conversion per server. Open a row for check-level detail.' };
+  PAGES.foodcost = { label: 'AYCE Food Cost', icon: '◐', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations',
+    desc: 'Estimated cost of AYCE food recorded in Toast against AYCE sales collected.' };
+  PAGES.update = { label: 'Update Dashboard', icon: '⬆', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations',
+    desc: 'Keep Toast sales, OpenTable guest status and food costs current.' };
+  PAGES.fixes = { label: 'Fixes Needed', icon: '▣', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0,
+    desc: 'The short list of visits that genuinely need a decision — one card at a time.' };
+  PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true,
+    desc: 'Frozen pilot weekend, Jul 31 – Aug 2, 2026. Commission figures are informational.' };
+  PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help',
+    desc: 'Where the numbers come from, in plain language, with the technical detail one click away.' };
 
   // land on Operations Overview unless the visitor SAVED a page earlier;
   // stale saved pages from previous versions map to their nearest new home

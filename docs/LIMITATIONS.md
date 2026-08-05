@@ -1,35 +1,22 @@
-# Known limitations (current branch)
+# Known limitations
 
-1. **Static hosting = public data.** GitHub Pages cannot enforce authentication. The
-   passcode is presentational; published normalized data is readable by anyone with
-   the URL. Real access control arrives with the Supabase phase (scaffolded, unfunded
-   by credentials today).
-2. **Food cost is estimated and partially covered.** ~83% of pilot food revenue is
-   cost-mapped. Combo trays (Tray A/B, Full House, Three-of-a-Kind, Pocket Pair,
-   One-Outter, Go All-In) and some à-la-carte items await chef costs; true food-cost %
-   is understated until the queue clears. Costs marked "rough" are unverified workbook
-   values.
-3. **Alcohol/beverage cost is out of scope** — the page measures FOOD cost only
-   (Food sales category).
-4. **Selection-level owner attribution** is not exposed by the Toast orders API;
-   attribution uses the order's server (documented rule). Transferred checks are not
-   yet detectable from the ordersBulk payload alone.
-5. **OpenTable is not integrated.** Production API access has not been granted
-   (see docs/CREDENTIALS.md). Intent for the pilot window comes from the host log in
-   the frozen pilot extract; live dates have no intent data, so conversion analytics
-   remain pilot-scoped.
-6. **Manual CSV import of Toast/OpenTable exports validates but does not merge** —
-   final column mapping needs a real export sample; chef cost CSV import is fully
-   functional (browser-local until the backend lands).
-7. **Browser-local imports** (Data Import page) persist per device via localStorage;
-   they are honest about this in the UI. The authoritative path is the import scripts
-   + git, or the future backend.
-8. **RLS tests (brief items 20–22) and scheduled cloud ingestion** require a live
-   Supabase project; scaffolds and static policy tests exist, behavior tests are
-   pending credentials.
-9. **Legacy pilot pages** (Overview/Servers/Commission) still read the frozen pilot
-   extract — by design, to preserve the reviewed pilot numbers byte-for-byte.
-10. **Pilot-extract vs live-API deltas.** The pilot extract reports $89,932 floor
-    revenue; the live API normalization measures $92,051 across floor checks before
-    the pilot's bar-table and edge-case exclusions. The reconciliation is documented
-    in the methodology page; the two bases are never mixed in one metric.
+1. **Temporary public writes.** GitHub Pages cannot enforce server-side
+   authentication, and the current presentation build grants anon execute on a
+   narrow RPC allowlist. Treat this as temporary, not permanent production
+   authorization.
+2. **Public static assets.** The passcode is presentational; static files and
+   normalized PII-free dashboard data remain public to anyone with the URL.
+3. **Food cost is estimated until confirmed.** Rough costs are labeled
+   `Rough costs — waiting for chef confirmation`; true food-cost percentage may
+   sharpen as chef-confirmed costs replace workbook estimates and fallbacks.
+4. **Alcohol/beverage cost is out of scope.** The page measures food cost only.
+5. **OpenTable automation is not integrated.** Manual GuestCenter CSV upload is
+   the current path; API approval is still required for unattended sync.
+6. **Selection-level owner attribution is not exposed by the Toast orders API.**
+   Attribution uses the order server; transfer exceptions require review.
+7. **Legacy pilot pages** (Overview/Servers/Commission) still read the frozen
+   pilot extract by design, to preserve reviewed pilot numbers byte-for-byte.
+8. **Pilot history is frozen.** Jul 31-Aug 2, 2026 rows are informational and
+   cannot be edited from Fixes Needed.
+9. **Server portal and payroll remain off.** Feature flags stay disabled until
+   access control and payroll definitions are intentionally rebuilt.

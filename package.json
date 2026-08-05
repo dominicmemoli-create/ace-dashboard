@@ -10,9 +10,12 @@
     "import:costs": "node scripts/import-costs.mjs",
     "build:metrics": "node scripts/build-metrics.mjs",
     "serve": "npx serve .",
-    "import:opentable": "node scripts/import-opentable.mjs"
+    "import:opentable": "node scripts/import-opentable.mjs",
+    "shots": "node scripts/shots.mjs",
+    "shots:fixtures": "node scripts/shots-fixtures.mjs"
   },
   "devDependencies": {
+    "playwright": "^1.62.1",
     "vitest": "^3.0.0",
     "xlsx": "^0.18.5"
   },

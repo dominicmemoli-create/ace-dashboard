@@ -1,5 +1,5 @@
 {
-  "url": "https://cdqbiwgxezaoaibypvsi.supabase.co",
-  "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkcWJpd2d4ZXphb2FpYnlwdnNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MTQ1MzEsImV4cCI6MjEwMDQ5MDUzMX0.gt77LMv4WMu_1R1Ko3ZxIW-PgNuPPKMkrvRp6wjLQ-k",
-  "note": "anon key is public by design; access is limited by row-level security"
+  "url": "https://hgnijizgavveoadjeoqm.supabase.co",
+  "publishableKey": "sb_publishable_BEMKg8-o-drNVisNBz1QVQ_O5osoi1W",
+  "note": "Dedicated ace-dashboard project. The publishable key is public by design: it grants read access only to the PII-free dashboard tables and sanitized views, and every write RPC requires a signed-in approved manager. Secret and service keys never appear in this file."
 }

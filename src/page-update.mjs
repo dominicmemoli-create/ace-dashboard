@@ -1,15 +1,15 @@
-// Update Dashboard — the one place managers keep data current.
+// Update Dashboard — the one place visitors keep data current.
 // Three status cards (Toast Sales · OpenTable Guest Status · Food Costs),
 // a compact green/yellow/red system panel, and complete in-browser upload
 // workflows. Writes go through the protected database functions with the
-// signed-in user's identity; no commands, no JSON, no configuration.
-import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs';
-import { toastVisits, matchVisits } from './ot-matcher.mjs';
-import { triageIntents } from './triage.mjs';
-import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs';
-import { buildMetricsForDate } from './metrics-builder.mjs';
-import { rpc, restGet } from './auth.mjs';
-import { requireOperator, notify, currentUser } from './manager-mode.mjs';
+// signed-in manager's identity; no commands, no JSON, no configuration.
+import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260806-manager-auth';
+import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260806-manager-auth';
+import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
+import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260806-manager-auth';
+import { buildMetricsForDate } from './metrics-builder.mjs?v=20260806-manager-auth';
+import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
+import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260806-manager-auth';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }
@@ -93,14 +93,18 @@ export function systemStatus(DATA, badge) {
         : 'The last upload did not finish. Try the upload again — nothing was half-saved.',
     };
   }
-  if (t.state === 'attention') {
-    return { color: 'yellow', head: 'One update is needed', action: 'Toast is behind. Press Retry Toast Update below.' };
-  }
   const needs = [];
+  if (t.state === 'attention') needs.push('Toast is behind. Press Retry Toast Update below.');
   if (ot.behind) needs.push(`Upload the OpenTable file for ${longDate(ot.toastLast)}.`);
   if (badge > 0) needs.push(`${badge} item${badge === 1 ? '' : 's'} under Fixes Needed ${badge === 1 ? 'needs' : 'need'} a decision.`);
-  if (c.roughShare > 0) needs.push('Food costs are still temporary estimates — upload the chef’s confirmed costs when ready.');
-  if (needs.length) return { color: 'yellow', head: 'One update is needed', action: needs.join(' ') };
+  if (c.roughShare > 0) needs.push('Rough costs — waiting for chef confirmation.');
+  if (needs.length) {
+    return {
+      color: 'yellow',
+      head: needs.length === 1 ? 'One update needs attention' : `${needs.length} updates need attention`,
+      action: needs.join(' '),
+    };
+  }
   return { color: 'green', head: 'Everything is up to date', action: 'Toast is current, guest status is loaded, and there is nothing waiting on a decision.' };
 }
 
@@ -113,62 +117,76 @@ export function pgUpdate(host) {
   const ot = opentableStatus(DATA);
   const c = costsStatus(DATA);
 
+  // each source card carries its own attention tone, so the three states are
+  // distinguishable at a glance and not just three identical white cards
+  const toastTone = t.state === 'ok' ? 'ok' : t.state === 'updating' ? 'busy' : 'alert';
+  const otTone = ot.behind ? 'attn' : 'ok';
+  const costTone = c.roughShare > 0 ? 'attn' : 'ok';
+
   host.innerHTML = `
   <div class="sys ${sys.color} rise" role="status">
     <span class="si" aria-hidden="true"></span>
     <div><div class="sh2">${esc(sys.head)}</div><div class="sm">${esc(sys.action)}</div></div>
   </div>
 
-  <div class="sec g3">
-    <div class="card"><header><div><div class="ttl">Toast Sales</div>
-      <div class="sub">Updates by itself every morning</div></div></header>
+  <div class="sec g3 srccards">
+    <section class="card srccard ${toastTone}" aria-labelledby="srcToastTtl">
+      <header><div><div class="ttl" id="srcToastTtl">Toast Sales</div>
+        <div class="sub">Updates by itself every morning</div></div></header>
       <div class="body">
-        <div style="margin-bottom:10px">${t.state === 'ok' ? `<span class="st ok">${esc(t.label)}</span>`
+        <div class="srcstate">${t.state === 'ok' ? `<span class="st ok">${esc(t.label)}</span>`
           : t.state === 'updating' ? `<span class="st partial">${esc(t.label)}</span>`
           : `<span class="st rev">${esc(t.label)}</span>`}</div>
-        <div class="calcrow"><span class="cl">Sales through</span><span class="cr">${longDate(t.last)}</span></div>
-        <div class="calcrow"><span class="cl">Last update</span><span class="cr">${fmtWhen(DATA.manifest?.lastToastSync)}</span></div>
-        <div class="note" style="margin-top:12px">Sales come in from Toast automatically around 6 AM for the
-          previous day. You normally don't need to do anything here.</div>
-        <div id="toastActions" style="margin-top:12px"></div>
-      </div></div>
+        <dl class="deflist">
+          <div><dt>Sales through</dt><dd>${longDate(t.last)}</dd></div>
+          <div><dt>Last update</dt><dd>${fmtWhen(DATA.manifest?.lastToastSync)}</dd></div>
+        </dl>
+        <p class="srcnote">Sales come in from Toast automatically around 6 AM for the previous day.
+          You normally don't need to do anything here.</p>
+        <div id="toastActions" class="srcactions"></div>
+      </div></section>
 
-    <div class="card"><header><div><div class="ttl">OpenTable Guest Status</div>
-      <div class="sub">Upload the GuestCenter file after each service</div></div></header>
+    <section class="card srccard ${otTone}" aria-labelledby="srcOtTtl">
+      <header><div><div class="ttl" id="srcOtTtl">OpenTable Guest Status</div>
+        <div class="sub">Upload the GuestCenter file after each service</div></div></header>
       <div class="body">
-        <div style="margin-bottom:10px">${ot.behind
+        <div class="srcstate">${ot.behind
           ? `<span class="st partial">Upload needed${ot.toastLast ? ` for ${esc(longDate(ot.toastLast))}` : ''}</span>`
           : `<span class="st ok">Covers through ${esc(longDate(ot.otLast))}</span>`}</div>
-        <div class="calcrow"><span class="cl">Last upload</span><span class="cr">${fmtWhen(ot.lastUpload)}</span></div>
-        <div class="calcrow"><span class="cl">Days covered</span><span class="cr">${ot.otDates.length ? `${longDate(ot.otDates[0])} – ${longDate(ot.otLast)}` : 'none yet'}</span></div>
-        ${ot.behind ? `<div class="note gold" style="margin-top:12px">Toast has newer sales than the guest-status file.
-          Upload the latest GuestCenter export so conversion stays current.</div>` : ''}
-        <div style="margin-top:12px"><button class="bigbtn" id="otUploadBtn" type="button">Upload OpenTable File</button></div>
-      </div></div>
+        <dl class="deflist">
+          <div><dt>Last upload</dt><dd>${fmtWhen(ot.lastUpload)}</dd></div>
+          <div><dt>Days covered</dt><dd>${ot.otDates.length ? `${longDate(ot.otDates[0])} – ${longDate(ot.otLast)}` : 'none yet'}</dd></div>
+        </dl>
+        <p class="srcnote">${ot.behind
+          ? 'Toast has newer sales than the guest-status file. Upload the latest GuestCenter export so conversion stays current.'
+          : 'Guest status is level with Toast. Upload again after the next service.'}</p>
+        <div class="srcactions"><button class="bigbtn" id="otUploadBtn" type="button">Upload OpenTable File</button></div>
+      </div></section>
 
-    <div class="card"><header><div><div class="ttl">Food Costs</div>
-      <div class="sub">Occasional — when the chef confirms costs</div></div></header>
+    <section class="card srccard ${costTone}" aria-labelledby="srcCostTtl">
+      <header><div><div class="ttl" id="srcCostTtl">Food Costs</div>
+        <div class="sub">Occasional — when the chef confirms costs</div></div></header>
       <div class="body">
-        <div style="margin-bottom:10px">${c.roughShare > 0
-          ? `<span class="st partial">Temporary estimates in use</span>`
-          : `<span class="st ok">Chef-confirmed</span>`}</div>
-        <div class="calcrow"><span class="cl">Last updated</span><span class="cr">${fmtWhen(c.lastUpdated)}${c.lastUpdatedBy ? ` · ${esc(c.lastUpdatedBy.split('@')[0])}` : ''}</span></div>
-        <div class="calcrow"><span class="cl">AYCE items with costs entered</span><span class="cr">${c.coverage == null ? '—' : c.coverage.toFixed(0) + '%'}</span></div>
-        <div class="note" style="margin-top:12px">${c.roughShare > 0
-          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use temporary estimates. Numbers stay marked
-             provisional until the chef's confirmed costs are uploaded — uploading here replaces the temporary
-             values item by item.`
-          : 'Costs are chef-confirmed. Upload a new file whenever prices change.'}</div>
-        <div style="margin-top:12px"><button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button></div>
-      </div></div>
+        <div class="srcstate">${c.roughShare > 0
+          ? '<span class="st partial">Rough costs — waiting for chef confirmation</span>'
+          : '<span class="st ok">Chef-confirmed</span>'}</div>
+        <dl class="deflist">
+          <div><dt>Last updated</dt><dd>${fmtWhen(c.lastUpdated)}${c.lastUpdatedBy ? ` · ${esc(c.lastUpdatedBy.split('@')[0])}` : ''}</dd></div>
+          <div><dt>AYCE items with costs entered</dt><dd>${c.coverage == null ? '—' : c.coverage.toFixed(0) + '%'}</dd></div>
+        </dl>
+        <p class="srcnote">${c.roughShare > 0
+          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use rough costs. Numbers stay marked
+             "waiting for chef confirmation" until the chef's confirmed costs are uploaded — uploading here replaces
+             the rough values item by item.`
+          : 'Costs are chef-confirmed. Upload a new file whenever prices change.'}</p>
+        <div class="srcactions"><button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button></div>
+      </div></section>
   </div>
 
   <div id="upStage" class="sec"></div>`;
 
   renderToastActions(host.querySelector('#toastActions'), t);
   host.querySelector('#otUploadBtn').addEventListener('click', () => {
-    // Signed-out visitors are prompted for the magic link right here, at the
-    // moment of the write attempt — there is no separate mode to enter first.
     if (!requireOperator('Uploading the OpenTable file')) return;
     startOpenTableFlow(host.querySelector('#upStage'));
   });
@@ -183,14 +201,14 @@ function renderToastActions(el, t) {
   if (t.state !== 'attention') { el.innerHTML = ''; return; }
   el.innerHTML = `
     <button class="bigbtn" id="retryBtn" type="button">Retry Toast Update</button>
-    <div class="acc" style="margin-top:10px"><button type="button" aria-expanded="false" id="advTgl">
+    <div class="acc"><button type="button" aria-expanded="false" id="advTgl">
       Advanced<span class="ch">▶</span></button>
       <div class="ab" hidden id="advBody">
-        <label style="display:flex;flex-direction:column;gap:4px;font-size:12px">Business date to update
-          <input id="advDate" type="date" style="padding:7px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);max-width:200px"></label>
-        <div style="margin-top:8px"><button class="btn ghost sm" id="retryDateBtn" type="button">Update this date</button></div>
+        <label class="field" for="advDate"><span>Business date to update</span>
+          <input class="ctl" id="advDate" type="date" style="max-width:210px"></label>
+        <div style="margin-top:10px"><button class="btn ghost sm" id="retryDateBtn" type="button">Update this date</button></div>
       </div></div>
-    <div id="retryStage" class="sub" style="margin-top:8px" role="status"></div>`;
+    <div id="retryStage" class="sub" role="status"></div>`;
   el.querySelector('#advTgl').addEventListener('click', () => {
     const b = el.querySelector('#advBody'); const t2 = el.querySelector('#advTgl');
     const open = t2.getAttribute('aria-expanded') === 'true';
@@ -384,7 +402,7 @@ async function handleOpenTableFile(file, stage) {
     <div class="calcrow"><span class="cl">Guest status recorded</span><span class="cr">${fmt(recorded)}</span></div>
     <div class="calcrow"><span class="cl">Guest status not recorded</span><span class="cr">${fmt(unmarked)}</span></div>
     <div class="calcrow"><span class="cl">Duplicate rows already loaded</span><span class="cr">${fmt(dup)}</span></div>
-    <div class="calcrow"><span class="cl">Possible issues requiring a manager decision</span><span class="cr">${fmt(issues)}</span></div>
+    <div class="calcrow"><span class="cl">Possible issues requiring a decision</span><span class="cr">${fmt(issues)}</span></div>
     ${notCompleted ? `<div class="note" style="margin-top:10px">${fmt(notCompleted)} canceled or no-show rows are ignored automatically — that's normal.</div>` : ''}
     <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
       <button class="bigbtn" id="otGo" type="button">Update Dashboard</button>
@@ -404,7 +422,7 @@ async function handleOpenTableFile(file, stage) {
       });
       const connected = all.filter((s) => s.intent !== 'UNKNOWN' && s.matchStatus === 'matched').length;
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'manager')}.<br>
         ${fmt(connected)} visits connected to Toast.<br>
         ${fmt(unmarked)} visits had no recorded starting choice — they still count in sales, covers and food
         cost; only conversion rates leave them out.<br>
@@ -446,7 +464,7 @@ export function startCostFlow(stageHost) {
       <b>canonical_name</b> (or “item” / “name”) and <b>cost</b> (or “cost_per_portion” / “unit_cost”);
       optional <b>portion</b> and <b>notes</b> columns. The management workbook layout (names in column B,
       costs in column C) is also understood. Costs are dollars per portion, above $0.
-      Chef-confirmed values replace the temporary estimates item by item, and past days keep the costs
+      Chef-confirmed values replace rough costs item by item, and past days keep the costs
       that were in effect at the time. Uploading the same file twice is safe.</div>
     <div id="cStage"></div>`);
   const dz = body.querySelector('#cDz');
@@ -527,7 +545,7 @@ async function handleCostFile(file, stage) {
       ${rejected.length ? `<div class="note warn" style="margin-top:10px"><b>${rejected.length} row${rejected.length === 1 ? ' was' : 's were'} rejected</b> and will not be saved:
         ${rejected.slice(0, 8).map((r) => `line ${r.line}${r.name ? ` (${esc(r.name)})` : ''} — ${esc(r.why)}`).join('; ')}${rejected.length > 8 ? ` and ${rejected.length - 8} more` : ''}.</div>` : ''}
       ${workbookHeuristic ? `<div class="note" style="margin-top:10px">This file has no header row, so it was read using the known
-        management-workbook layout (item names in column B, costs in column C). Only rows that fit that shape are
+        known workbook layout (item names in column B, costs in column C). Only rows that fit that shape are
         listed above — check the "Items recognized" count against the workbook before confirming.</div>` : ''}
       ${(diff.changed.length || diff.added.length) ? `
         <div style="max-height:210px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:8px">
@@ -587,9 +605,9 @@ async function handleCostFile(file, stage) {
         ? `<br>${res.skipped.length} row${res.skipped.length === 1 ? '' : 's'} skipped by the database: ${esc(res.skipped.map((s) => `${s.name} (${s.why})`).join('; '))}.`
         : '';
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'manager')}.<br>
         ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.
-        Chef-confirmed values now replace the temporary estimates for those items.${skippedNote}<br>
+        Chef-confirmed values now replace rough costs for those items.${skippedNote}<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;
       notify('Food costs updated.');
       CTX.refreshData();

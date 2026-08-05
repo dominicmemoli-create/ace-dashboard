@@ -12,11 +12,11 @@ import { parseCostCsv, rowsFromWorkbookAoa, diffCosts, stillUncosted } from '../
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
-const MANAGER_SCREENS = ['src/page-update.mjs', 'src/page-fixes.mjs', 'src/manager-mode.mjs'];
+const UPDATE_SCREENS = ['src/page-update.mjs', 'src/page-fixes.mjs', 'src/manager-mode.mjs'];
 
 describe('3/23: no CLI or technical language on management screens', () => {
   it('management screens contain no commands or technical terminology', () => {
-    for (const f of MANAGER_SCREENS) {
+    for (const f of UPDATE_SCREENS) {
       const src = read(f);
       expect(src, f).not.toMatch(/npm run|node scripts\/|apply-corrections|corrections\.json/);
       expect(src, f).not.toMatch(/Supabase(?!\/)/);        // brand never displayed (path refs in comments ok)
@@ -55,10 +55,21 @@ describe('9: service credentials never reach the browser', () => {
       expect(src, f).not.toMatch(/SERVICE_ROLE|SUPABASE_DB_URL|TOAST_CLIENT_SECRET|ghp_|github_pat_/);
     }
   });
-  it('the published Supabase key is the anon role only', () => {
+  it('the published Supabase key is the publishable browser key only', () => {
+    const raw = read('data/supabase_config.json');
+    const cfg = JSON.parse(raw);
+    expect(cfg.publishableKey).toMatch(/^sb_publishable_/);
+    // no secret key, no service-role JWT, no legacy anon JWT
+    expect(raw).not.toMatch(/sb_secret_|service_role|SUPABASE_SECRET/);
+    expect(cfg.url).toMatch(/^https:\/\/[a-z]+\.supabase\.co$/);
+  });
+  it('the frontend points at the dedicated ace-dashboard project', () => {
     const cfg = JSON.parse(read('data/supabase_config.json'));
-    const payload = JSON.parse(Buffer.from(cfg.anonKey.split('.')[1], 'base64').toString());
-    expect(payload.role).toBe('anon');
+    expect(cfg.url).toBe('https://hgnijizgavveoadjeoqm.supabase.co');
+    // the previously shared project must not survive anywhere in the tree
+    for (const f of ['data/supabase_config.json', 'src/pages-live.mjs', 'docs/DEPLOY.md']) {
+      expect(read(f), f).not.toMatch(/cdqbiwgxezaoaibypvsi/);
+    }
   });
   it('the GitHub token lives in Vault, read only inside the definer function', () => {
     const sql = read('supabase/migrations/0003_manager_tools.sql');
@@ -74,54 +85,25 @@ describe('1/22: Toast automation intact; retry drives the same pipeline', () => 
     expect(wf).toMatch(/workflow_dispatch/);
     expect(wf).toMatch(/nightly\.mjs/);
   });
-  it('retry-toast-update dispatches that exact workflow (manager-only)', () => {
-    const sql = read('supabase/migrations/0003_manager_tools.sql');
+  it('retry-toast-update dispatches that exact workflow with cooldown protection', () => {
+    const sql = read('supabase/migrations/0006_manager_writes.sql');
     expect(sql).toMatch(/nightly-ingest\.yml\/dispatches/);
-    const fn = sql.slice(sql.indexOf('ace_retry_toast_update'), sql.indexOf('ace_retry_status'));
-    expect(fn).toMatch(/not in \('executive','manager'\)/);
+    const fn = sql.slice(sql.indexOf('create or replace function ace_retry_toast_update'),
+      sql.indexOf('create or replace function ace_retry_status'));
+    expect(fn).toMatch(/ace_require_operator\(\)/);
+    expect(fn).toMatch(/pg_try_advisory_xact_lock/);
+    expect(fn).toMatch(/retry_cooldown/);
+    expect(fn).toMatch(/retry_daily_limit/);
+    // the cooldown must not be keyed on the caller-supplied business date,
+    // which would let a caller cycle dates to dispatch unlimited runs
+    const cooldown = fn.slice(fn.indexOf('retry_cooldown') - 400, fn.indexOf('retry_cooldown'));
+    expect(cooldown).not.toMatch(/businessDate/);
   });
   // live proof: verify-live.mjs --with-retry → dispatch accepted (HTTP 204),
   // nightly run recorded, run finished success.
 });
 
-describe('6/7/8/17/19/21: authorization + audit are enforced in the database', () => {
-  const sql = read('supabase/migrations/0003_manager_tools.sql');
-  const sql4 = read('supabase/migrations/0004_operator_role.sql');
-  it('one operator role: every write function requires an approved operator (0004)', () => {
-    // every legacy role value maps to the same operator capability
-    expect(sql4).toMatch(/in \('executive','manager','shift_lead'\)/);
-    for (const fn of ['ace_upload_costs', 'ace_replace_metrics', 'ace_save_review_fix', 'ace_retry_toast_update']) {
-      const body = sql4.slice(sql4.indexOf(`create or replace function ${fn}`));
-      expect(body, fn).toMatch(/if not ace_is_operator\(\) then/);
-    }
-    // no manager-versus-shift-lead distinctions survive in the operator model
-    expect(sql4).not.toMatch(/manager_required_pilot_window|manager_required_mixed_menu/);
-    expect(sql4).not.toMatch(/v_role = 'shift_lead'/);
-  });
-  it('anonymous users cannot execute any write function (0003 + 0004)', () => {
-    expect(sql).toMatch(/revoke all on function %s from public, anon/);
-    expect(sql4).toMatch(/revoke all on function %s from public, anon/);
-  });
-  it('the browser gates writes on a signed-in operator, prompting at write time', () => {
-    for (const f of ['src/page-update.mjs', 'src/page-fixes.mjs']) {
-      expect(read(f), f).toMatch(/requireOperator\(/);
-    }
-    const mm = read('src/manager-mode.mjs');
-    expect(mm).toMatch(/openSignIn\(/);            // sign-in prompt at the moment of the write
-    expect(mm).not.toMatch(/Shift lead|shift-lead only|manager-only/i); // no hierarchy labels
-  });
-  it('corrections store the authenticated identity, never a typed name', () => {
-    const fix = sql4.slice(sql4.indexOf('ace_save_review_fix'), sql4.indexOf('ace_retry_toast_update'));
-    expect(fix).toMatch(/auth\.jwt\(\) ->> 'email'/);
-    expect(fix).toMatch(/ace_correction_audit/);
-    expect(fix).toMatch(/'REVERT'/);        // reversal path exists
-    const ui = read('src/page-fixes.mjs');
-    expect(ui).not.toMatch(/prompt\(/);     // no "type your name" prompts anywhere
-  });
-  // live proof: verify-live.mjs asserts the matrix with real sessions
-  // (anon 401, unapproved rejected, operator allowed everything,
-  //  idempotent re-upload, audit identity, REVERT restores original).
-});
+// Authorization and audit posture moved to test/authorization.test.mjs.
 
 describe('18: no correction JSON downloads anywhere', () => {
   it('no dashboard surface creates a corrections file', () => {

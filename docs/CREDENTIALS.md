@@ -6,10 +6,10 @@
 | 2 | Toast nightly export / SFTP | ❌ Not configured | Request "Nightly Data Export" from Toast support; host + SSH key → `TOAST_EXPORT_SFTP_*` | Backup ingestion path |
 | 3 | Cloud Toast MCP for production | ⚠️ Do not assume | Only if Toast confirms unattended server-to-server auth for the MCP. Interactive use in Claude ≠ production-safe. Currently NOT planned | (alternative to #1, unnecessary) |
 | 4 | OpenTable Reservation/Guest Sync | ❌ Not granted | Account manager approval; open questions already documented in the OpenTable MCP project (`docs/OPENTABLE_ACCESS_REQUIREMENTS.md` there). Yields `OPENTABLE_CLIENT_ID`/`SECRET` | Automated intent + table matching |
-| 5 | OpenTable export format | ❌ Need one sample | A single GuestCenter export CSV to finalize the column mapping in the Data Import page | Manual intent upload |
+| 5 | OpenTable export format | ✅ Browser parser present | Standard GuestCenter reservations CSV; guest PII is stripped before upload | Manual intent upload |
 | 6 | Toast item-selection export sample | ❌ Need one sample | One "Item Selection Details" CSV export to finalize CSV import mapping | Manual Toast upload without API |
-| 7 | Supabase project | ❌ Not created | Create project (free tier OK to start) → `SUPABASE_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` | Auth, RLS, server portal, cron ingestion |
-| 8 | Chef-confirmed cost workbook | ❌ Awaiting chef | CSV per docs/CHEF_COSTS.md — esp. combo trays | Full cost coverage; PROVISIONAL badge clears |
+| 7 | Supabase project | ✅ In use |  Dedicated `ace-dashboard` project. Public URL + publishable key are in `data/supabase_config.json`; DB URL and secret key stay in `.env` / password manager only | Dashboard reads (anon, read-only) and manager-authenticated writes |
+| 8 | Chef-confirmed cost workbook | ❌ Awaiting chef | CSV per docs/CHEF_COSTS.md — esp. combo trays | Full cost coverage; rough-cost label clears |
 | 9 | Payroll source + definitions | ❌ Undecided | Which system, which fields, what "final" means | Payroll phase (flag stays off) |
 
 Until each lands: the adapter interface, config path, env placeholder, docs and manual

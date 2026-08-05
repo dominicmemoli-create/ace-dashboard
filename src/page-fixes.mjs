@@ -3,16 +3,16 @@
 // bar/takeout/delivery) is excluded from the QUEUE automatically and
 // summarized honestly: unmarked visits still count in every operational
 // figure — only conversion leaves them out. Half/Half is a guest-mix note and
-// never creates work. Decisions save straight to the shared database with the
-// signed-in user's identity and are reversible from the audit history.
+// never creates work. Decisions save straight to the shared database with a
+// signed-in manager and are reversible from the audit history.
 //
 // Accessibility: every field id is unique per card (no duplicate DOM ids),
 // decisions are native radio groups inside a fieldset, and the queue offers
 // filters by issue type, date and server with the global count always shown
 // next to the filtered count.
-import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs';
-import { rpc, restGet } from './auth.mjs';
-import { requireOperator, notify } from './manager-mode.mjs';
+import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260806-manager-auth';
+import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
+import { requireOperator, notify } from './manager-mode.mjs?v=20260806-manager-auth';
 
 let CTX = null;
 export function initFixesPage(ctx) { CTX = ctx; }
@@ -122,25 +122,30 @@ export function pgFixes(host) {
     <div class="hero-line">Only clear, answerable questions land here — a conflicting starting choice or one
       likely Toast table to confirm. Your decision saves immediately for everyone and can be undone later.</div>
   </div></div></section>
-  ${notes.map((n) => `<div class="note" style="margin-top:12px">${esc(n)}</div>`).join('')}
+  ${notes.length ? `<div class="card sec"><header><div><div class="ttl">Handled automatically</div>
+    <div class="sub">Nothing below needs a decision — it is listed so the totals stay honest.</div></div></header>
+    <div class="body"><ul class="autolist">${notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul></div></div>` : ''}
   ${actionable.length ? `
-  <div class="card sec"><div class="body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
-    <label for="fixFilterKind" style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Issue type
-      <select id="fixFilterKind" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+  <div class="card sec"><div class="body fieldrow">
+    <label class="field" for="fixFilterKind"><span>Issue type</span>
+      <select class="ctl" id="fixFilterKind">
         <option value="all">All types</option>
         ${kindsPresent.map((k) => `<option value="${esc(k)}" ${filters.kind === k ? 'selected' : ''}>${esc(KIND_LABEL[k]?.[0] ?? k)}</option>`).join('')}
       </select></label>
-    <label for="fixFilterDate" style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Date
-      <select id="fixFilterDate" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" for="fixFilterDate"><span>Date</span>
+      <select class="ctl" id="fixFilterDate">
         <option value="all">All dates</option>
         ${dates.map((d) => `<option value="${d}" ${filters.date === d ? 'selected' : ''}>${midDate(d)}</option>`).join('')}
       </select></label>
-    <label for="fixFilterServer" style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)">Server
-      <select id="fixFilterServer" style="padding:6px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text)">
+    <label class="field" for="fixFilterServer"><span>Server</span>
+      <select class="ctl" id="fixFilterServer">
         <option value="all">All servers</option>
         ${servers.map((s) => `<option value="${esc(s)}" ${filters.server === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}
       </select></label>
-    <span class="sub" style="margin-left:auto">Showing ${visible.length} of ${actionable.length} open item${actionable.length === 1 ? '' : 's'}</span>
+    <div class="rangenote sub" role="status">
+      <span>Showing <b>${visible.length}</b> of ${actionable.length} open item${actionable.length === 1 ? '' : 's'}</span>
+      ${filtered ? '<span>Filters are active</span>' : '<span>No filters applied</span>'}
+    </div>
   </div></div>` : ''}
   <div id="fixList"></div>
   <div id="doneList" class="sec"></div>`;
@@ -154,13 +159,21 @@ export function pgFixes(host) {
 
   const list = host.querySelector('#fixList');
   if (!actionable.length) {
-    list.innerHTML = `<div class="empty sec"><div class="ei">✓</div><div class="et">Nothing needs a decision</div>
+    list.innerHTML = `<div class="empty sec"><div class="ei" aria-hidden="true">✓</div>
+      <div class="et">Nothing needs a decision</div>
       <div class="es">New items appear here after an OpenTable upload when something genuinely needs a call.</div></div>`;
   } else if (!visible.length) {
-    list.innerHTML = `<div class="empty sec"><div class="et">Nothing matches this filter</div>
+    list.innerHTML = `<div class="empty sec"><div class="ei" aria-hidden="true">⌕</div>
+      <div class="et">Nothing matches this filter</div>
       <div class="es">${actionable.length} open item${actionable.length === 1 ? '' : 's'} exist${actionable.length === 1 ? 's' : ''} outside the current filter.</div></div>`;
   } else {
-    visible.forEach((item, i) => list.appendChild(fixCard(item, i)));
+    list.innerHTML = `<div class="queuebar sec" role="status">
+      <span class="qcount"><b>1</b> of ${visible.length}</span>
+      <span class="qtext">One card at a time${filtered ? ' in this filter' : ''} — save this decision and the next
+        item takes its place.</span>
+      <span class="qprog" aria-hidden="true"><i style="width:${Math.max(4, 100 / visible.length)}%"></i></span>
+    </div>`;
+    list.appendChild(fixCard(visible[0], 0));
   }
   renderDecided(host.querySelector('#doneList'));
 }
@@ -187,12 +200,13 @@ function fixCard(item, idx) {
       ? matchWhy(r, ev)
     : item.kind === KIND.TRANSFER
       ? 'The table changed hands during service — confirm who it belongs to.'
-      : 'An operator asked for another look at this visit.';
+      : 'A visitor asked for another look at this visit.';
 
   el.innerHTML = `
     <div class="fk">
-      <span class="verdict-badge ${kindCls}">${esc(kindLabel)}</span>
-      ${item.pilot ? '<span class="verdict-badge neu">Pilot weekend — touches frozen history</span>' : ''}
+      <span class="badge ${kindCls}">${esc(kindLabel)}</span>
+      <span class="sub">${esc(midDate(r.businessDate))}${r.visitTime ? ` · ${esc(r.visitTime)}` : ''}${
+        r.tableTokens?.length ? ` · table ${esc(r.tableTokens.join(', '))}` : ''}</span>
     </div>
     <div class="facts">
       <div class="fact"><div class="k">Date</div><div class="v">${esc(midDate(r.businessDate))}</div></div>
@@ -208,23 +222,23 @@ function fixCard(item, idx) {
         r.matchedOrderGuid ? '<span class="sub">Looking up the suggested table…</span>' :
         'No confident table connection.'}</div></div>
     </div>
-    <div class="sub" style="margin-bottom:10px">${why}</div>
-    <fieldset style="border:none;padding:0;margin:0 0 10px">
-      <legend class="sub" style="padding:0 0 6px">Decision</legend>
+    <p class="fixwhy">${why}</p>
+    <fieldset>
+      <legend class="flegend">Decision</legend>
       <div class="fixbtns" id="${fid('opts')}"></div>
     </fieldset>
     <div id="${fid('pickWrap')}"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <label class="sr" for="${fid('reason')}">Reason for this decision</label>
-      <select id="${fid('reason')}" style="padding:8px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);font-size:13px">
-        <option value="">Reason…</option>
-        ${REASONS.map((x) => `<option>${x}</option>`).join('')}
-      </select>
-      <label class="sr" for="${fid('note')}">Optional note</label>
-      <input id="${fid('note')}" placeholder="Note (optional)" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);font-size:13px">
-      <button class="bigbtn" id="${fid('save')}" type="button" disabled>Save</button>
+    <div class="fixactions">
+      <label class="field" for="${fid('reason')}"><span>Reason for this decision</span>
+        <select class="ctl" id="${fid('reason')}">
+          <option value="">Choose a reason…</option>
+          ${REASONS.map((x) => `<option>${x}</option>`).join('')}
+        </select></label>
+      <label class="field grow" for="${fid('note')}"><span>Note <span class="muted">(optional)</span></span>
+        <input class="ctl" id="${fid('note')}" placeholder="Anything the next person should know"></label>
+      <button class="bigbtn" id="${fid('save')}" type="button" disabled>Save decision</button>
     </div>
-    <div id="${fid('err')}" style="color:var(--neg);font-size:12.5px;min-height:16px;margin-top:6px" role="alert"></div>`;
+    <div id="${fid('err')}" class="fixerr" role="alert"></div>`;
 
   // ---- decision options: native radios, one group per card
   const optsHost = el.querySelector(`#${fid('opts')}`);
@@ -256,8 +270,7 @@ function fixCard(item, idx) {
     const wrap = document.createElement('label');
     wrap.className = 'fixbtn';
     wrap.setAttribute('for', rid);
-    wrap.innerHTML = `<input type="radio" id="${rid}" name="${fid('decision')}" value="${esc(val)}"
-      style="accent-color:var(--accent);margin-right:7px">${esc(label)}`;
+    wrap.innerHTML = `<input type="radio" id="${rid}" name="${fid('decision')}" value="${esc(val)}">${esc(label)}`;
     wrap.querySelector('input').addEventListener('change', () => {
       chosen = val;
       optsHost.querySelectorAll('label.fixbtn').forEach((x) => x.classList.remove('on'));
@@ -308,23 +321,23 @@ function fixCard(item, idx) {
     const wrap = el.querySelector(`#${fid('pickWrap')}`);
     wrap.innerHTML = '';
     if (val === 'PICK') {
-      wrap.innerHTML = '<div class="sub" style="margin-bottom:8px">Loading that day\'s tables…</div>';
+      wrap.innerHTML = '<div class="sub pickload" role="status">Loading that day\'s tables…</div>';
       loadVisits().then((vs) => {
-        wrap.innerHTML = `<label class="sr" for="${fid('pickSel')}">Pick the correct table</label>
-          <select id="${fid('pickSel')}" style="margin-bottom:10px;max-width:100%;padding:8px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);font-size:13px">
+        wrap.innerHTML = `<label class="field pickfield" for="${fid('pickSel')}"><span>Pick the correct table</span>
+          <select class="ctl" id="${fid('pickSel')}">
           <option value="">Pick the correct table…</option>
           ${vs.sort((a, b) => String(a.table).localeCompare(String(b.table), 'en', { numeric: true }))
             .map((v) => `<option value="${esc(v.orderGuid)}">Table ${esc(v.table)} · ${esc(fmtTime(v.opened, tz))} · ${v.guests || '?'} guests · $${Math.round(v.net)}${v.server ? ` · ${esc(v.server)}` : ''}</option>`).join('')}
-        </select>`;
+        </select></label>`;
         wrap.querySelector(`#${fid('pickSel')}`).addEventListener('change', (e) => { pickedOrderGuid = e.target.value || null; syncSave(); });
       }).catch(() => { wrap.innerHTML = '<div class="errbox">Could not load that day\'s tables.</div>'; });
     } else if (val === 'PICK_SERVER') {
       const emps = (DATA.reference?.employees ?? []).slice().sort((a, b) => a.name.localeCompare(b.name));
-      wrap.innerHTML = `<label class="sr" for="${fid('pickSrv')}">Pick the server</label>
-        <select id="${fid('pickSrv')}" style="margin-bottom:10px;padding:8px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);font-size:13px">
+      wrap.innerHTML = `<label class="field pickfield" for="${fid('pickSrv')}"><span>Pick the server</span>
+        <select class="ctl" id="${fid('pickSrv')}">
         <option value="">Pick the server…</option>
         ${emps.map((e2) => `<option value="${esc(e2.guid)}">${esc(e2.name)}</option>`).join('')}
-      </select>`;
+      </select></label>`;
       wrap.querySelector(`#${fid('pickSrv')}`).addEventListener('change', (e) => { pickedServerGuid = e.target.value || null; syncSave(); });
     }
   }
@@ -405,7 +418,7 @@ function renderDecided(host) {
       <td style="text-align:left">${esc(midDate(r.businessDate))}</td>
       <td style="text-align:left">${esc(r.tableTokens?.join(', ') || '—')}</td>
       <td style="text-align:left">${esc(describeDecision(r))}</td>
-      <td style="text-align:left">${esc((r.correction.user ?? '').split('@')[0])}</td>
+      <td style="text-align:left">${esc(r.correction.user || 'manager')}</td>
       <td><button class="btn ghost sm" type="button" data-undo="${i}"
         aria-label="Undo the decision for ${esc(midDate(r.businessDate))} table ${esc(r.tableTokens?.join(', ') || '')}">Undo</button></td></tr>`).join('')}
     </tbody></table></div></div>`;
