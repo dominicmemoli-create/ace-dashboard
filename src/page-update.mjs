@@ -10,7 +10,7 @@ import { parseCostCsv, rowsFromWorkbookAoa, attachAliases, diffCosts, stillUncos
 import { buildMetricsForDate } from './metrics-builder.mjs';
 import { rpc, restGet } from './auth.mjs';
 import {
-  canUploadOpenTable, canUploadCosts, canRetryToast, requireRole, notify,
+  canUploadOpenTable, canUploadCosts, canRetryToast, requireRole, notify, refreshIdentity,
 } from './manager-mode.mjs';
 
 let CTX = null;
@@ -168,11 +168,14 @@ export function pgUpdate(host) {
     startOpenTableFlow(host.querySelector('#upStage'));
   });
   // Food-cost upload is manager-only; shift leads don't see the button at all.
-  if (canUploadCosts()) {
+  // Identity resolves asynchronously (token may need a refresh after the
+  // device slept), so paint the button once the role is actually known.
+  refreshIdentity().then(() => {
     const w = host.querySelector('#costBtnWrap');
+    if (!w || !canUploadCosts() || w.querySelector('#costUploadBtn')) return;
     w.innerHTML = `<button class="bigbtn" id="costUploadBtn" type="button">Update Food Costs</button>`;
     w.querySelector('#costUploadBtn').addEventListener('click', () => startCostFlow(host.querySelector('#upStage')));
-  }
+  });
 }
 
 /* --------------------------------------------------------- Toast retry UI -- */
@@ -402,7 +405,7 @@ async function handleOpenTableFile(file, stage) {
         ${res.duplicates ? `${fmt(res.duplicates)} rows were already loaded and skipped.<br>` : ''}
         ${issues ? `${fmt(issues)} item${issues === 1 ? '' : 's'} may require a manager decision — see <b>Fixes Needed</b>.` : 'Nothing needs a manager decision.'}</div>`;
       notify('OpenTable file saved to the dashboard.');
-      CTX.reload();
+      CTX.refreshData();
     } catch (e) {
       btn.disabled = false;
       out.innerHTML = `<div class="errbox"><b>The update didn't save.</b> ${esc(e.message)}</div>`;
@@ -541,7 +544,7 @@ async function handleCostFile(file, stage) {
         ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;
       notify('Food costs updated.');
-      CTX.reload();
+      CTX.refreshData();
     } catch (e) {
       btn.disabled = false;
       out.innerHTML = `<div class="errbox"><b>The update didn't save.</b> ${esc(e.message)}</div>`;

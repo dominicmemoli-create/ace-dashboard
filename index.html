@@ -2304,7 +2304,7 @@ function pgMethod(host) {
         <tr><td>Pre-decided AYCE (weekend)</td><td>${fmt(P.overall.conversion.predecidedTables)}</td><td><span class="st partial">In mix, out of conversion</span></td></tr>
         <tr><td>AYCE tables where AYCE items ≠ guest count</td><td>${fmt(q.aceCoversNeGuests)}</td><td><span class="st ok">Retained</span></td></tr>
       </tbody></table></div>
-      <div class="foot">Checks aggregate to one record per table visit — split checks are combined.</div></div>
+      <div class="foot">Each table visit counts once, no matter how the bill was divided.</div></div>
   </div>`;
 
   /* reconciliation */
@@ -2389,7 +2389,7 @@ function pgMethod(host) {
       <dt>Off-premise</dt><dd>${fmt(q.noTable)} orders with no table (takeout, delivery, online) excluded.</dd>
       <dt>Large party</dt><dd>Six or more seated covers.</dd>
       <dt>Revenue</dt><dd>Pre-tax food &amp; beverage. AYCE table revenue is the full F&amp;B total of tables that rang AYCE items.</dd>
-      <dt>Split checks</dt><dd>Aggregated to one record per table visit.</dd></dl>`],
+      <dt>Divided bills</dt><dd>Each table visit counts once, no matter how the bill was divided.</dd></dl>`],
     ["Derived indicators added in this dashboard", `<dl>
       <dt>Gap to average</dt><dd>eligible × (restaurant average conversion − server conversion) ÷ 100, floored at zero,
         shown only for servers with ${LB_MIN_GAP}+ eligible tables. Pure arithmetic. It is <b>not</b> an employee evaluation

@@ -83,27 +83,40 @@ export async function signInWithEmail(email) {
   throw new Error('Could not send the sign-in email. Check the address and try again.');
 }
 
-/** Current valid session (refreshes when near expiry). Null when signed out. */
+/** Current valid session (refreshes when near expiry). Null when signed out.
+ * Refresh is single-flight: refresh tokens are one-time-use, so concurrent
+ * callers (page load after the laptop wakes up) must share one request
+ * instead of racing each other into a sign-out. */
+let refreshing = null;
 export async function getSession() {
   const s = loadSession();
   if (!s) return null;
   if (s.expires_at - 90 > Date.now() / 1000) return s;
-  try {
-    const res = await fetch(`${CFG.url}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: { apikey: CFG.anonKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: s.refresh_token }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.access_token) { saveSession(null); return null; }
-    const next = {
-      access_token: json.access_token,
-      refresh_token: json.refresh_token ?? s.refresh_token,
-      expires_at: Math.floor(Date.now() / 1000) + Number(json.expires_in || 3600),
-    };
-    saveSession(next);
-    return next;
-  } catch { return null; }
+  if (!refreshing) {
+    refreshing = (async () => {
+      try {
+        const res = await fetch(`${CFG.url}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { apikey: CFG.anonKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: s.refresh_token }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.access_token) { saveSession(null); return null; }
+        const next = {
+          access_token: json.access_token,
+          refresh_token: json.refresh_token ?? s.refresh_token,
+          expires_at: Math.floor(Date.now() / 1000) + Number(json.expires_in || 3600),
+        };
+        saveSession(next);
+        return next;
+      } catch {
+        return null;   // transient network failure: keep the stored session
+      } finally {
+        refreshing = null;
+      }
+    })();
+  }
+  return refreshing;
 }
 
 export async function signOut() {

@@ -721,6 +721,9 @@ registerPages();
 const CTX = {
   APP, DATA, helpers, fmtDate, opDates,
   reload: reloadLive,
+  // background data refresh: updates badge + freshness but leaves the current
+  // page DOM alone (so upload success messages stay readable)
+  refreshData: () => { DATA.loading = null; DATA.loaded = false; return loadLive(); },
   loadLive,
 };
 initUpdatePage(CTX);
