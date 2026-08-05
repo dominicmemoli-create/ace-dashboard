@@ -1,7 +1,7 @@
 // Chef cost-file handling shared by the browser Food Costs upload.
 // Parsing + preview diff only — the authoritative write (effective dating,
 // close-and-append, audit fields) happens server-side in ace_upload_costs().
-import { parseCsv } from './opentable.mjs?v=20260805-open-access';
+import { parseCsv } from './opentable.mjs?v=20260806-manager-auth';
 
 export function normalizeName(name) {
   return String(name ?? '')

@@ -10,29 +10,38 @@ for migrations, credentials, recovery, and verification.
   metric rows rebuilt for affected dates.
 - **Frontend** -> GitHub Pages from repo root on `main`. Reads Supabase with
   the anon key and falls back to `data/live/*.json` when unreachable.
-- **Current browser writes** -> public anon RPC allowlist from
-  `supabase/migrations/0006_public_access_rpc.sql`. RPC functions are
-  security-definer, validate payloads, reject PII, write audit records with
-  `actor_session_id`, and block Jul 31-Aug 2 pilot-history edits.
-- **Legacy authenticated posture** -> migrations `0003_manager_tools.sql` and
-  `0004_operator_role.sql` remain in history. Re-tightening access later should
-  be a new forward migration that revokes anon execute and restores operator
-  checks.
+- **Browser writes** -> manager-only RPCs from
+  `supabase/migrations/0006_manager_writes.sql`. Every write RPC is granted to
+  `authenticated` only and calls `ace_require_operator()` first. The functions
+  are security-definer, validate payloads, reject PII, write audit records with
+  `auth.uid()` and the JWT email, and block Jul 31-Aug 2 pilot-history edits.
+  Anonymous callers get read-only access to the PII-free dashboard tables and
+  the two sanitized `*_public` views.
+- **Sign-in** -> Supabase Auth magic links (`src/auth.mjs`), approval seeded from
+  `ace_approved_emails` into `user_profiles` by the `ace_on_auth_user_created`
+  trigger in `0003_manager_tools.sql`.
 - **Retry Toast Update** -> RPC reads `ace_github_pat` from Supabase Vault and
   dispatches the nightly workflow via `pg_net`. No GitHub token reaches the
   browser.
 
 ## Migrations
 
-Apply in order:
+On a clean project, apply everything in dependency order with one command:
 
 ```bash
-node scripts/admin/apply-sql.mjs supabase/migrations/0001_schema.sql
-node scripts/admin/apply-sql.mjs supabase/migrations/0002_rls.sql
-node scripts/admin/apply-sql.mjs supabase/migrations/0003_manager_tools.sql
-node scripts/admin/apply-sql.mjs supabase/migrations/0004_operator_role.sql
-node scripts/admin/apply-sql.mjs supabase/migrations/0005_upload_rematch.sql
-node scripts/admin/apply-sql.mjs supabase/migrations/0006_public_access_rpc.sql
+node scripts/admin/bootstrap.mjs
+```
+
+That runs `0000_ace_core_tables.sql` (which owns every flat `ace_*` table, so
+the ingestion scripts are no longer the de-facto schema), then `0003`, `0004`,
+`0005`, `0006_manager_writes.sql`. `0001_schema.sql` / `0002_rls.sql` define an
+older normalized schema the dashboard never reads and are opt-in via
+`--with-legacy-schema`. Preview the order with `--dry-run`.
+
+Individual files still apply with:
+
+```bash
+node scripts/admin/apply-sql.mjs supabase/migrations/0006_manager_writes.sql
 ```
 
 ## Admin tools (`scripts/admin/`, need `.env`)
