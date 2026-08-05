@@ -23,10 +23,16 @@ describe('intent normalization (Reservation Tags only)', () => {
   it('conflicting intent tags → REVIEW_REQUIRED', () => {
     expect(classifyIntentTags('AYCE,UNDECIDED.').intent).toBe('REVIEW_REQUIRED');
   });
-  it('Half/Half → MIXED_MENU_EXCEPTION flag', () => {
+  it('Half/Half is guest-mix metadata only — no intent, no mixed-menu exception', () => {
     const c = classifyIntentTags('Half/Half');
-    expect(c.mixedMenuException).toBe(true);
-    expect(c.intent).toBe('UNKNOWN'); // no directional intent recorded
+    expect(c.halfHalf).toBe(true);            // preserved as optional visit metadata
+    expect(c.mixedMenuException).toBeUndefined(); // the policy-exception concept is gone
+    expect(c.intent).toBe('UNKNOWN');         // no directional intent recorded
+  });
+  it('Half/Half never suppresses a real starting choice on the same record', () => {
+    const c = classifyIntentTags('Half/Half,UNDECIDED.');
+    expect(c.intent).toBe('UNDECIDED');       // the valid classification stands
+    expect(c.halfHalf).toBe(true);
   });
   it('intent never comes from free text (only the tags argument exists)', () => {
     // structural: classifyIntentTags takes reservation tags only; guest
@@ -66,7 +72,7 @@ describe('sample-export fixture (reproduces supplied GuestCenter conditions)', (
     expect(c.PREDECIDED_AYCE).toBe(38);
     expect(c.REVIEW_REQUIRED).toBe(1);
     expect(c.UNKNOWN).toBe(62 + 11); // Half/Half rows carry no directional intent
-    expect(sanitized.filter((s) => s.mixedMenuException).length).toBe(11);
+    expect(sanitized.filter((s) => s.halfHalf).length).toBe(11);
   });
   it('sanitized rows contain no PII', () => {
     for (const s of sanitized) {
@@ -78,8 +84,8 @@ describe('sample-export fixture (reproduces supplied GuestCenter conditions)', (
       expect('phone' in s).toBe(false);
     }
   });
-  it('conflict/mixed rows are queued for review', () => {
-    expect(sanitized.filter((s) => s.reviewStatus === 'pending_review').length).toBe(12); // 11 half/half + 1 conflict
+  it('only genuine conflicts are queued for review — Half/Half creates no work', () => {
+    expect(sanitized.filter((s) => s.reviewStatus === 'pending_review').length).toBe(1); // the 1 conflicting visit
   });
 });
 

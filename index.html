@@ -54,6 +54,11 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+/* skip link — first focusable element, visible only on focus */
+.skiplink{position:absolute;left:8px;top:-48px;z-index:500;background:var(--accent-strong);color:#fff;
+  padding:9px 16px;border-radius:0 0 8px 8px;font-weight:650;font-size:13.5px;text-decoration:none;
+  transition:top .15s ease}
+.skiplink:focus{top:0;outline:2px solid #fff;outline-offset:-4px}
 body{
   font-family:var(--ff); background:var(--bg); color:var(--text);
   font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased;
@@ -165,11 +170,12 @@ a{color:var(--accent)}
   box-shadow:var(--shadow-1);overflow:hidden}
 .card>header{display:flex;align-items:flex-start;gap:10px;padding:15px 18px 0}
 .card>header .ttl{font-size:13.5px;font-weight:650;letter-spacing:-.1px}
-.card>header .sub{font-size:11.5px;color:var(--text-3);margin-top:2px;font-weight:400;letter-spacing:0}
+.card>header .sub{font-size:12.5px;color:var(--text-3);margin-top:2px;font-weight:400;letter-spacing:0}
+.sub{font-size:12.5px;color:var(--text-3)}
 .card>header .sp{flex:1}
 .card .body{padding:14px 18px 18px}
 .card .foot{padding:10px 18px;border-top:1px solid var(--border);background:var(--surface-2);
-  font-size:11.5px;color:var(--text-3);line-height:1.5}
+  font-size:12.5px;color:var(--text-3);line-height:1.5}
 .sec{margin-top:26px}
 .sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .sec-h h2{font-size:15px;font-weight:650;letter-spacing:-.2px}
@@ -188,9 +194,14 @@ a{color:var(--accent)}
   font-weight:650;margin-bottom:9px;display:flex;align-items:center;gap:8px}
 .verdict-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;
   font-size:11.5px;font-weight:650;letter-spacing:.2px}
-.verdict-badge.pos{background:rgba(74,168,120,.16);color:#7fd3a5;border:1px solid rgba(74,168,120,.35)}
-.verdict-badge.neu{background:rgba(208,170,84,.14);color:#dcbc6c;border:1px solid rgba(208,170,84,.32)}
-.verdict-badge.neg{background:rgba(224,112,92,.15);color:#f0917e;border:1px solid rgba(224,112,92,.35)}
+/* default (light analytical surfaces): theme-variable colors, WCAG AA in both themes */
+.verdict-badge.pos{background:var(--pos-soft);color:var(--pos);border:1px solid var(--pos)}
+.verdict-badge.neu{background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-line)}
+.verdict-badge.neg{background:var(--neg-soft);color:var(--neg);border:1px solid var(--neg)}
+/* inside the dark hero the badge palette is tuned for the navy background */
+.hero .verdict-badge.pos{background:rgba(74,168,120,.16);color:#7fd3a5;border:1px solid rgba(74,168,120,.35)}
+.hero .verdict-badge.neu{background:rgba(208,170,84,.14);color:#dcbc6c;border:1px solid rgba(208,170,84,.32)}
+.hero .verdict-badge.neg{background:rgba(224,112,92,.15);color:#f0917e;border:1px solid rgba(224,112,92,.35)}
 .hero-delta{display:flex;align-items:baseline;gap:12px;margin:4px 0 2px;flex-wrap:wrap}
 .hero-delta .big{font-size:60px;font-weight:700;letter-spacing:-2.4px;line-height:1;
   font-variant-numeric:tabular-nums;color:#fff}
@@ -443,11 +454,12 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
   padding:10px 13px;font-size:13px;line-height:1.55}
 .fixcard .said .k{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--text-3);
   font-weight:650;margin-bottom:4px}
-.fixbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.fixbtn{background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);
+.fixbtns{display:flex;gap:8px;flex-wrap:wrap}
+.fixbtn{display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);
   padding:8px 13px;font-size:13px;cursor:pointer;color:var(--text);transition:border-color var(--dur),background var(--dur)}
 .fixbtn:hover{border-color:var(--accent)}
-.fixbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:650}
+.fixbtn[aria-pressed="true"],.fixbtn.on{background:var(--accent-soft);border-color:var(--accent);font-weight:650}
+.fixbtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:700px){.fixcard .said{grid-template-columns:1fr}}
 
 /* ---------------- charts ---------------- */
@@ -527,6 +539,11 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
   #side{position:fixed;left:0;top:0;bottom:0;width:250px;height:100dvh;transform:translateX(-100%);
     transition:transform .24s var(--ease);z-index:120}
   #side.open{transform:none}
+  /* wide tables scroll intentionally; the identifying first column stays pinned */
+  .tw th:first-child,.tw td:first-child{position:sticky;left:0;background:var(--surface);z-index:3;
+    box-shadow:1px 0 0 var(--border)}
+  .tw thead th:first-child{z-index:5;background:var(--surface-2)}
+  .tw tbody tr.sub td:first-child{background:var(--surface-2)}
   #mobilebar{display:flex;align-items:center;gap:11px;padding:10px 16px;background:var(--nav-bg);
     color:var(--nav-fg);position:sticky;top:0;z-index:40}
   #mobilebar .mt{font-size:14px;font-weight:650}
@@ -595,6 +612,8 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
 </head>
 <body>
 
+<a class="skiplink" href="#content">Skip to content</a>
+
 <!-- presentation gate: NOT security. The passcode is embedded in this file. -->
 <div id="gate">
   <div class="gb">
@@ -621,11 +640,11 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
     </div>
     <nav id="navlist" aria-label="Primary"></nav>
     <div class="foot">
-      <button class="themebtn" id="mmBtn" type="button" style="display:none">
-        <span>Manager Mode</span><span id="mmLabel">Sign in</span></button>
+      <button class="themebtn" id="acctBtn" type="button" style="display:none" aria-label="Account and sign out">
+        <span>Account</span><span id="acctLabel"></span></button>
       <button class="themebtn" id="themeBtn" type="button">
         <span>Appearance</span><span id="themeLabel">Light</span></button>
-      <div class="gen">Data generated<br><span id="genstamp"></span></div>
+      <div class="gen">Pilot extract generated<br><span id="genstamp"></span> (ET)</div>
     </div>
   </aside>
 
@@ -647,7 +666,7 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
       </div>
     </div>
 
-    <main class="container"><div id="content"></div></main>
+    <main class="container"><div id="content" tabindex="-1"></div></main>
   </div>
 </div>
 
@@ -708,6 +727,10 @@ ROWS.forEach(r => {
     MISMATCHES.push({ row: r, stored, rule: ruleComm(r) });
   }
 });
+
+/* impossible records: more AYCE covers rung than guests seated. Surfaced for
+   review — the stored figures are preserved, never silently corrected. */
+const IMPOSSIBLE = ROWS.filter(r => r.adultAce + r.kidAce > r.covers);
 
 /* ------------------------------------------------------------------ utils -- */
 const $  = (s, r) => (r || document).querySelector(s);
@@ -2076,7 +2099,10 @@ function pgCommission(host) {
   const groups = Object.keys(byS).map(n => ({
     server: n, ls: byS[n], sub: r2(byS[n].reduce((a, l) => a + l.amount, 0)),
     adult: byS[n].reduce((a, l) => a + l.adultAce, 0),
-  })).sort((a, b) => b.sub - a.sub);
+    /* Host To Go is an unattributed bucket, never counted as a server */
+    unattributed: byS[n].every(l => l.unattributed),
+  })).sort((a, b) => (a.unattributed - b.unattributed) || (b.sub - a.sub));
+  const serverGroups = groups.filter(g => !g.unattributed);
 
   let h = `<div class="sec-h" style="margin-top:2px"><h2>Commission ledger</h2>
     <span class="d">Provisional pilot rates · ${all.length} converted table${all.length === 1 ? "" : "s"}${isDefaultFilters() ? "" : " · filtered"}</span></div>`;
@@ -2089,7 +2115,8 @@ function pgCommission(host) {
     ${kcell("Weekend total", usd(total), `${all.length} converted tables`, "comm", "gold")}
     ${kcell("Adult AYCE covers", fmt(adultCov), "commission-bearing covers")}
     ${kcell("Avg per converted table", usd(all.length ? total / all.length : 0), "total ÷ converted tables")}
-    ${kcell("Servers paid", fmt(groups.length), "with at least one conversion")}
+    ${kcell("Servers with entries", fmt(serverGroups.length),
+      "provisional ledger entries — nothing here was paid" + (groups.length > serverGroups.length ? " · plus the unattributed Host To Go bucket" : ""))}
   </div>`;
 
   h += `<div class="card"><div class="toolbar no-print">
@@ -2116,11 +2143,11 @@ function pgCommission(host) {
       <td><span style="display:inline-flex;align-items:center;gap:8px">
         <span style="color:var(--text-3);font-size:10px;display:inline-block;transition:transform .2s;
           transform:rotate(${open ? 90 : 0}deg)">▶</span>
-        <span class="av" style="width:22px;height:22px;font-size:9.5px;background:${avColor(g.server)}">${esc(initials(g.server))}</span>
-        ${esc(g.server)}</span></td>
+        <span class="av" style="width:22px;height:22px;font-size:9.5px;background:${g.unattributed ? "var(--s4)" : avColor(g.server)}">${g.unattributed ? "—" : esc(initials(g.server))}</span>
+        ${esc(g.server)}${g.unattributed ? ` <span class="tag unk">unattributed bucket — not a server</span>` : ""}</span></td>
       <td colspan="5" style="text-align:left;color:var(--text-3);font-weight:400">
         ${g.ls.length} converted table${g.ls.length === 1 ? "" : "s"} · ${g.adult} adult AYCE covers ·
-        avg ${usd(g.sub / g.ls.length)}</td>
+        avg ${usd(g.sub / g.ls.length)}${g.unattributed ? " · no per-table server records exist" : ""}</td>
       <td></td><td></td><td><b>${usd(g.sub)}</b></td><td></td></tr>`;
     if (!open) return;
     g.ls.slice().sort((a, b) => a.day - b.day || String(a.table).localeCompare(String(b.table))).forEach(l => {
@@ -2153,8 +2180,9 @@ function pgCommission(host) {
   host.appendChild(wrap);
 
   $("#cDist", wrap).appendChild(rankBars(groups.map(g => ({
-    label: g.server, v: g.sub, fv: usd(g.sub), sub: g.ls.length + " tbl",
-    color: "var(--gold)",
+    label: g.unattributed ? g.server + " (unattributed)" : g.server,
+    v: g.sub, fv: usd(g.sub), sub: g.ls.length + " tbl",
+    color: g.unattributed ? "var(--s4)" : "var(--gold)",
     tip: tipHTML({
       title: g.server,
       rows: [["Provisional commission", usd(g.sub)], ["Converted tables", fmt(g.ls.length)],
@@ -2278,8 +2306,8 @@ function pgMethod(host) {
   h += `<div class="kstrip" style="margin-bottom:14px">
     ${kcell("Toast orders scanned", fmt(q.totalOrders), "Jul 10 – Aug 2, all sources")}
     ${kcell("Floor tables (weekend)", fmt(q.pilotFloorOrders), "dine-in, bar excluded")}
-    ${kcell("Intent matched", fmt(q.pilotIntentMatched), `${pct(matchRate)} of weekend floor tables`)}
-    ${kcell("Unknown intent", fmt(q.pilotIntentUnknown), "excluded from conversion rates")}
+    ${kcell("Server-attributed tables", fmt(q.pilotIntentMatched), `${pct(matchRate)} of floor tables have filterable row-level records`)}
+    ${kcell("Unknown intent", fmt(q.pilotIntentUnknown), "in mix and totals; out of conversion rates")}
   </div>`;
 
   /* status board */
@@ -2292,8 +2320,11 @@ function pgMethod(host) {
         <tr><td>Commission rates ratified</td><td><span class="st rev">Requires review — provisional</span></td></tr>
         <tr><td>Ledger amount vs stated rule</td><td><span class="st ${MISMATCHES.length ? "rev" : "ok"}">
           ${MISMATCHES.length ? MISMATCHES.length + " requires review" : "Reconciled"}</span></td></tr>
+        <tr><td>AYCE covers rung vs guests seated (impossible if covers exceed guests)</td>
+          <td><span class="st ${IMPOSSIBLE.length ? "rev" : "ok"}">
+          ${IMPOSSIBLE.length ? IMPOSSIBLE.length + " impossible — see below" : "Validated"}</span></td></tr>
       </tbody></table></div>
-      <div class="foot">Data generated ${esc(P.generated)}.</div></div>
+      <div class="foot">Data generated ${esc(P.generated)} ET.</div></div>
 
     <div class="card"><header><div><div class="ttl">Exclusions &amp; filters</div></div></header>
       <div class="tw"><table><tbody>
@@ -2346,6 +2377,23 @@ function pgMethod(host) {
         weekend provisional total reads ${usd(r2(P.overall.conversion.commission - dSum))} rather than the
         ${usd(P.overall.conversion.commission)} stored in the source extract — a difference of ${usd(dSum)}.
         Confirm the correct adult cover count for the flagged table before any figure is used for pay.</div></div>`;
+  }
+
+  /* impossible-record validation — display-only; stored history preserved */
+  if (IMPOSSIBLE.length) {
+    h += `<div class="sec card"><header><div><div class="ttl">Data validation — AYCE covers exceed seated guests</div>
+        <div class="sub">These rows record more AYCE covers than guests at the table, which is physically impossible.
+        The stored figures are preserved and flagged — confirm the true counts before using them for anything binding.</div></div></header>
+      <div class="tw"><table><thead><tr><th>Server</th><th>Day</th><th>Table</th><th>Guests seated</th>
+        <th>Adult AYCE</th><th>Kids AYCE</th><th>Total AYCE covers</th></tr></thead><tbody>`;
+    IMPOSSIBLE.forEach(r => {
+      h += `<tr><td>${esc(r.server)}</td><td>${DAY_LABEL[r.day]}</td><td>${esc(r.table)}</td>
+        <td>${r.covers}</td><td>${r.adultAce}</td><td>${r.kidAce}</td>
+        <td class="neg"><b>${r.adultAce + r.kidAce}</b></td></tr>`;
+    });
+    h += `</tbody></table></div>
+      <div class="foot">Likely a mis-ring or an unrecorded guest-count change. Commission on flagged rows should be
+        confirmed manually; this dashboard keeps the stored values visible rather than guessing.</div></div>`;
   }
 
   /* definitions */

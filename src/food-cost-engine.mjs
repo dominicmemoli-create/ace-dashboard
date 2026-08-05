@@ -13,10 +13,21 @@
 //   baseline (weighted)     = Σ baseline cost / Σ baseline eligible revenue
 //                             (NEVER an average of per-server percentages)
 //
-// Matching hierarchy per selection: (1) Toast item GUID → (2) configured alias →
-// (3) normalized item name → (4) unmatched review queue. Unmatched selections are
-// NEVER assigned a $0 cost; they are excluded from cost dollars and reported in
-// coverage so the shortfall is visible.
+// Classification precedence per selection (src/cost-rules.mjs):
+//   A. Toast modifiers / non-cost signals (structural parentSelectionGuid, plus
+//      curated name fallback) → EXCLUDED: no cost, no missing-cost entry, out of
+//      coverage denominators, never the $2 fallback.
+//   B. Trivial drinks → EXCLUDED the same way.
+//   C. Explicit portion overrides (1/2-lb shrimp $2.50, 1-pc crab cake $4).
+//   D. Explicit canonical temporary costs (WDT $10, Catfish $3, …).
+//   E. $2 supplied-menu fallback for genuine menu items without explicit costs.
+//   Chef-confirmed costs outrank every temporary rule (C–E).
+// Cost lookup routes per record: (1) Toast item GUID → (2) configured alias →
+// (3) normalized item name; precedence between records uses costRank(). A real
+// food item with no cost stays in the MISSING queue — never silently $0.
+import {
+  isModifierName, isDrinkName, portionOverrideFor, ruleCostRecords, costRank, costTierOf,
+} from './cost-rules.mjs';
 
 export function normalizeName(name) {
   return String(name ?? '')
@@ -24,6 +35,21 @@ export function normalizeName(name) {
     .replace(/[^a-z0-9 ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Classify one selection for the food-cost model.
+ * 'modifier' — Toast modifier / preparation note / kitchen batching marker
+ * 'drink'    — trivial drink (even when Toast miscategorizes it as Food)
+ * 'entitlement' — AYCE per-person entitlement (revenue side, $0 direct cost)
+ * 'item'     — genuine cost-bearing food item
+ */
+export function classifySelection(sel) {
+  if (sel.parentSelectionGuid) return 'modifier';        // Toast structural metadata
+  if (isModifierName(sel.itemName)) return 'modifier';   // curated name fallback
+  if (isDrinkName(sel.itemName)) return 'drink';
+  if (isAyceEntitlement(sel)) return 'entitlement';
+  return 'item';
 }
 
 export const DEFAULT_THRESHOLDS = {
@@ -62,33 +88,49 @@ export function buildCostIndex(costRecords) {
   return { byGuid, byName };
 }
 
-function pickEffective(records, businessDate) {
-  const eligible = records.filter((r) => isEffective(r, businessDate));
-  if (eligible.length === 0) return null;
-  // Latest effectiveFrom wins.
-  return eligible.sort((a, b) => String(b.effectiveFrom).localeCompare(String(a.effectiveFrom)))[0];
-}
-
 /**
- * Resolve the effective cost record for one selection.
- * Returns { record, method } — method ∈ 'guid' | 'alias' | 'name' | null.
- * 'alias' vs 'name': alias = the matched key differs from the record's canonical
- * name (i.e. a configured alternate); name = canonical-name equality.
+ * Resolve the effective cost record for one selection using the full
+ * precedence model. Returns { record, method, tier } — method ∈ 'guid' |
+ * 'alias' | 'name' | 'override' | null. 'alias' vs 'name': alias = the matched
+ * key differs from the record's canonical name; name = canonical equality.
+ * tier (see costTierOf): 'confirmed' | 'override' | 'explicit_temp' |
+ * 'rough_estimate' | 'fallback_2'.
  */
 export function resolveCost(selection, index, businessDate) {
+  const candidates = [];
   if (selection.itemGuid && index.byGuid.has(selection.itemGuid)) {
-    const rec = pickEffective(index.byGuid.get(selection.itemGuid), businessDate);
-    if (rec) return { record: rec, method: 'guid' };
+    for (const rec of index.byGuid.get(selection.itemGuid)) {
+      if (isEffective(rec, businessDate)) candidates.push({ record: rec, method: 'guid' });
+    }
   }
   const key = normalizeName(selection.itemName);
   if (key && index.byName.has(key)) {
-    const rec = pickEffective(index.byName.get(key), businessDate);
-    if (rec) {
-      const method = normalizeName(rec.canonicalName) === key ? 'name' : 'alias';
-      return { record: rec, method };
+    for (const rec of index.byName.get(key)) {
+      if (!isEffective(rec, businessDate)) continue;
+      candidates.push({ record: rec, method: normalizeName(rec.canonicalName) === key ? 'name' : 'alias' });
     }
   }
-  return { record: null, method: null };
+  const po = portionOverrideFor(selection.itemName);
+  if (po) {
+    candidates.push({
+      record: {
+        id: `rule-override-${key.replace(/ /g, '-')}`, toastItemGuid: null,
+        canonicalName: po.canonicalName, aliases: [], costPerUnit: po.cost,
+        effectiveFrom: '20260101', effectiveTo: null,
+        source: 'portion_override', verification: 'unverified',
+        notes: 'Explicit portion override — replace via chef upload',
+      },
+      method: 'override',
+    });
+  }
+  if (!candidates.length) return { record: null, method: null, tier: null };
+  const M_RANK = { guid: 0, override: 1, alias: 2, name: 2 };
+  candidates.sort((a, b) =>
+    (costRank(a.record) - costRank(b.record))
+    || (M_RANK[a.method] - M_RANK[b.method])
+    || String(b.record.effectiveFrom).localeCompare(String(a.record.effectiveFrom)));
+  const best = candidates[0];
+  return { record: best.record, method: best.method, tier: costTierOf(best.record) };
 }
 
 const GIFT_CARD_RE = /gift ?card|e-?gift/i;
@@ -110,16 +152,17 @@ export function selectionNet(sel) {
 }
 
 /**
- * Core aggregation.
+ * Core aggregation — the ONE canonical food-cost pipeline. The headline, the
+ * server metrics, the tables and the drill-downs all flow through here.
  * @param selections normalized selection rows (possibly multiple dates)
  * @param checks     normalized check rows (for check-level discounts + drilldown)
  * @param reference  { salesCategories, employees, tables } from ingestion
- * @param costRecords item-cost master
+ * @param costRecords item-cost master (temporary rule records are merged in)
  * @param opts { thresholds }
  */
 export function computeFoodCost(selections, checks, reference, costRecords, opts = {}) {
   const thresholds = { ...DEFAULT_THRESHOLDS, ...(opts.thresholds ?? {}) };
-  const index = buildCostIndex(costRecords);
+  const index = buildCostIndex([...costRecords, ...ruleCostRecords()]);
   const catNames = new Map((reference.salesCategories ?? []).map((c) => [c.guid, c.name]));
 
   // Check-level discount proration: discount applies to the whole check; spread it
@@ -135,14 +178,23 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
   const perServer = new Map();  // serverGuid -> accumulator
   const perItem = new Map();    // itemKey -> accumulator (cost drivers)
   const unmatched = new Map();  // normalized name -> {name, qty, net, checks:Set}
+  const excludedMods = new Map();   // normalized name -> {name, qty, kind}
+  const excludedDrinks = new Map();
   const total = {
     foodCostDollars: 0, eligibleNetFoodRevenue: 0,
     matchedQty: 0, totalQty: 0, matchedNet: 0,
     unmatchedQty: 0, unmatchedNet: 0,
+    entitlementQty: 0,
+    excludedModifierQty: 0, excludedDrinkQty: 0,
     checksAffectedByUnmatched: new Set(),
+    costByTier: { confirmed: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
+    qtyByTier: { confirmed: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
   };
 
-  const acc = () => ({ foodCostDollars: 0, eligibleNetFoodRevenue: 0, matchedNet: 0, unmatchedNet: 0, matchedQty: 0, totalQty: 0, checks: new Set() });
+  const acc = () => ({
+    foodCostDollars: 0, eligibleNetFoodRevenue: 0, matchedNet: 0, unmatchedNet: 0,
+    matchedQty: 0, totalQty: 0, excludedModifierQty: 0, excludedDrinkQty: 0, checks: new Set(),
+  });
 
   for (const s of selections) {
     if (!isEligibleFoodSelection(s, catNames)) continue;
@@ -158,14 +210,52 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
     }
 
     const qty = s.quantity ?? 0;
-    const { record, method } = resolveCost(s, index, s.businessDate);
+    const cls = classifySelection(s);
 
     const buckets = [total];
     if (!perServer.has(s.serverGuid)) perServer.set(s.serverGuid, acc());
     buckets.push(perServer.get(s.serverGuid));
-    if (!perCheck.has(s.checkGuid)) perCheck.set(s.checkGuid, { ...acc(), serverGuid: s.serverGuid, tableGuid: s.tableGuid, businessDate: s.businessDate, orderGuid: s.orderGuid, unmatchedItems: [] });
+    if (!perCheck.has(s.checkGuid)) {
+      perCheck.set(s.checkGuid, {
+        ...acc(), serverGuid: s.serverGuid, tableGuid: s.tableGuid,
+        businessDate: s.businessDate, orderGuid: s.orderGuid,
+        unmatchedItems: [], excludedItems: [], items: [],
+      });
+    }
     buckets.push(perCheck.get(s.checkGuid));
+    const pc = perCheck.get(s.checkGuid);
 
+    // A/B — excluded modifiers and drinks: no cost, no missing entry, no
+    // coverage effect, no revenue (their prices, when any, are à-la-carte
+    // add-ons outside the tracked model). Identified per check for drill-downs.
+    if (cls === 'modifier' || cls === 'drink') {
+      const bag = cls === 'modifier' ? excludedMods : excludedDrinks;
+      const key = normalizeName(s.itemName) || '(unnamed)';
+      if (!bag.has(key)) bag.set(key, { name: s.itemName ?? '(unnamed)', qty: 0, kind: cls });
+      bag.get(key).qty += qty;
+      for (const b of buckets) {
+        if (cls === 'modifier') b.excludedModifierQty += qty; else b.excludedDrinkQty += qty;
+        if (b.checks) b.checks.add(s.checkGuid);
+      }
+      pc.excludedItems.push({ name: s.itemName, qty, kind: cls });
+      continue;
+    }
+
+    // Entitlements carry the revenue (and a documented $0 direct cost); they
+    // are not "rounds", so they stay out of the qty-coverage denominator.
+    if (cls === 'entitlement') {
+      for (const b of buckets) {
+        b.eligibleNetFoodRevenue += net;
+        b.matchedNet += net;
+        if (b.checks) b.checks.add(s.checkGuid);
+      }
+      total.entitlementQty += qty;
+      pc.items.push({ name: s.itemName, qty, net, cls: 'entitlement', cost: 0, tier: 'confirmed' });
+      continue;
+    }
+
+    // Genuine cost-bearing food item.
+    const { record, method, tier } = resolveCost(s, index, s.businessDate);
     for (const b of buckets) {
       b.eligibleNetFoodRevenue += net;
       b.totalQty += qty;
@@ -179,10 +269,13 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
         b.matchedNet += net;
         b.matchedQty += qty;
       }
+      total.costByTier[tier] += ext;
+      total.qtyByTier[tier] += qty;
       const itemKey = record.canonicalName;
-      if (!perItem.has(itemKey)) perItem.set(itemKey, { canonicalName: itemKey, qty: 0, costDollars: 0, net: 0, method, source: record.source, verification: record.verification, costPerUnit: record.costPerUnit });
+      if (!perItem.has(itemKey)) perItem.set(itemKey, { canonicalName: itemKey, qty: 0, costDollars: 0, net: 0, method, source: record.source, verification: record.verification, tier, costPerUnit: record.costPerUnit });
       const it = perItem.get(itemKey);
       it.qty += qty; it.costDollars += ext; it.net += net;
+      pc.items.push({ name: s.itemName, qty, net, cls: 'item', cost: ext, costPerUnit: record.costPerUnit, canonicalName: record.canonicalName, tier });
     } else {
       const key = normalizeName(s.itemName) || '(unnamed)';
       if (!unmatched.has(key)) unmatched.set(key, { name: s.itemName ?? '(unnamed)', qty: 0, net: 0, checks: new Set() });
@@ -190,13 +283,15 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
       u.qty += qty; u.net += net; u.checks.add(s.checkGuid);
       total.unmatchedQty += qty; total.unmatchedNet += net;
       total.checksAffectedByUnmatched.add(s.checkGuid);
-      const pc = perCheck.get(s.checkGuid);
       pc.unmatchedNet += net;
       pc.unmatchedItems.push(s.itemName);
+      pc.items.push({ name: s.itemName, qty, net, cls: 'missing', cost: null, tier: null });
       perServer.get(s.serverGuid).unmatchedNet += net;
     }
   }
 
+  // Coverage counts genuine cost-bearing items only — modifiers, drinks and
+  // entitlements are out of the denominator by construction.
   const coverage = (b) => ({
     qtyPct: b.totalQty > 0 ? (b.matchedQty / b.totalQty) * 100 : null,
     netPct: b.eligibleNetFoodRevenue > 0 ? (b.matchedNet / b.eligibleNetFoodRevenue) * 100 : null,
@@ -216,7 +311,9 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
     itemDrivers: [...perItem.values()].sort((a, b) => b.costDollars - a.costDollars),
     unmatchedQueue: [...unmatched.values()]
       .map((u) => ({ ...u, checks: u.checks.size }))
-      .sort((a, b) => b.net - a.net),
+      .sort((a, b) => b.net - a.net || b.qty - a.qty),
+    excludedModifiers: [...excludedMods.values()].sort((a, b) => b.qty - a.qty),
+    excludedDrinks: [...excludedDrinks.values()].sort((a, b) => b.qty - a.qty),
   };
 }
 
@@ -224,6 +321,48 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
 export function weightedBaselinePct(baselineTotal) {
   if (!baselineTotal || baselineTotal.eligibleNetFoodRevenue <= 0) return null;
   return (baselineTotal.foodCostDollars / baselineTotal.eligibleNetFoodRevenue) * 100;
+}
+
+/** Linear-interpolated quantile of an ASCENDING array. */
+export function quantile(sortedAsc, p) {
+  if (!sortedAsc.length) return null;
+  const idx = (sortedAsc.length - 1) * p;
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  if (lo === hi) return sortedAsc[lo];
+  return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo);
+}
+
+/**
+ * Distribution statistics over per-check (or per-table) food-cost buckets.
+ * Two DIFFERENT truths, shown together, never substituted for each other:
+ *   weightedPct — Σ cost ÷ Σ revenue: the actual financial impact.
+ *   medianPct   — the typical check, robust to "whale" tables.
+ * Also returns quartiles / IQR and a Tukey outlier threshold (Q3 + 1.5·IQR)
+ * so unusually expensive checks can be identified.
+ * @param buckets array of { foodCostDollars, eligibleNetFoodRevenue }
+ */
+export function perCheckCostStats(buckets) {
+  let cost = 0, revenue = 0;
+  const pcts = [];
+  for (const b of buckets ?? []) {
+    cost += b.foodCostDollars ?? 0;
+    revenue += b.eligibleNetFoodRevenue ?? 0;
+    if ((b.eligibleNetFoodRevenue ?? 0) > 0) {
+      pcts.push(((b.foodCostDollars ?? 0) / b.eligibleNetFoodRevenue) * 100);
+    }
+  }
+  pcts.sort((a, b) => a - b);
+  const q1 = quantile(pcts, 0.25), q3 = quantile(pcts, 0.75);
+  const iqr = q1 != null && q3 != null ? q3 - q1 : null;
+  const outlierAbove = iqr != null ? q3 + 1.5 * iqr : null;
+  return {
+    weightedPct: revenue > 0 ? (cost / revenue) * 100 : null,
+    medianPct: quantile(pcts, 0.5),
+    q1Pct: q1, q3Pct: q3, iqrPct: iqr,
+    outlierAbovePct: outlierAbove,
+    outlierCount: outlierAbove != null ? pcts.filter((p) => p > outlierAbove).length : 0,
+    samples: pcts.length,
+  };
 }
 
 /**

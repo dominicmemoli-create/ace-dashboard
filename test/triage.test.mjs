@@ -67,16 +67,32 @@ describe('actionable issues (do appear)', () => {
     expect(actionable).toHaveLength(1);
     expect(actionable[0].kind).toBe(KIND.CONFLICT);
   });
-  it('15: Half/Half visits appear', () => {
-    const { actionable } = triageIntents([rec({ mixedMenuException: true, reviewStatus: 'pending_review' })]);
-    expect(actionable).toHaveLength(1);
-    expect(actionable[0].kind).toBe(KIND.MIXED);
+  it('15: Half/Half creates NO fix — it is guest-mix metadata, not a menu question', () => {
+    // current field
+    const current = triageIntents([rec({ halfHalf: true })]);
+    expect(current.actionable).toHaveLength(0);
+    expect(current.excluded.connected).toBe(1); // counts normally, nothing to fix
+    // legacy rows imported before the correction still carry mixedMenuException
+    const legacy = triageIntents([rec({ mixedMenuException: true, reviewStatus: 'pending_review' })]);
+    expect(legacy.actionable).toHaveLength(0);
+    // and Half/Half never blocks the record's real starting choice
+    const withIntent = triageIntents([rec({ halfHalf: true, intent: 'ALC' })]);
+    expect(withIntent.actionable).toHaveLength(0);
+    expect(withIntent.excluded.connected).toBe(1);
   });
   it('16: a strong single-candidate mismatch may appear', () => {
     const { actionable } = triageIntents([
       rec({ matchStatus: 'ambiguous', matchedOrderGuid: 'g3', matchConfidence: 0.5 })]);
     expect(actionable).toHaveLength(1);
     expect(actionable[0].kind).toBe(KIND.MATCH);
+  });
+  it('a stored suggestion that fails the CURRENT matching rules is auto-excluded', () => {
+    // set by the live re-verification pass (candidate hours away, $0 order,
+    // Host To Go, excluded area) — never presented as work
+    const { actionable, excluded } = triageIntents([
+      rec({ matchStatus: 'ambiguous', matchedOrderGuid: 'g3', matchConfidence: 0.5, staleSuggestion: true })]);
+    expect(actionable).toHaveLength(0);
+    expect(excluded.markedNotConnected).toBe(1);
   });
   it('transfers appear when detected', () => {
     const { actionable } = triageIntents([rec({ transferDetected: true })]);
@@ -106,30 +122,34 @@ describe('queue lifecycle', () => {
 });
 
 describe('badge + prioritization', () => {
-  it('badge counts only actionable items, never auto-excluded ones', () => {
+  it('badge counts only actionable items — unmarked and Half/Half never count', () => {
     const { badge } = triageIntents([
       rec({ intent: 'UNKNOWN' }),
       rec({ intent: 'UNKNOWN', matchStatus: 'unmatched' }),
       rec({ matchStatus: 'unmatched', matchedOrderGuid: null }),
       rec({ intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }),
-      rec({ mixedMenuException: true, reviewStatus: 'pending_review' }),
+      rec({ halfHalf: true }),
+      rec({ mixedMenuException: true, reviewStatus: 'pending_review' }), // legacy Half/Half row
     ]);
-    expect(badge).toBe(2);
+    expect(badge).toBe(1);
   });
-  it('pilot-window items sort first, then conflict > mixed > match > transfer', () => {
+  it('pilot-window items sort first, then conflict > match > transfer', () => {
     const { actionable } = triageIntents([
-      rec({ matchStatus: 'ambiguous', matchedOrderGuid: 'g', matchConfidence: 0.6 }),          // match, recent
-      rec({ transferDetected: true }),                                                          // transfer
-      rec({ mixedMenuException: true, reviewStatus: 'pending_review' }),                        // mixed
-      rec({ intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }),                       // conflict
-      rec({ businessDate: '20260801', mixedMenuException: true, reviewStatus: 'pending_review' }), // pilot mixed
+      rec({ matchStatus: 'ambiguous', matchedOrderGuid: 'g', matchConfidence: 0.6 }),   // match, recent
+      rec({ transferDetected: true }),                                                   // transfer
+      rec({ intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }),                // conflict
+      rec({ businessDate: '20260801', intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }), // pilot conflict
     ]);
     expect(actionable[0].pilot).toBe(true);
-    expect(actionable.slice(1).map((a) => a.kind)).toEqual([KIND.CONFLICT, KIND.MIXED, KIND.MATCH, KIND.TRANSFER]);
+    expect(actionable.slice(1).map((a) => a.kind)).toEqual([KIND.CONFLICT, KIND.MATCH, KIND.TRANSFER]);
   });
-  it('exclusion summaries use plain, non-alarming language', () => {
+  it('exclusion summaries are honest: unmarked visits still count operationally', () => {
     const lines = exclusionSummaryLines({ unmarked: 62, markedNotConnected: 3 });
-    expect(lines[0]).toBe('62 visits did not have a recorded starting choice and were excluded automatically.');
+    expect(lines[0]).toMatch(/^62 visits did not have a recorded starting choice/);
+    expect(lines[0]).toMatch(/still count in tables, covers, sales and food cost/);
+    expect(lines[0]).toMatch(/only conversion rates leave them out/);
+    // never again claim they "do not affect anyone's numbers"
+    expect(lines.join(' ')).not.toMatch(/do(n't| not) affect anyone/i);
     expect(lines.join(' ')).not.toMatch(/error|fail|attention/i);
   });
 });

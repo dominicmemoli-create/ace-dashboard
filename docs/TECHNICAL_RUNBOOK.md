@@ -10,11 +10,13 @@ Managers never need this file — every routine workflow runs in the browser
   (idempotent per-date replace) → metric rows rebuilt for affected dates.
 - **Frontend** → GitHub Pages (repo root of `main`). Reads Supabase with the
   anon key (RLS read-only); falls back to `data/live/*.json` when unreachable.
-- **Manager tools** → Supabase Auth (email magic links) + `user_profiles`
-  roles + security-definer RPCs in `supabase/migrations/0003_manager_tools.sql`:
-  `ace_upload_opentable`, `ace_upload_costs`, `ace_replace_metrics`,
-  `ace_save_review_fix`, `ace_retry_toast_update` (+ `ace_retry_status`,
-  `ace_whoami`). Role checks happen inside the functions; anon has no execute.
+- **Operator tools** → Supabase Auth (email magic links) + security-definer
+  RPCs (`supabase/migrations/0003_manager_tools.sql` +
+  `0004_operator_role.sql`): `ace_upload_opentable`, `ace_upload_costs`,
+  `ace_replace_metrics`, `ace_save_review_fix`, `ace_retry_toast_update`
+  (+ `ace_retry_status`, `ace_whoami`, `ace_is_operator`). ONE operator
+  capability — all approved roles are equal; checks happen inside the
+  functions; anon has no execute.
 - **Retry Toast Update** → RPC reads a GitHub token from Supabase Vault
   (`ace_github_pat`) and dispatches the nightly workflow via `pg_net`.
   No secret ever reaches the browser.
@@ -23,8 +25,8 @@ Managers never need this file — every routine workflow runs in the browser
 
 | Command | Purpose |
 |---|---|
-| `node scripts/admin/add-manager.mjs <email> <manager\|shift_lead\|executive>` | approve a sign-in email + set role |
-| `node scripts/admin/add-manager.mjs <email> --remove` | revoke manager access |
+| `node scripts/admin/add-manager.mjs <email> <manager\|shift_lead\|executive>` | approve a sign-in email (all role values grant the same operator capability) |
+| `node scripts/admin/add-manager.mjs <email> --remove` | revoke operator access |
 | `node scripts/admin/set-github-token.mjs` | store/rotate the GitHub token in Vault (prefer a fine-grained PAT: this repo only, Actions read/write) |
 | `node scripts/admin/apply-sql.mjs <file.sql>` | apply a migration |
 | `node scripts/admin/verify-live.mjs [--with-retry]` | live acceptance suite: real sessions per role, authorization matrix, idempotency, audit, reversal, optional real workflow dispatch (cleans up after itself; needs the `*.test@example.com` users provisioned via add-manager) |

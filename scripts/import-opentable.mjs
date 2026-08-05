@@ -35,12 +35,11 @@ async function main() {
   // intent census
   const byIntent = {};
   for (const s of sanitized) byIntent[s.intent] = (byIntent[s.intent] ?? 0) + 1;
-  const mixed = sanitized.filter((s) => s.mixedMenuException).length;
-  console.log('Intent counts:', JSON.stringify(byIntent), '| mixed-menu (Half/Half):', mixed, '| rejected (not completed):', rejected);
+  const halfHalf = sanitized.filter((s) => s.halfHalf).length;
+  console.log('Intent counts:', JSON.stringify(byIntent), '| Half/Half noted (metadata only):', halfHalf, '| rejected (not completed):', rejected);
 
   // ---- match against Toast visits per business date (from local normalized data)
   const reference = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'live', 'reference.json'), 'utf8'));
-  const emp = new Map(reference.employees.map((e) => [e.guid, e.name]));
   const dates = [...new Set(sanitized.map((s) => s.businessDate))].sort();
   const cfg = {
     ...OPS.opentableMatch,
@@ -49,6 +48,13 @@ async function main() {
   const opsFilter = (c) =>
     (c.serviceAreaGuid && c.serviceAreaGuid in OPS.includedAreas.serviceAreaGuids) ||
     (!c.serviceAreaGuid && c.revenueCenterGuid in OPS.includedAreas.revenueCenterGuids);
+  const areaNameOf = (c) =>
+    (c.serviceAreaGuid && OPS.includedAreas.serviceAreaGuids[c.serviceAreaGuid]) ||
+    (c.revenueCenterGuid && OPS.includedAreas.revenueCenterGuids[c.revenueCenterGuid]) || null;
+  const areaOf = (c) => {
+    const n = areaNameOf(c);
+    return n ? (/patio/i.test(n) ? 'patio' : 'dining') : null;
+  };
 
   let all = [];
   for (const date of dates) {
@@ -60,8 +66,7 @@ async function main() {
       continue;
     }
     const checks = JSON.parse(fs.readFileSync(checksPath, 'utf8'));
-    const tv = toastVisits(checks, reference, opsFilter)
-      .map((v) => ({ ...v, serverName: emp.get(v.serverGuid) ?? '' }));
+    const tv = toastVisits(checks, reference, opsFilter, { areaOf });
     const matched = matchVisits(rows, tv, cfg);
     // annotate conversion facts: did the matched Toast visit ring an AYCE
     // entitlement, and which server owns it (final-owner attribution)?

@@ -41,6 +41,10 @@ export function buildMetricsForDate(date, selections, checks, reference, costs, 
       matchedQty: fc.total.matchedQty,
       totalQty: fc.total.totalQty,
       unmatchedItems: fc.total.unmatchedItemCount,
+      excludedModifierQty: fc.total.excludedModifierQty,
+      excludedDrinkQty: fc.total.excludedDrinkQty,
+      costByTier: Object.fromEntries(Object.entries(fc.total.costByTier).map(([k, v]) => [k, round2(v)])),
+      qtyByTier: { ...fc.total.qtyByTier },
     };
     rows.push({ ...base, serverGuid: null });
 
@@ -63,12 +67,17 @@ export function buildMetricsForDate(date, selections, checks, reference, costs, 
         roundCost: round2(b.foodCostDollars),
         matchedQty: b.matchedQty,
         totalQty: b.totalQty,
+        excludedModifierQty: b.excludedModifierQty,
+        excludedDrinkQty: b.excludedDrinkQty,
       });
     }
 
     for (const d of fc.itemDrivers) {
-      itemRows.push({ businessDate: date, period, name: d.canonicalName, matched: true, qty: d.qty, cost: round2(d.costDollars), source: d.source, verification: d.verification });
+      itemRows.push({ businessDate: date, period, name: d.canonicalName, matched: true, qty: d.qty, cost: round2(d.costDollars), source: d.source, verification: d.verification, tier: d.tier });
     }
+    // Only genuine food items land in the missing list — excluded modifiers
+    // and drinks are summarized in the period row and never presented as
+    // uncosted items.
     for (const u of fc.unmatchedQueue) {
       itemRows.push({ businessDate: date, period, name: u.name, matched: false, qty: u.qty, cost: 0 });
     }

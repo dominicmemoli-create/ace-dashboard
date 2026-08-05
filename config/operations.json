@@ -21,7 +21,8 @@
     "weeks": 4
   },
   "opentableMatch": {
-    "timeToleranceMinutes": 90,
+    "_comment": "Automatic matching window: OpenTable reservation/seating time vs Toast check-open time. Candidates outside the window are never suggested. Patio table numbers are unreliable (guests self-seat), so patio matching leans on time/party/area evidence instead.",
+    "timeToleranceMinutes": 25,
     "partySizeTolerance": 2
   },
   "commission": {

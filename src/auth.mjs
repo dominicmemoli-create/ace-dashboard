@@ -1,8 +1,8 @@
-// Manager Mode authentication — Supabase Auth (email magic links) via the
+// Operator authentication — Supabase Auth (email magic links) via the
 // GoTrue REST API. No SDK, no service credentials: the browser only ever holds
-// the public anon key plus the signed-in user's own JWT. Roles live in
-// user_profiles and are enforced server-side (RLS + security-definer RPCs);
-// nothing here grants access by itself.
+// the public anon key plus the signed-in user's own JWT. Operator approval
+// lives in user_profiles and is enforced server-side (RLS + security-definer
+// RPCs); nothing here grants access by itself.
 const STORE_KEY = 'ace.auth.session';
 
 let CFG = null;          // { url, anonKey }
@@ -153,7 +153,7 @@ export async function whoami() {
 /** Call a protected database function as the signed-in user. */
 export async function rpc(name, args = {}) {
   const s = await getSession();
-  if (!s) throw new Error('Please sign in with Manager Mode first.');
+  if (!s) throw new Error('Please sign in first — saving changes needs a signed-in operator.');
   const res = await fetch(`${CFG.url}/rest/v1/rpc/${name}`, {
     method: 'POST',
     headers: {
@@ -168,9 +168,7 @@ export async function rpc(name, args = {}) {
     const ref = `E-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     console.error(`[${ref}] ${name} failed:`, json);
     const friendly = {
-      not_authorized: 'Your account is not allowed to do this. A manager account is required.',
-      manager_required_pilot_window: 'This item touches the frozen pilot weekend — a manager must decide it.',
-      manager_required_mixed_menu: 'Mixed-menu policy exceptions need a manager decision.',
+      not_authorized: 'Your account is not on the approved operator list. Ask the administrator to approve it.',
       github_token_not_configured: 'The update service is not connected yet — ask the administrator to finish setup.',
       reason_required: 'Choose a reason before saving.',
       empty_upload: 'The file did not contain any usable rows.',

@@ -6,12 +6,10 @@
 import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs';
 import { toastVisits, matchVisits } from './ot-matcher.mjs';
 import { triageIntents } from './triage.mjs';
-import { parseCostCsv, rowsFromWorkbookAoa, attachAliases, diffCosts, stillUncosted } from './costs-shared.mjs';
+import { parseCostCsvDetailed, rowsFromWorkbookAoa, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs';
 import { buildMetricsForDate } from './metrics-builder.mjs';
 import { rpc, restGet } from './auth.mjs';
-import {
-  canUploadOpenTable, canUploadCosts, canRetryToast, requireRole, notify, refreshIdentity,
-} from './manager-mode.mjs';
+import { requireOperator, notify, currentUser } from './manager-mode.mjs';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }
@@ -64,17 +62,21 @@ export function costsStatus(DATA) {
   for (const it of DATA.items ?? []) {
     if (!it.matched) continue;
     total += it.cost;
-    if (it.source === 'rough_workbook') rough += it.cost;
+    // anything not chef-confirmed is a temporary estimate of some tier
+    if (it.source !== 'chef_confirmed' && it.verification !== 'verified') rough += it.cost;
   }
   for (const r of DATA.metrics ?? []) {
     if (r.serverGuid) continue;
     matched += r.matchedQty ?? 0; qty += r.totalQty ?? 0;
   }
-  const updatedAts = (DATA.costs ?? []).map((c) => c.updatedAt).filter(Boolean).sort();
+  const stamped = (DATA.costs ?? []).filter((c) => c.updatedAt)
+    .sort((a, b) => String(a.updatedAt).localeCompare(String(b.updatedAt)));
+  const last = stamped[stamped.length - 1];
   return {
     roughShare: total > 0 ? (rough / total) * 100 : 0,
     coverage: qty > 0 ? (matched / qty) * 100 : null,
-    lastUpdated: updatedAts[updatedAts.length - 1] ?? null,
+    lastUpdated: last?.updatedAt ?? null,
+    lastUpdatedBy: last?.updatedBy ?? null,
   };
 }
 
@@ -97,7 +99,7 @@ export function systemStatus(DATA, badge) {
   const needs = [];
   if (ot.behind) needs.push(`Upload the OpenTable file for ${longDate(ot.toastLast)}.`);
   if (badge > 0) needs.push(`${badge} item${badge === 1 ? '' : 's'} under Fixes Needed ${badge === 1 ? 'needs' : 'need'} a decision.`);
-  if (c.roughShare > 0) needs.push('Food costs are still rough estimates — upload the chef’s confirmed costs when ready.');
+  if (c.roughShare > 0) needs.push('Food costs are still temporary estimates — upload the chef’s confirmed costs when ready.');
   if (needs.length) return { color: 'yellow', head: 'One update is needed', action: needs.join(' ') };
   return { color: 'green', head: 'Everything is up to date', action: 'Toast is current, guest status is loaded, and there is nothing waiting on a decision.' };
 }
@@ -148,15 +150,16 @@ export function pgUpdate(host) {
       <div class="sub">Occasional — when the chef confirms costs</div></div></header>
       <div class="body">
         <div style="margin-bottom:10px">${c.roughShare > 0
-          ? `<span class="st partial">Rough estimates in use</span>`
+          ? `<span class="st partial">Temporary estimates in use</span>`
           : `<span class="st ok">Chef-confirmed</span>`}</div>
-        <div class="calcrow"><span class="cl">Last updated</span><span class="cr">${fmtWhen(c.lastUpdated)}</span></div>
+        <div class="calcrow"><span class="cl">Last updated</span><span class="cr">${fmtWhen(c.lastUpdated)}${c.lastUpdatedBy ? ` · ${esc(c.lastUpdatedBy.split('@')[0])}` : ''}</span></div>
         <div class="calcrow"><span class="cl">AYCE items with costs entered</span><span class="cr">${c.coverage == null ? '—' : c.coverage.toFixed(0) + '%'}</span></div>
         <div class="note" style="margin-top:12px">${c.roughShare > 0
-          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use rough estimates. Numbers stay marked
-             provisional until the chef's confirmed costs are uploaded.`
+          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use temporary estimates. Numbers stay marked
+             provisional until the chef's confirmed costs are uploaded — uploading here replaces the temporary
+             values item by item.`
           : 'Costs are chef-confirmed. Upload a new file whenever prices change.'}</div>
-        <div style="margin-top:12px" id="costBtnWrap"></div>
+        <div style="margin-top:12px"><button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button></div>
       </div></div>
   </div>
 
@@ -164,17 +167,14 @@ export function pgUpdate(host) {
 
   renderToastActions(host.querySelector('#toastActions'), t);
   host.querySelector('#otUploadBtn').addEventListener('click', () => {
-    if (!requireRole(canUploadOpenTable, 'Uploading the OpenTable file')) return;
+    // Signed-out visitors are prompted for the magic link right here, at the
+    // moment of the write attempt — there is no separate mode to enter first.
+    if (!requireOperator('Uploading the OpenTable file')) return;
     startOpenTableFlow(host.querySelector('#upStage'));
   });
-  // Food-cost upload is manager-only; shift leads don't see the button at all.
-  // Identity resolves asynchronously (token may need a refresh after the
-  // device slept), so paint the button once the role is actually known.
-  refreshIdentity().then(() => {
-    const w = host.querySelector('#costBtnWrap');
-    if (!w || !canUploadCosts() || w.querySelector('#costUploadBtn')) return;
-    w.innerHTML = `<button class="bigbtn" id="costUploadBtn" type="button">Update Food Costs</button>`;
-    w.querySelector('#costUploadBtn').addEventListener('click', () => startCostFlow(host.querySelector('#upStage')));
+  host.querySelector('#costUploadBtn').addEventListener('click', () => {
+    if (!requireOperator('Uploading food costs')) return;
+    startCostFlow(host.querySelector('#upStage'));
   });
 }
 
@@ -197,7 +197,7 @@ function renderToastActions(el, t) {
     t2.setAttribute('aria-expanded', String(!open)); b.hidden = open;
   });
   const kick = async (businessDate) => {
-    if (!requireRole(canRetryToast, 'Retrying the Toast update')) return;
+    if (!requireOperator('Retrying the Toast update')) return;
     const stage = el.querySelector('#retryStage');
     try {
       stage.textContent = 'Starting the update…';
@@ -343,7 +343,13 @@ async function handleOpenTableFile(file, stage) {
   const opsFilter = (c) =>
     (c.serviceAreaGuid && c.serviceAreaGuid in ops.includedAreas.serviceAreaGuids) ||
     (!c.serviceAreaGuid && c.revenueCenterGuid in ops.includedAreas.revenueCenterGuids);
-  const emp = new Map((DATA.reference?.employees ?? []).map((e) => [e.guid, e.name]));
+  const areaNameOf = (c) =>
+    (c.serviceAreaGuid && ops.includedAreas.serviceAreaGuids[c.serviceAreaGuid]) ||
+    (c.revenueCenterGuid && ops.includedAreas.revenueCenterGuids[c.revenueCenterGuid]) || null;
+  const areaOf = (c) => {
+    const n = areaNameOf(c);
+    return n ? (/patio/i.test(n) ? 'patio' : 'dining') : null;
+  };
   const all = [];
   for (const d of dates) {
     const rows = sanitized.filter((s) => s.businessDate === d);
@@ -351,8 +357,7 @@ async function handleOpenTableFile(file, stage) {
     let dateData;
     try { dateData = await fetchDateData(d); } catch { dateData = { checks: [], selections: [] }; }
     if (!dateData.checks.length) { all.push(...rows); continue; }
-    const tv = toastVisits(dateData.checks, DATA.reference, opsFilter)
-      .map((v) => ({ ...v, serverName: emp.get(v.serverGuid) ?? '' }));
+    const tv = toastVisits(dateData.checks, DATA.reference, opsFilter, { areaOf });
     const matched = matchVisits(rows, tv, cfg);
     const ayceOrders = new Set(dateData.selections
       .filter((s) => !s.voided && /PER PERSON|\(kids\)/i.test(s.itemName ?? '')).map((s) => s.orderGuid));
@@ -387,7 +392,7 @@ async function handleOpenTableFile(file, stage) {
     <div id="otResult" style="margin-top:12px" role="status"></div>`;
 
   stage.querySelector('#otGo').addEventListener('click', async () => {
-    if (!requireRole(canUploadOpenTable, 'Uploading the OpenTable file')) return;
+    if (!requireOperator('Uploading the OpenTable file')) return;
     const btn = stage.querySelector('#otGo');
     const out = stage.querySelector('#otResult');
     btn.disabled = true;
@@ -399,11 +404,12 @@ async function handleOpenTableFile(file, stage) {
       });
       const connected = all.filter((s) => s.intent !== 'UNKNOWN' && s.matchStatus === 'matched').length;
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Dashboard updated successfully.</b><br>
+        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} ET by ${esc(currentUser().email || 'operator')}.<br>
         ${fmt(connected)} visits connected to Toast.<br>
-        ${fmt(unmarked)} unmarked visits were excluded automatically.<br>
-        ${res.duplicates ? `${fmt(res.duplicates)} rows were already loaded and skipped.<br>` : ''}
-        ${issues ? `${fmt(issues)} item${issues === 1 ? '' : 's'} may require a manager decision — see <b>Fixes Needed</b>.` : 'Nothing needs a manager decision.'}</div>`;
+        ${fmt(unmarked)} visits had no recorded starting choice — they still count in sales, covers and food
+        cost; only conversion rates leave them out.<br>
+        ${res.duplicates ? `${fmt(res.duplicates)} rows were already loaded and skipped (re-uploading is always safe).<br>` : ''}
+        ${issues ? `${fmt(issues)} item${issues === 1 ? '' : 's'} need${issues === 1 ? 's' : ''} a decision — see <b>Fixes Needed</b>.` : 'Nothing needs a decision.'}</div>`;
       notify('OpenTable file saved to the dashboard.');
       CTX.refreshData();
     } catch (e) {
@@ -430,12 +436,18 @@ function loadXlsx() {
 }
 
 export function startCostFlow(stageHost) {
-  if (!requireRole(canUploadCosts, 'Updating food costs')) return;
-  const body = stageCard(stageHost, 'Update Dashboard → Food Costs', `
+  if (!requireOperator('Uploading food costs')) return;
+  const body = stageCard(stageHost, 'Upload Food Costs', `
     <div class="dz" id="cDz" tabindex="0" role="button" aria-label="Choose or drop the cost file">
       <div class="dzt">Drop the chef's cost file here — or click to choose it</div>
-      <div class="dzs">CSV or Excel. One row per item with its cost per portion.</div>
+      <div class="dzs">CSV or Excel (.csv / .xlsx). One row per item with its cost per portion.</div>
     </div>
+    <div class="note" style="margin-top:10px"><b>What the file needs:</b> a header row naming at least
+      <b>canonical_name</b> (or “item” / “name”) and <b>cost</b> (or “cost_per_portion” / “unit_cost”);
+      optional <b>portion</b> and <b>notes</b> columns. The management workbook layout (names in column B,
+      costs in column C) is also understood. Costs are dollars per portion, above $0.
+      Chef-confirmed values replace the temporary estimates item by item, and past days keep the costs
+      that were in effect at the time. Uploading the same file twice is safe.</div>
     <div id="cStage"></div>`);
   const dz = body.querySelector('#cDz');
   const stage = body.querySelector('#cStage');
@@ -455,16 +467,38 @@ async function handleCostFile(file, stage) {
   stage.innerHTML = '<div class="sub" style="padding:12px 0">Reading the file…</div>';
 
   let incoming;
+  let rejected = [];
   if (/\.xlsx?$/i.test(file.name)) {
     await loadXlsx();
     const wb = window.XLSX.read(await file.arrayBuffer());
     const aoa = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: null });
     incoming = rowsFromWorkbookAoa(aoa);
   } else {
-    incoming = parseCostCsv(await file.text());
-    if (incoming === null) throw new Error('The first row should name the columns — at least "canonical_name" (the item) and "cost".');
+    const parsed = parseCostCsvDetailed(await file.text());
+    if (parsed === null) throw new Error('The first row should name the columns — at least "canonical_name" (the item) and "cost". See the format guidance above the drop zone.');
+    incoming = parsed.rows;
+    rejected = parsed.rejected;
   }
-  if (!incoming.length) throw new Error('No usable cost rows were found (each row needs an item name and a cost above $0).');
+  if (!incoming.length) {
+    throw new Error('No usable cost rows were found (each row needs an item name and a cost above $0).'
+      + (rejected.length ? ` ${rejected.length} row(s) were rejected: ${rejected.slice(0, 5).map((r) => `line ${r.line} — ${r.why}`).join('; ')}.` : ''));
+  }
+
+  // Duplicate handling: the same item twice with DIFFERENT costs is ambiguous
+  // and must be fixed in the file — never silently accepted. Identical
+  // duplicates collapse to one row.
+  const byNorm = new Map();
+  const ambiguous = [];
+  for (const r of incoming) {
+    const k = normalizeName(r.name);
+    const prev = byNorm.get(k);
+    if (!prev) byNorm.set(k, r);
+    else if (Math.abs(prev.cost - r.cost) > 0.005) ambiguous.push(`${r.name} ($${prev.cost.toFixed(2)} vs $${r.cost.toFixed(2)})`);
+  }
+  if (ambiguous.length) {
+    throw new Error(`The file lists the same item more than once with different costs: ${ambiguous.join(', ')}. Fix the file so each item appears once.`);
+  }
+  incoming = [...byNorm.values()];
 
   let aliasMap = {};
   try { aliasMap = await (await fetch('imports/alias_map.json', { cache: 'no-cache' })).json(); delete aliasMap._comment; } catch { /* optional */ }
@@ -486,6 +520,8 @@ async function handleCostFile(file, stage) {
       <div class="calcrow"><span class="cl">Costs that change</span><span class="cr">${fmt(diff.changed.length + diff.added.length)}</span></div>
       <div class="calcrow"><span class="cl">Costs staying the same</span><span class="cr">${fmt(diff.unchanged.length)}</span></div>
       <div class="calcrow"><span class="cl">Toast items still without a cost after this</span><span class="cr">${fmt(uncosted.length)}</span></div>
+      ${rejected.length ? `<div class="note warn" style="margin-top:10px"><b>${rejected.length} row${rejected.length === 1 ? ' was' : 's were'} rejected</b> and will not be saved:
+        ${rejected.slice(0, 8).map((r) => `line ${r.line}${r.name ? ` (${esc(r.name)})` : ''} — ${esc(r.why)}`).join('; ')}${rejected.length > 8 ? ` and ${rejected.length - 8} more` : ''}.</div>` : ''}
       ${(diff.changed.length || diff.added.length) ? `
         <div style="max-height:210px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:8px">
         <table><thead><tr><th style="text-align:left">Item</th><th>Now</th><th>Becomes</th></tr></thead><tbody>
@@ -515,7 +551,7 @@ async function handleCostFile(file, stage) {
   };
 
   const applyCosts = async (effectiveFrom) => {
-    if (!requireRole(canUploadCosts, 'Updating food costs')) return;
+    if (!requireOperator('Uploading food costs')) return;
     const btn = stage.querySelector('#cGo');
     const out = stage.querySelector('#cResult');
     btn.disabled = true;
@@ -540,8 +576,13 @@ async function handleCostFile(file, stage) {
           await rpc('ace_replace_metrics', { p_dates: datesAcc.splice(0), p_rows: rowsAcc.splice(0), p_item_rows: itemsAcc.splice(0) });
         }
       }
-      out.innerHTML = `<div class="note" style="border-left-color:var(--pos)"><b>Food costs updated.</b><br>
-        ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.<br>
+      const skippedNote = (res.skipped ?? []).length
+        ? `<br>${res.skipped.length} row${res.skipped.length === 1 ? '' : 's'} skipped by the database: ${esc(res.skipped.map((s) => `${s.name} (${s.why})`).join('; '))}.`
+        : '';
+      out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
+        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} ET by ${esc(currentUser().email || 'operator')}.<br>
+        ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.
+        Chef-confirmed values now replace the temporary estimates for those items.${skippedNote}<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;
       notify('Food costs updated.');
       CTX.refreshData();

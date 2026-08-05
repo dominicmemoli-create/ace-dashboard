@@ -56,12 +56,15 @@ export function parseGuestCenter(text) {
 
 /**
  * Intent from Reservation Tags ONLY. Recognized: UNDECIDED. / A LA CARTE /
- * AYCE / Half/Half (punctuation, spacing, case normalized). Everything else
+ * AYCE (punctuation, spacing, case normalized). Everything else
  * (First Timers, Birthday, …) is a non-intent tag and ignored.
  *   0 intent tags → UNKNOWN
  *   1 intent tag  → UNDECIDED | ALC | PREDECIDED_AYCE
  *   2+ distinct   → REVIEW_REQUIRED
- * Half/Half is a separate mixed-menu policy-exception flag.
+ * Half/Half is NOT an intent and NOT a mixed-menu exception: it records that
+ * roughly half the party are returning guests and half are first-time
+ * visitors. It is preserved as optional visit metadata (halfHalf) and has no
+ * effect on starting preference, review status, or Fixes Needed.
  */
 export function classifyIntentTags(reservationTags) {
   const tokens = String(reservationTags ?? '')
@@ -69,19 +72,19 @@ export function classifyIntentTags(reservationTags) {
     .map((t) => t.trim().replace(/\.+$/, '').replace(/\s+/g, ' ').toUpperCase())
     .filter(Boolean);
   const intents = new Set();
-  let mixed = false;
+  let halfHalf = false;
   const relevant = [];
   for (const t of tokens) {
     if (t === 'UNDECIDED') { intents.add('UNDECIDED'); relevant.push(t); }
     else if (t === 'A LA CARTE' || t === 'ALC' || t === 'ALACARTE') { intents.add('ALC'); relevant.push(t); }
     else if (t === 'AYCE') { intents.add('PREDECIDED_AYCE'); relevant.push(t); }
-    else if (t === 'HALF/HALF' || t === 'HALF HALF') { mixed = true; relevant.push(t); }
+    else if (t === 'HALF/HALF' || t === 'HALF HALF') { halfHalf = true; relevant.push(t); }
   }
   let intent;
   if (intents.size > 1) intent = 'REVIEW_REQUIRED';
   else if (intents.size === 1) intent = [...intents][0];
   else intent = 'UNKNOWN';
-  return { intent, mixedMenuException: mixed, relevantTags: relevant };
+  return { intent, halfHalf, relevantTags: relevant };
 }
 
 /** '51,52,53' → ['51','52','53'];  'H1' → ['H1']. Letters preserved. */
@@ -131,7 +134,7 @@ export async function rowHashOfAsync(raw) {
  * NO guest name, NO phone, NO free-text requests/notes.
  */
 export function sanitizeVisitCore(v, runId, rowHash) {
-  const { intent, mixedMenuException, relevantTags } = classifyIntentTags(v.reservationTags);
+  const { intent, halfHalf, relevantTags } = classifyIntentTags(v.reservationTags);
   return {
     rowHash,
     runId,
@@ -143,13 +146,13 @@ export function sanitizeVisitCore(v, runId, rowHash) {
     tableTokens: tableTokens(v.table),
     serverSoftLabel: serverSoftLabel(v.serverText),
     intent,
-    mixedMenuException,
+    halfHalf,           // returning/first-time mix note — metadata only
     relevantTags,
     posSubtotal: v.posSubtotal,
     matchStatus: 'unmatched',
     matchedOrderGuid: null,
     matchConfidence: null,
-    reviewStatus: (intent === 'REVIEW_REQUIRED' || mixedMenuException) ? 'pending_review' : 'auto',
+    reviewStatus: intent === 'REVIEW_REQUIRED' ? 'pending_review' : 'auto',
   };
 }
 

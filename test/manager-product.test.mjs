@@ -33,7 +33,9 @@ describe('3/23: no CLI or technical language on management screens', () => {
   it('raw enums are mapped to plain language in Fixes Needed', () => {
     const fx = read('src/page-fixes.mjs');
     expect(fx).toMatch(/REVIEW_REQUIRED: 'Needs a decision'/);
-    expect(fx).toMatch(/Mixed-menu table/);
+    // Half/Half is a guest-mix note, shown as information — never a fix kind
+    expect(fx).toMatch(/half returning, half first-time/i);
+    expect(fx).not.toMatch(/Mixed-menu table/);
   });
   it('CLI fallbacks live only behind Advanced Details / technical docs', () => {
     const live = read('src/pages-live.mjs');
@@ -84,25 +86,40 @@ describe('1/22: Toast automation intact; retry drives the same pipeline', () => 
 
 describe('6/7/8/17/19/21: authorization + audit are enforced in the database', () => {
   const sql = read('supabase/migrations/0003_manager_tools.sql');
-  it('chef-cost upload is manager-only; OpenTable allows shift leads', () => {
-    const costs = sql.slice(sql.indexOf('create or replace function ace_upload_costs'), sql.indexOf('ace_replace_metrics'));
-    expect(costs).toMatch(/not in \('executive','manager'\)/);
-    const ot = sql.slice(sql.indexOf('create or replace function ace_upload_opentable'), sql.indexOf('ace_upload_costs'));
-    expect(ot).toMatch(/not in \('executive','manager','shift_lead'\)/);
+  const sql4 = read('supabase/migrations/0004_operator_role.sql');
+  it('one operator role: every write function requires an approved operator (0004)', () => {
+    // every legacy role value maps to the same operator capability
+    expect(sql4).toMatch(/in \('executive','manager','shift_lead'\)/);
+    for (const fn of ['ace_upload_costs', 'ace_replace_metrics', 'ace_save_review_fix', 'ace_retry_toast_update']) {
+      const body = sql4.slice(sql4.indexOf(`create or replace function ${fn}`));
+      expect(body, fn).toMatch(/if not ace_is_operator\(\) then/);
+    }
+    // no manager-versus-shift-lead distinctions survive in the operator model
+    expect(sql4).not.toMatch(/manager_required_pilot_window|manager_required_mixed_menu/);
+    expect(sql4).not.toMatch(/v_role = 'shift_lead'/);
   });
-  it('anonymous users cannot execute any write function', () => {
+  it('anonymous users cannot execute any write function (0003 + 0004)', () => {
     expect(sql).toMatch(/revoke all on function %s from public, anon/);
+    expect(sql4).toMatch(/revoke all on function %s from public, anon/);
+  });
+  it('the browser gates writes on a signed-in operator, prompting at write time', () => {
+    for (const f of ['src/page-update.mjs', 'src/page-fixes.mjs']) {
+      expect(read(f), f).toMatch(/requireOperator\(/);
+    }
+    const mm = read('src/manager-mode.mjs');
+    expect(mm).toMatch(/openSignIn\(/);            // sign-in prompt at the moment of the write
+    expect(mm).not.toMatch(/Shift lead|shift-lead only|manager-only/i); // no hierarchy labels
   });
   it('corrections store the authenticated identity, never a typed name', () => {
-    const fix = sql.slice(sql.indexOf('ace_save_review_fix'), sql.indexOf('ace_retry_toast_update'));
+    const fix = sql4.slice(sql4.indexOf('ace_save_review_fix'), sql4.indexOf('ace_retry_toast_update'));
     expect(fix).toMatch(/auth\.jwt\(\) ->> 'email'/);
     expect(fix).toMatch(/ace_correction_audit/);
     expect(fix).toMatch(/'REVERT'/);        // reversal path exists
     const ui = read('src/page-fixes.mjs');
     expect(ui).not.toMatch(/prompt\(/);     // no "type your name" prompts anywhere
   });
-  // live proof: verify-live.mjs asserts the full matrix with real sessions
-  // (anon 401, unapproved rejected, shift-lead OpenTable OK / costs denied,
+  // live proof: verify-live.mjs asserts the matrix with real sessions
+  // (anon 401, unapproved rejected, operator allowed everything,
   //  idempotent re-upload, audit identity, REVERT restores original).
 });
 

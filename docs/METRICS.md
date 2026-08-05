@@ -16,10 +16,34 @@ price, are priced individually and sit **outside** the tracked program metric.
 | Cost per AYCE cover | AYCE food cost $ ÷ entitlement covers |
 | Round coverage | % of round **quantity** with a costed item (rounds have no revenue, so coverage is judged on quantity) |
 
-Preparation modifiers (spice level, sauce choice, steak temperature, omissions like
-"No Corn, No Potato") carry an explicit $0 — their cost is inside the item costs.
 Priced add-ons on an AYCE check (a $30 à-la-carte lobster, a Royal Feast tray) are
 excluded from both sides of the program metric.
+
+### Classification precedence (binding — src/cost-rules.mjs)
+
+Every selection is classified before costing, in this strict order:
+
+| Level | Rule |
+|---|---|
+| **A. Excluded modifiers / non-cost signals** | Any Toast selection with a `parentSelectionGuid` (structural modifier metadata), plus a curated normalized-name fallback for known modifier names ("Med Well", "Melted Butter", "Bday", "No Potato Extra Corn", Tray A–F, …). Never cost items: they add no cost, never appear in missing-cost lists, never reduce coverage, never receive the $2 fallback. |
+| **B. Drinks** | Trivial drinks (fountain drinks, sweet tea, lemonade, Coke/Coke Zero/Sprite, …) are ignored by this temporary model — even when Toast miscategorizes them as Food. Same non-effects as A. |
+| **C. Explicit portion overrides** | Every recognized ½-lb shrimp portion = **$2.50** (half of the $5 pound; EZ-Peel / Head-On / Jumbo White spellings normalized). Every one-piece crab cake = **$4.00**. Overrides beat generic aliases and every temporary cost. |
+| **D. Explicit canonical temporary costs** | WDT $10 · Catfish $3 · Shrimp $2 · Gator $3 · Blackened Wings $2 · Tenders $3 · Shrimp Tacos $3 · Catfish Tacos $3 · Honey Shrimp $4 · Calamari $4 · Blackened Salmon $6 · Shrimp Scampi $4 · Gumbo $6 · Small/Large Clam Chowder $2/$4 · Crab Dip $4 (aliases normalized). |
+| **E. $2 supplied-menu fallback** | Genuine supplied-menu items with no explicit cost (Cajun Fries, Fresh Garlic Noodles, Brussels Sprouts, Mac & Cheese, Hush Puppies, Beignets, cheesecakes, Ice Cream, real sauce items). Each surfaces under its own canonical name — never buried in a "Sides/Desserts/Sauce" bucket. |
+| **Missing** | A real food item outside the above stays in the missing-cost list — **never silently $0**. |
+
+**Chef-confirmed costs outrank every temporary rule (C–E)** — uploading the
+chef's sheet replaces the temporary model item by item, effective-dated.
+Coverage is computed over genuine cost-bearing items only (A/B and the AYCE
+entitlement rows are out of the denominator), so modifiers can never mask a
+real gap.
+
+### Distribution statistics (server drill-downs)
+
+Two figures shown together, never substituted:
+- **Weighted mean** = Σ cost ÷ Σ AYCE sales — the actual financial impact.
+- **Median check %** — the typical table; robust to "whale" tables. Quartiles /
+  IQR and a Tukey outlier line (Q3 + 1.5·IQR) identify unusually expensive checks.
 
 An **All food (context)** scope remains available on the page for the blended view;
 everything below applies to that mode.

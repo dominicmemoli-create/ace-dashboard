@@ -11,22 +11,41 @@ export function normalizeName(name) {
     .trim();
 }
 
-/** Chef CSV (canonical_name,cost[,portion,notes] — header names tolerant). */
-export function parseCostCsv(text) {
-  const rows = parseCsv(String(text ?? '').replace(/^﻿/, ''));
-  if (!rows.length) return [];
-  const header = rows[0].map((h) => String(h ?? '').trim().toLowerCase());
+/** Chef CSV (canonical_name,cost[,portion,notes] — header names tolerant).
+ * Detailed variant: returns { rows, rejected } so uploads can show a
+ * rejected-row report instead of silently dropping malformed lines.
+ * Returns null when the header is not a cost file at all. */
+export function parseCostCsvDetailed(text) {
+  const raw = parseCsv(String(text ?? '').replace(/^﻿/, ''));
+  if (!raw.length) return { rows: [], rejected: [] };
+  const header = raw[0].map((h) => String(h ?? '').trim().toLowerCase());
   const nameIdx = header.findIndex((h) => ['canonical_name', 'item', 'item_name', 'name'].includes(h));
   const costIdx = header.findIndex((h) => ['cost', 'cost_per_portion', 'unit_cost'].includes(h));
   const portionIdx = header.findIndex((h) => ['portion', 'serving'].includes(h));
   const notesIdx = header.findIndex((h) => h === 'notes');
   if (nameIdx < 0 || costIdx < 0) return null; // not a cost file
-  return rows.slice(1).map((cells) => ({
-    name: String(cells[nameIdx] ?? '').trim(),
-    cost: Number(cells[costIdx]),
-    portion: portionIdx >= 0 ? String(cells[portionIdx] ?? '').trim() : undefined,
-    notes: notesIdx >= 0 ? String(cells[notesIdx] ?? '').trim() : undefined,
-  })).filter((r) => r.name && Number.isFinite(r.cost) && r.cost > 0);
+  const rows = [], rejected = [];
+  raw.slice(1).forEach((cells, i) => {
+    if (!cells.some((c) => String(c ?? '').trim() !== '')) return; // blank line
+    const r = {
+      name: String(cells[nameIdx] ?? '').trim(),
+      cost: Number(cells[costIdx]),
+      portion: portionIdx >= 0 ? String(cells[portionIdx] ?? '').trim() : undefined,
+      notes: notesIdx >= 0 ? String(cells[notesIdx] ?? '').trim() : undefined,
+    };
+    if (!r.name) rejected.push({ line: i + 2, name: r.name, why: 'missing item name' });
+    else if (!Number.isFinite(r.cost)) rejected.push({ line: i + 2, name: r.name, why: `cost is not a number ("${String(cells[costIdx] ?? '').trim()}")` });
+    else if (r.cost <= 0) rejected.push({ line: i + 2, name: r.name, why: 'cost must be above $0' });
+    else if (r.cost >= 500) rejected.push({ line: i + 2, name: r.name, why: 'cost of $500+ per portion looks wrong — check the units' });
+    else rows.push(r);
+  });
+  return { rows, rejected };
+}
+
+/** Legacy contract: valid rows only (null when not a cost file). */
+export function parseCostCsv(text) {
+  const d = parseCostCsvDetailed(text);
+  return d === null ? null : d.rows;
 }
 
 /** XLSX sheet as array-of-arrays → cost rows. Tries a header row first, then

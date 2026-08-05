@@ -67,6 +67,11 @@ async function main() {
         create policy poc_read on ace_item_metrics for select using (true);
       end if;
     end $$;`);
+  // full rebuild: clear the covered dates first so reclassified items (e.g.
+  // modifiers that used to appear as unmatched rows) cannot linger as stale
+  // ace_item_metrics entries
+  await client.query('delete from ace_metrics where business_date = any($1)', [manifest.dates.map(String)]);
+  await client.query('delete from ace_item_metrics where business_date = any($1)', [manifest.dates.map(String)]);
   for (let i = 0; i < allRows.length; i += 500) {
     const batch = allRows.slice(i, i + 500).map((r) => ({
       unique_key: `${r.businessDate}|${r.period}|${r.serverGuid ?? '-'}`,

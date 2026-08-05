@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 // Live integration verification against the configured Supabase project.
-// Exercises the protected manager-tool functions with REAL authenticated
-// sessions for each role, asserts the authorization matrix, idempotency,
-// audit identity, and reversal — then cleans up every synthetic row it wrote.
+// Exercises the protected operator-tool functions with REAL authenticated
+// sessions, asserts the authorization matrix (one operator role — every
+// approved operator has equal capabilities; anon and unapproved users have
+// none), idempotency, audit identity, and reversal — then cleans up every
+// synthetic row it wrote.
 //
 //   node scripts/admin/verify-live.mjs            # full run
 //   node scripts/admin/verify-live.mjs --with-retry  # also dispatch a real Toast retry
 //
 // Test users (provisioned via scripts/admin/add-manager.mjs):
-//   manager.test@example.com   role manager
-//   lead.test@example.com      role shift_lead
+//   manager.test@example.com   approved operator (legacy role value 'manager')
+//   lead.test@example.com      approved operator (legacy role value 'shift_lead')
 //   outsider.test@example.com  authenticated but NOT approved (role server)
 import fs from 'node:fs';
 import path from 'node:path';
@@ -89,10 +91,10 @@ async function main() {
   const out = await mintSession('outsider.test@example.com');
 
   try {
-    console.log('\n[whoami / roles]');
-    ok('manager role', (await rpcAs(mgr, 'ace_whoami')).body.role === 'manager');
-    ok('shift_lead role', (await rpcAs(lead, 'ace_whoami')).body.role === 'shift_lead');
-    ok('unapproved user has no manager role', (await rpcAs(out, 'ace_whoami')).body.role === 'server');
+    console.log('\n[whoami / operator capability]');
+    ok('manager.test is an operator', ['executive', 'manager', 'shift_lead'].includes((await rpcAs(mgr, 'ace_whoami')).body.role));
+    ok('lead.test is an operator', ['executive', 'manager', 'shift_lead'].includes((await rpcAs(lead, 'ace_whoami')).body.role));
+    ok('unapproved user is not an operator', (await rpcAs(out, 'ace_whoami')).body.role === 'server');
 
     console.log('\n[authorization matrix — writes]');
     const rows = [syntheticRow(1), syntheticRow(2, { intent: 'REVIEW_REQUIRED', relevantTags: ['AYCE', 'UNDECIDED'], reviewStatus: 'pending_review' })];
@@ -101,19 +103,19 @@ async function main() {
     r = await rpcAs(out, 'ace_upload_opentable', { p_rows: rows, p_file_name: 'verify.csv', p_file_hash: 'itestfile1' });
     ok('unapproved user cannot upload OpenTable', r.status >= 400, `got ${r.status}`);
     r = await rpcAs(lead, 'ace_upload_opentable', { p_rows: rows, p_file_name: 'verify.csv', p_file_hash: 'itestfile1' });
-    ok('shift lead CAN upload OpenTable', r.status === 200 && r.body.inserted === 2, JSON.stringify(r.body).slice(0, 120));
+    ok('any approved operator can upload OpenTable', r.status === 200 && r.body.inserted === 2, JSON.stringify(r.body).slice(0, 120));
     r = await rpcAs(lead, 'ace_upload_opentable', { p_rows: rows, p_file_name: 'verify.csv', p_file_hash: 'itestfile1' });
     ok('re-upload is idempotent (0 inserted, 2 duplicates)', r.status === 200 && r.body.inserted === 0 && r.body.duplicates === 2, JSON.stringify(r.body).slice(0, 120));
     ok('duplicate file flagged', r.body.duplicateFile === true);
 
     const costRec = [{ name: 'TEST ITEM ZZZ', cost: 4.25, portion: 'per test', aliases: [] }];
-    r = await rpcAs(lead, 'ace_upload_costs', { p_records: costRec, p_effective_from: TEST_DATE });
-    ok('shift lead CANNOT upload costs', r.status >= 400 && JSON.stringify(r.body).includes('not_authorized'), `got ${r.status}`);
-    r = await rpcAs(mgr, 'ace_upload_costs', { p_records: costRec, p_effective_from: TEST_DATE, p_file_name: 'verify-costs.csv', p_file_hash: 'itestfile2' });
-    ok('manager CAN upload costs', r.status === 200 && r.body.recognized === 1, JSON.stringify(r.body).slice(0, 160));
+    r = await rpcAs(out, 'ace_upload_costs', { p_records: costRec, p_effective_from: TEST_DATE });
+    ok('unapproved user CANNOT upload costs', r.status >= 400 && JSON.stringify(r.body).includes('not_authorized'), `got ${r.status}`);
+    r = await rpcAs(lead, 'ace_upload_costs', { p_records: costRec, p_effective_from: TEST_DATE, p_file_name: 'verify-costs.csv', p_file_hash: 'itestfile2' });
+    ok('any approved operator can upload costs (no hierarchy)', r.status === 200 && r.body.recognized === 1, JSON.stringify(r.body).slice(0, 160));
     ok('new item reported as changed', r.body.changed === 1);
     r = await rpcAs(mgr, 'ace_upload_costs', { p_records: costRec, p_effective_from: TEST_DATE, p_file_name: 'verify-costs.csv', p_file_hash: 'itestfile2' });
-    ok('cost re-upload idempotent (unchanged)', r.status === 200 && r.body.unchanged === 1, JSON.stringify(r.body).slice(0, 160));
+    ok('cost re-upload idempotent (unchanged), across operators', r.status === 200 && r.body.unchanged === 1, JSON.stringify(r.body).slice(0, 160));
 
     console.log('\n[PII guard]');
     r = await rpcAs(mgr, 'ace_upload_opentable', { p_rows: [{ ...syntheticRow(9), guestName: 'A Person' }], p_file_name: 'x.csv' });
@@ -121,7 +123,7 @@ async function main() {
 
     console.log('\n[save-review-fix: direct save, audit identity, queue removal, reversal]');
     r = await rpcAs(lead, 'ace_save_review_fix', { p_row_hash: T(2), p_action: 'UNDECIDED', p_reason: 'Host entry correction', p_note: 'verify-live' });
-    ok('shift lead saves a conflicting-choice fix', r.status === 200 && r.body.saved === true, JSON.stringify(r.body).slice(0, 120));
+    ok('operator saves a conflicting-choice fix', r.status === 200 && r.body.saved === true, JSON.stringify(r.body).slice(0, 120));
     let row = (await db.query('select payload from ace_intents where row_hash = $1', [T(2)])).rows[0].payload;
     ok('correction saved directly to shared DB', row.intentEffective === 'UNDECIDED' && row.reviewStatus === 'confirmed');
     ok('original value preserved', row.correction?.original?.intent === 'REVIEW_REQUIRED');
@@ -134,33 +136,31 @@ async function main() {
     row = (await db.query('select payload from ace_intents where row_hash = $1', [T(2)])).rows[0].payload;
     ok('reversal restores original intent state', row.intentEffective == null && row.reviewStatus === 'pending_review' && (row.correction == null));
 
-    console.log('\n[shift-lead restrictions]');
+    console.log('\n[operator equality — no per-role restrictions]');
     await db.query(
       `insert into ace_intents (row_hash, business_date, payload) values ($1, $2, $3)
        on conflict (row_hash) do update set payload = excluded.payload`,
       [T(3), PILOT_DATE, JSON.stringify(syntheticRow(3, { businessDate: PILOT_DATE, intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }))]);
     r = await rpcAs(lead, 'ace_save_review_fix', { p_row_hash: T(3), p_action: 'UNDECIDED', p_reason: 'Host entry correction' });
-    ok('shift lead blocked on pilot-window item', r.status >= 400 && JSON.stringify(r.body).includes('manager_required_pilot_window'));
-    r = await rpcAs(mgr, 'ace_save_review_fix', { p_row_hash: T(3), p_action: 'UNDECIDED', p_reason: 'Host entry correction' });
-    ok('manager allowed on pilot-window item', r.status === 200);
+    ok('any operator may decide a pilot-window item', r.status === 200, JSON.stringify(r.body).slice(0, 120));
 
     console.log('\n[replace-metrics authorization]');
-    r = await rpcAs(lead, 'ace_replace_metrics', { p_dates: [TEST_DATE], p_rows: [], p_item_rows: [] });
-    ok('shift lead cannot replace metrics', r.status >= 400);
+    r = await rpcAs(out, 'ace_replace_metrics', { p_dates: [TEST_DATE], p_rows: [], p_item_rows: [] });
+    ok('unapproved user cannot replace metrics', r.status >= 400);
     r = await rpcAs(mgr, 'ace_replace_metrics', {
       p_dates: [TEST_DATE],
       p_rows: [{ businessDate: TEST_DATE, period: 'dinner', serverGuid: null, checks: 0, guests: 0, floorNet: 0, ayceChecks: 0, entitlementNet: 0, entitlementCovers: 0, roundCost: 0, matchedQty: 0, totalQty: 0 }],
       p_item_rows: [] });
-    ok('manager can replace metrics for declared dates', r.status === 200 && r.body.rows === 1, JSON.stringify(r.body).slice(0, 120));
+    ok('operator can replace metrics for declared dates', r.status === 200 && r.body.rows === 1, JSON.stringify(r.body).slice(0, 120));
     r = await rpcAs(mgr, 'ace_replace_metrics', { p_dates: [TEST_DATE], p_rows: [{ businessDate: '20260101', period: 'dinner' }], p_item_rows: [] });
     ok('rows outside declared dates rejected', r.status >= 400 && JSON.stringify(r.body).includes('row_outside_declared_dates'));
 
     if (withRetry) {
       console.log('\n[retry-toast-update — REAL workflow dispatch]');
-      r = await rpcAs(lead, 'ace_retry_toast_update', {});
-      ok('shift lead cannot retry Toast', r.status >= 400);
+      r = await rpcAs(out, 'ace_retry_toast_update', {});
+      ok('unapproved user cannot retry Toast', r.status >= 400);
       r = await rpcAs(mgr, 'ace_retry_toast_update', {});
-      ok('manager retry returns "Update started"', r.status === 200 && r.body.status === 'Update started', JSON.stringify(r.body).slice(0, 120));
+      ok('operator retry returns "Update started"', r.status === 200 && r.body.status === 'Update started', JSON.stringify(r.body).slice(0, 120));
       if (r.status === 200) {
         let accepted = false;
         for (let i = 0; i < 12 && !accepted; i++) {

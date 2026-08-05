@@ -5,22 +5,25 @@ Restaurant-management dashboard for the AYCE program at Chasin' Tails
 conversion, and the frozen pilot review — run entirely from the browser.
 
 **Production:** https://dominicmemoli-create.github.io/ace-dashboard/
-(presentation passcode; writes require Manager Mode — see docs/SECURITY.md).
+(presentation passcode for viewing; saving changes prompts for operator
+sign-in at that moment — see docs/SECURITY.md).
 
-Managers: the whole routine is **docs/UPLOAD_GUIDE.md** (one page, no
-commands). Operators: **docs/TECHNICAL_RUNBOOK.md**.
+Operators: the whole routine is **docs/UPLOAD_GUIDE.md** (one page, no
+commands). Administrators: **docs/TECHNICAL_RUNBOOK.md**.
 
 ## How it runs
 
 - Toast sales ingest automatically every morning (GitHub Actions → Supabase);
-  managers see status on **Update Dashboard** and a Retry button if needed.
+  operators see status on **Update Dashboard** and a Retry button if needed.
 - OpenTable guest status arrives as a GuestCenter CSV uploaded in the browser;
-  chef costs as an occasional CSV/XLSX upload (manager-only).
-- Corrections happen on **Fixes Needed** — actionable exceptions only; unknown
-  or unreliable records are excluded automatically and never create work.
-- All writes go through role-checked security-definer functions
-  (`supabase/migrations/0003_manager_tools.sql`) under Supabase Auth magic
-  links. Browser code holds only the public anon key.
+  chef costs as an occasional CSV/XLSX upload. Every approved operator has the
+  same capabilities — there is no manager-versus-shift-lead hierarchy.
+- Corrections happen on **Fixes Needed** — actionable exceptions only
+  (conflicting recorded choices, likely-match confirmations). Half/Half is a
+  guest-mix note, never a fix; unmarked visits never create work.
+- All writes go through operator-checked security-definer functions
+  (`supabase/migrations/0004_operator_role.sql`, building on `0003`) under
+  Supabase Auth magic links. Browser code holds only the public anon key.
 
 ## Layout
 
@@ -49,10 +52,13 @@ npx serve -l 5173 .      # local preview (module pages need http, not file://)
 
 ## Honesty invariants
 
-- Unmatched items are never $0-costed; coverage is always displayed.
-- Rough costs stay flagged provisional until chef-confirmed; cost changes are
-  effective-dated — history never rewrites.
-- Unknown / unmarked guest choices never enter conversion and never pay
-  commission; they are excluded automatically, not turned into busywork.
+- Unmatched items are never $0-costed; coverage is always displayed and counts
+  only genuine cost-bearing items (Toast modifiers, preparation notes and
+  trivial drinks are excluded from the model — they never mask a gap).
+- Temporary costs stay flagged provisional until chef-confirmed; cost changes
+  are effective-dated — history never rewrites.
+- Visits without a recorded guest choice count in every operational figure
+  (tables, covers, sales, food cost). Only conversion leaves them out — shown
+  as unavailable, never as zero — and they never pay commission or create work.
 - Every correction is audited under the authenticated user and reversible.
 - Nothing claims to be connected that isn't (see docs/CREDENTIALS.md).
