@@ -49,10 +49,19 @@ export function toastVisits(checks, reference, opsFilter = () => true, opts = {}
     v.net += c.amount ?? 0;
     v.checks += 1;
     if (!v.openedDate || (c.openedDate && c.openedDate < v.openedDate)) v.openedDate = c.openedDate;
+    // deterministic attribution for mixed-server orders (e.g. a table handed
+    // from Host To Go to a floor server): any real server beats Host To Go,
+    // regardless of check iteration order
+    const curHtg = HOST_TO_GO_RE.test(v.serverName ?? '');
+    const newName = emp.get(c.serverGuid) ?? '';
+    if (curHtg && newName && !HOST_TO_GO_RE.test(newName)) {
+      v.serverGuid = c.serverGuid;
+      v.serverName = newName;
+    }
   }
   return [...byOrder.values()].filter((v) =>
     v.net > 0                                    // $0 visits are never candidates
-    && !HOST_TO_GO_RE.test(v.serverName ?? '')); // Host To Go is unattributed, not a floor match
+    && !HOST_TO_GO_RE.test(v.serverName ?? '')); // ALL checks Host To Go → unattributed, not a floor match
 }
 
 export function openedMinutesLocal(iso, timezone) {
@@ -61,6 +70,15 @@ export function openedMinutesLocal(iso, timezone) {
   const h = Number(parts.find((p) => p.type === 'hour')?.value ?? NaN) % 24;
   const m = Number(parts.find((p) => p.type === 'minute')?.value ?? NaN);
   return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+}
+
+/** Circular minutes-since-midnight difference: an 11:50 PM reservation and a
+ * 12:10 AM check-open are 20 minutes apart, not 1420. Both sides live on the
+ * same BUSINESS date, so the wrap is always the short way around. */
+export function clockDiffMinutes(a, b) {
+  if (a == null || b == null) return null;
+  const d = Math.abs(a - b) % 1440;
+  return Math.min(d, 1440 - d);
 }
 
 /**
@@ -79,12 +97,12 @@ export function scorePair(ot, visit, cfg) {
   const tableHit = visit.tableName != null && ot.tableTokens.includes(visit.tableName);
   const patio = visit.area === 'patio';
 
-  // time — hard window
+  // time — hard window (circular around midnight; both sides share the
+  // business date, so short-way-around is always correct)
   const vm = ot.visitMinutes;
   const om = openedMinutesLocal(visit.openedDate, cfg.timezone);
-  let timeDiff = null;
-  if (vm != null && om != null) {
-    timeDiff = Math.abs(vm - om);
+  const timeDiff = clockDiffMinutes(vm, om);
+  if (timeDiff != null) {
     if (timeDiff > tolMin) return null;                  // outside window — never a candidate
     score += 0.45 * (1 - timeDiff / tolMin);
     reasons.push(`time±${timeDiff}m`);
@@ -155,9 +173,11 @@ export function matchVisits(otRows, visits, cfg) {
     // second-best competing score for the same OT row → ambiguity check
     const rival = candidates.find((x) => x !== c && x.ot.rowHash === c.ot.rowHash && !takenVisit.has(x.v.orderGuid));
     // patio matches without a table overlap stay in human review unless the
-    // remaining evidence is overwhelming and unrivaled
+    // remaining evidence is overwhelming and unrivaled; a candidate with NO
+    // time evidence can never auto-match — the ±window can't be verified
     const patioSoft = !c.evidence.tableOverlap && c.evidence.area === 'patio';
     const ambiguous = c.score < 0.55 || (rival && (c.score - rival.score) < 0.08)
+      || c.evidence.timeDiffMin == null
       || (patioSoft && (c.score < 0.7 || !!rival));
     takenOt.add(c.ot.rowHash);
     takenVisit.add(c.v.orderGuid);

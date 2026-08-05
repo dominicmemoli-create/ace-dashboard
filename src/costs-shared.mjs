@@ -50,21 +50,34 @@ export function parseCostCsv(text) {
 
 /** XLSX sheet as array-of-arrays → cost rows. Tries a header row first, then
  * falls back to the known management-workbook layout (names in column B,
- * numeric cost in column C). */
-export function rowsFromWorkbookAoa(aoa) {
-  if (!Array.isArray(aoa) || !aoa.length) return [];
+ * numeric cost in column C). Detailed variant reports rejected header-layout
+ * rows; the heuristic workbook layout cannot attribute rejects line-by-line,
+ * so it reports layout: 'workbook' and the caller discloses that only
+ * recognized rows are read. */
+export function rowsFromWorkbookAoaDetailed(aoa) {
+  if (!Array.isArray(aoa) || !aoa.length) return { rows: [], rejected: [], layout: 'empty' };
   const header = (aoa[0] ?? []).map((h) => String(h ?? '').trim().toLowerCase());
   const nameIdx = header.findIndex((h) => ['canonical_name', 'item', 'item_name', 'name'].includes(h));
   const costIdx = header.findIndex((h) => ['cost', 'cost_per_portion', 'unit_cost'].includes(h));
   if (nameIdx >= 0 && costIdx >= 0) {
     const portionIdx = header.findIndex((h) => ['portion', 'serving'].includes(h));
     const notesIdx = header.findIndex((h) => h === 'notes');
-    return aoa.slice(1).map((row) => ({
-      name: String(row[nameIdx] ?? '').trim(),
-      cost: Number(row[costIdx]),
-      portion: portionIdx >= 0 ? String(row[portionIdx] ?? '').trim() : undefined,
-      notes: notesIdx >= 0 ? String(row[notesIdx] ?? '').trim() : undefined,
-    })).filter((r) => r.name && Number.isFinite(r.cost) && r.cost > 0);
+    const rows = [], rejected = [];
+    aoa.slice(1).forEach((row, i) => {
+      if (!row || !row.some((c) => String(c ?? '').trim() !== '')) return; // blank
+      const r = {
+        name: String(row[nameIdx] ?? '').trim(),
+        cost: Number(row[costIdx]),
+        portion: portionIdx >= 0 ? String(row[portionIdx] ?? '').trim() : undefined,
+        notes: notesIdx >= 0 ? String(row[notesIdx] ?? '').trim() : undefined,
+      };
+      if (!r.name) rejected.push({ line: i + 2, name: r.name, why: 'missing item name' });
+      else if (!Number.isFinite(r.cost)) rejected.push({ line: i + 2, name: r.name, why: `cost is not a number ("${String(row[costIdx] ?? '').trim()}")` });
+      else if (r.cost <= 0) rejected.push({ line: i + 2, name: r.name, why: 'cost must be above $0' });
+      else if (r.cost >= 500) rejected.push({ line: i + 2, name: r.name, why: 'cost of $500+ per portion looks wrong — check the units' });
+      else rows.push(r);
+    });
+    return { rows, rejected, layout: 'header' };
   }
   // rough-workbook layout fallback (mirrors scripts/import-costs.mjs)
   const SKIP = new Set(['reg price->', 'weekend price->', 'total ayce guests', 'jumbotron?', 'other stuff', 'alc cm/guest', 'food cost', 'cocktails pp', 'beers']);
@@ -77,7 +90,12 @@ export function rowsFromWorkbookAoa(aoa) {
       out.push({ name: name.trim(), cost });
     }
   }
-  return out;
+  return { rows: out, rejected: [], layout: 'workbook' };
+}
+
+/** Legacy contract: rows only. */
+export function rowsFromWorkbookAoa(aoa) {
+  return rowsFromWorkbookAoaDetailed(aoa).rows;
 }
 
 /** Attach configured aliases so the server can resolve Toast GUIDs. */

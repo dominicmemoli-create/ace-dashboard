@@ -31,7 +31,7 @@ import {
   perCheckCostStats,
 } from './food-cost-engine.mjs';
 import { resolveRange } from './date-range.mjs';
-import { toastVisits, openedMinutesLocal } from './ot-matcher.mjs';
+import { toastVisits, scorePair } from './ot-matcher.mjs';
 import { triageIntents } from './triage.mjs';
 import { initManagerMode } from './manager-mode.mjs';
 import { initUpdatePage, pgUpdate } from './page-update.mjs';
@@ -62,10 +62,18 @@ async function fetchJson(url) {
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.json();
 }
+// Stable pagination order per table — Range paging without ORDER BY lets
+// PostgREST return pages in unspecified order, silently duplicating or
+// skipping rows past the first 1000.
+const PK_ORDER = {
+  ace_metrics: 'unique_key', ace_item_metrics: 'unique_key', ace_intents: 'row_hash',
+  ace_item_costs: 'id', ace_checks: 'check_guid', ace_selections: 'selection_guid',
+};
 async function sbRows(cfg, table, select, filter = '') {
   const out = [];
+  const order = !/[&?]order=/.test(filter) && PK_ORDER[table] ? `&order=${PK_ORDER[table]}` : '';
   for (let from = 0; ; from += 1000) {
-    const res = await fetch(`${cfg.url}/rest/v1/${table}?select=${select}${filter}`, {
+    const res = await fetch(`${cfg.url}/rest/v1/${table}?select=${select}${filter}${order}`, {
       headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}`, Range: `${from}-${from + 999}` },
     });
     if (!res.ok && res.status !== 206) throw new Error(`${table}: HTTP ${res.status}`);
@@ -136,35 +144,45 @@ function loadLive() {
 }
 
 /**
- * Re-verify STORED match suggestions against the CURRENT matching rules.
- * Rows imported under the old, wider rules can carry suggestions that today's
- * rules would never produce (candidates hours from the reservation time, $0 /
- * Host To Go / excluded-area orders). Those are marked staleSuggestion so
- * triage treats them as "no reliable candidate" instead of queueing busywork.
- * The stored row itself is untouched — this is an in-memory annotation.
+ * Re-verify STORED match connections against the CURRENT matching rules
+ * (time window, table overlap, party compatibility, area, candidate
+ * exclusions — one scorePair call covers all of them). Rows imported under
+ * the old, wider rules can carry connections today's rules would never make:
+ *   - ambiguous suggestions → marked staleSuggestion (auto-excluded, no card)
+ *   - automatic 'matched' rows → demoted in-memory to 'ambiguous' so they
+ *     leave conversion and appear as a likely-match card for a person.
+ * Manual connections and confirmed decisions are never touched, and the
+ * stored rows themselves are untouched — this is an in-memory annotation.
  */
 async function reverifyStoredMatches() {
   const ops = DATA.ops;
-  const tol = ops?.opentableMatch?.timeToleranceMinutes ?? 25;
-  const tz = ops?.servicePeriods?.timezone ?? 'America/New_York';
+  const cfg = { ...ops.opentableMatch, timezone: ops.servicePeriods.timezone };
   const pending = DATA.intents.filter((r) =>
-    r.matchStatus === 'ambiguous' && r.matchedOrderGuid && !r.matchEvidence
+    (r.matchStatus === 'ambiguous' || r.matchStatus === 'matched')
+    && r.matchedOrderGuid && !r.matchEvidence && r.matchMethod !== 'manual'
     && !r.excluded && r.reviewStatus !== 'confirmed');
   if (!pending.length) return;
   const opsFilter = (c) =>
     (c.serviceAreaGuid && c.serviceAreaGuid in ops.includedAreas.serviceAreaGuids) ||
     (!c.serviceAreaGuid && c.revenueCenterGuid in ops.includedAreas.revenueCenterGuids);
+  const areaOf = (c) => {
+    const n = (c.serviceAreaGuid && ops.includedAreas.serviceAreaGuids[c.serviceAreaGuid])
+      || (c.revenueCenterGuid && ops.includedAreas.revenueCenterGuids[c.revenueCenterGuid]) || null;
+    return n ? (/patio/i.test(n) ? 'patio' : 'dining') : null;
+  };
   for (const d of [...new Set(pending.map((r) => r.businessDate))]) {
     let detail = null;
     try { detail = await fetchDetail(d); } catch { /* leave rows as-is */ }
     if (!detail) continue;
-    const valid = new Map(toastVisits(detail.checks, DATA.reference, opsFilter).map((v) => [v.orderGuid, v]));
+    const valid = new Map(toastVisits(detail.checks, DATA.reference, opsFilter, { areaOf }).map((v) => [v.orderGuid, v]));
     for (const r of pending.filter((x) => x.businessDate === d)) {
       const v = valid.get(r.matchedOrderGuid);
-      if (!v) { r.staleSuggestion = true; continue; }        // $0 / Host To Go / excluded area / no table
-      if (r.visitMinutes != null) {
-        const om = openedMinutesLocal(v.openedDate, tz);
-        if (om != null && Math.abs(r.visitMinutes - om) > tol) r.staleSuggestion = true;
+      const s = v ? scorePair(r, v, cfg) : null;   // null → fails the current rules
+      if (s) { r.matchEvidence = s.evidence; continue; }   // still sound — keep, with fresh evidence
+      if (r.matchStatus === 'matched') {
+        r.matchStatus = 'ambiguous';               // out of conversion; a person confirms or excludes
+      } else {
+        r.staleSuggestion = true;                  // never was reliable — no card, no conversion
       }
     }
   }
@@ -223,7 +241,9 @@ async function rangeDetail(dates, periods) {
   const tbl = new Map((DATA.reference?.tables ?? []).map((t) => [t.guid, String(t.name).toUpperCase()]));
   const intentByOrder = new Map();
   for (const r of DATA.intents) {
-    if (r.matchedOrderGuid && !r.excluded) intentByOrder.set(r.matchedOrderGuid, r);
+    // only reliable connections attribute a recorded intent to a check —
+    // ambiguous suggestions stay "Unknown" until a person confirms them
+    if (r.matchStatus === 'matched' && r.matchedOrderGuid && !r.excluded) intentByOrder.set(r.matchedOrderGuid, r);
   }
   const out = [];
   const missingDates = [];
@@ -453,7 +473,7 @@ function renderOps(host) {
   const t = sumMetrics(range.dates, periods);
   const fc = fcPctOf(t);
   const base = baselineFor(range.dates, periods);
-  const conv = conversionStatsFor(range.dates);
+  const conv = conversionStatsFor(range.dates, periods);
   const triAll = triageIntents(DATA.intents);
   const tri = triageIntents(DATA.intents.filter((r) => range.dates.includes(r.businessDate)));
 
@@ -524,9 +544,14 @@ function renderOps(host) {
  *   excluded          — manager-excluded records
  * Half/Half is metadata and never affects any bucket.
  */
-function conversionStatsFor(dates) {
+function conversionStatsFor(dates, periods = null) {
   const set = new Set(dates);
-  const rows = DATA.intents.filter((r) => set.has(r.businessDate));
+  // service-period filter mirrors servicePeriodOf: before the lunch cutoff is
+  // lunch, everything else (including unknown times) is dinner
+  const cutoff = (DATA.ops?.servicePeriods?.lunchBeforeHour ?? 16) * 60;
+  const periodOf = (r) => (r.visitMinutes != null && r.visitMinutes < cutoff ? 'lunch' : 'dinner');
+  const rows = DATA.intents.filter((r) => set.has(r.businessDate)
+    && (!periods || periods.length === 2 || periods.includes(periodOf(r))));
   const st = { total: rows.length, eligible: 0, converted: 0, unknown: 0, review: 0, predecided: 0, ambiguous: 0, notConnected: 0, excluded: 0, halfHalf: 0 };
   for (const r of rows) {
     if (r.halfHalf || r.mixedMenuException) st.halfHalf++;   // metadata tally only
@@ -564,11 +589,15 @@ function renderServersLive(host) {
   const emp = new Map((DATA.reference?.employees ?? []).map((e) => [e.guid, e.name]));
   const view = srvView();
 
-  // conversion per server from recorded-and-connected visits
+  // conversion per server from recorded-and-connected visits, respecting the
+  // service-period selector like every other figure on the page
   const set = new Set(range.dates);
+  const cutoff = (DATA.ops?.servicePeriods?.lunchBeforeHour ?? 16) * 60;
+  const periodOf = (r) => (r.visitMinutes != null && r.visitMinutes < cutoff ? 'lunch' : 'dinner');
   const convByServer = new Map();
   for (const r of DATA.intents) {
     if (!set.has(r.businessDate) || r.excluded) continue;
+    if (periods.length !== 2 && !periods.includes(periodOf(r))) continue;
     const intent = r.intentEffective ?? r.intent;
     if (!['UNDECIDED', 'ALC'].includes(intent)) continue;
     if (r.matchStatus !== 'matched' || !r.matchedServerGuid) continue;
@@ -696,6 +725,7 @@ function renderServersLive(host) {
       ? `Check-level detail unavailable for ${missingDates.length} day(s) in this range.`
       : '';
     paintRows();
+    if (srvDrawerRepaint) srvDrawerRepaint();   // a drawer opened mid-load fills in live
   }).catch(() => { stateEl.textContent = 'Check-level detail could not load — totals above are unaffected.'; });
 }
 
@@ -742,11 +772,13 @@ const TIER_LABEL_SRC = {
   rough_estimate: 'temporary workbook', fallback_2: '$2 fallback',
 };
 let drawerLastFocus = null;
+let srvDrawerRepaint = null;
 function closeSrvDrawer() {
   const d = document.getElementById('srvDrawer'), s = document.getElementById('srvScrim');
   if (d) { d.classList.remove('show'); setTimeout(() => d.remove(), 260); }
   if (s) { s.classList.remove('show'); setTimeout(() => s.remove(), 260); }
   document.removeEventListener('keydown', srvDrawerKey, true);
+  srvDrawerRepaint = null;
   if (drawerLastFocus && drawerLastFocus.isConnected) drawerLastFocus.focus();
   drawerLastFocus = null;
 }
@@ -852,6 +884,7 @@ function openServerDrawer(guid, row, range, periods, base) {
   document.body.appendChild(scrim);
   document.body.appendChild(dr);
   paint();
+  srvDrawerRepaint = () => { if (dr.isConnected) paint(); };
   requestAnimationFrame(() => { scrim.style.opacity = '1'; dr.classList.add('show'); });
   scrim.addEventListener('click', closeSrvDrawer);
   document.addEventListener('keydown', srvDrawerKey, true);
@@ -906,8 +939,10 @@ function renderFoodCost(host) {
   const tempCost = totalCost - tiers.confirmed;
   // Metric rows built before the tier breakdown existed carry no costByTier —
   // fall back to the item-level sources so stale data can never claim
-  // "chef-confirmed" by omission.
-  const tiersKnown = DATA.metrics.some((r) => !r.serverGuid && r.costByTier);
+  // "chef-confirmed" by omission. Scoped to the SELECTED range: a mixed
+  // database must not vouch for dates it has no tier data for.
+  const rangeSet = new Set(range.dates);
+  const tiersKnown = DATA.metrics.some((r) => !r.serverGuid && rangeSet.has(r.businessDate) && r.costByTier);
   const provisional = tiersKnown
     ? tempCost > 0
     : (DATA.items ?? []).some((i) => i.matched && i.source !== 'chef_confirmed' && i.verification !== 'verified');
@@ -983,10 +1018,12 @@ function renderFoodCost(host) {
     if (!itemAgg.has(key)) itemAgg.set(key, { name: it.name, matched: it.matched, qty: 0, cost: 0, source: it.source, verification: it.verification, tier: it.tier });
     const a = itemAgg.get(key);
     a.qty += it.qty; a.cost += it.cost;
+    if (it.tier && a.tier && it.tier !== a.tier) a.tier = 'mixed';   // cost source changed mid-range
   }
   const drivers = [...itemAgg.values()].filter((x) => x.matched && x.cost > 0).sort((a, b) => b.cost - a.cost).slice(0, 14);
   const unmatched = [...itemAgg.values()].filter((x) => !x.matched).sort((a, b) => b.qty - a.qty).slice(0, 20);
   const tierBadge = (d) => {
+    if (d.tier === 'mixed') return '<span class="verdict-badge neu" title="The cost source for this item changed within the selected range (e.g. a chef confirmation took effect mid-range)">mixed sources</span>';
     if (d.tier === 'confirmed' || d.verification === 'verified') return '<span class="verdict-badge pos">chef-confirmed</span>';
     if (d.tier === 'fallback_2') return '<span class="verdict-badge neu">$2 fallback</span>';
     if (d.tier === 'override') return '<span class="verdict-badge neu">portion override</span>';
@@ -1074,7 +1111,10 @@ function pgPilot(host) {
 function pgHelp(host) {
   withData(host, (h) => {
     const dates = opDates();
-    const conv = conversionStatsFor(dates);
+    // census over EVERY stored OpenTable record (including dates without Toast
+    // metrics yet) so the reconciliation line always sums to the total
+    const allIntentDates = [...new Set(DATA.intents.map((r) => r.businessDate))];
+    const conv = conversionStatsFor(allIntentDates);
     const tri = triageIntents(DATA.intents);
     h.innerHTML = `
     <section class="hero rise"><div class="hero-top"><div class="hero-verdict">

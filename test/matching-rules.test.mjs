@@ -113,6 +113,16 @@ describe('hard candidate exclusions', () => {
   it('Host To Go rows are never suggested as floor-table candidates', () => {
     expect(toastVisits([baseCheck({ serverGuid: 'g2' })], ref, opsFilter)).toHaveLength(0);
   });
+  it('a mixed-server order (Host To Go + real server) attributes to the real server, in any check order', () => {
+    const htg = baseCheck({ orderGuid: 'oMix', serverGuid: 'g2', amount: 0 });
+    const real = baseCheck({ orderGuid: 'oMix', serverGuid: 'g1', amount: 90 });
+    for (const order of [[htg, real], [real, htg]]) {
+      const vs = toastVisits(order, ref, opsFilter);
+      expect(vs).toHaveLength(1);
+      expect(vs[0].serverName).toBe('Kendall Throne');
+      expect(vs[0].net).toBe(90);
+    }
+  });
   it('voided checks are never candidates', () => {
     expect(toastVisits([baseCheck({ voided: true })], ref, opsFilter)).toHaveLength(0);
   });

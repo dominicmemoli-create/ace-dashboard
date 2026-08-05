@@ -6,7 +6,7 @@
 import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs';
 import { toastVisits, matchVisits } from './ot-matcher.mjs';
 import { triageIntents } from './triage.mjs';
-import { parseCostCsvDetailed, rowsFromWorkbookAoa, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs';
+import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs';
 import { buildMetricsForDate } from './metrics-builder.mjs';
 import { rpc, restGet } from './auth.mjs';
 import { requireOperator, notify, currentUser } from './manager-mode.mjs';
@@ -29,7 +29,7 @@ function fmtWhen(iso) {
   try {
     return new Date(iso).toLocaleString('en-US', {
       timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-    });
+    }) + ' ET';
   } catch { return '—'; }
 }
 
@@ -404,7 +404,7 @@ async function handleOpenTableFile(file, stage) {
       });
       const connected = all.filter((s) => s.intent !== 'UNKNOWN' && s.matchStatus === 'matched').length;
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} ET by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
         ${fmt(connected)} visits connected to Toast.<br>
         ${fmt(unmarked)} visits had no recorded starting choice — they still count in sales, covers and food
         cost; only conversion rates leave them out.<br>
@@ -468,11 +468,15 @@ async function handleCostFile(file, stage) {
 
   let incoming;
   let rejected = [];
+  let workbookHeuristic = false;
   if (/\.xlsx?$/i.test(file.name)) {
     await loadXlsx();
     const wb = window.XLSX.read(await file.arrayBuffer());
     const aoa = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: null });
-    incoming = rowsFromWorkbookAoa(aoa);
+    const parsed = rowsFromWorkbookAoaDetailed(aoa);
+    incoming = parsed.rows;
+    rejected = parsed.rejected;
+    workbookHeuristic = parsed.layout === 'workbook';
   } else {
     const parsed = parseCostCsvDetailed(await file.text());
     if (parsed === null) throw new Error('The first row should name the columns — at least "canonical_name" (the item) and "cost". See the format guidance above the drop zone.');
@@ -522,6 +526,9 @@ async function handleCostFile(file, stage) {
       <div class="calcrow"><span class="cl">Toast items still without a cost after this</span><span class="cr">${fmt(uncosted.length)}</span></div>
       ${rejected.length ? `<div class="note warn" style="margin-top:10px"><b>${rejected.length} row${rejected.length === 1 ? ' was' : 's were'} rejected</b> and will not be saved:
         ${rejected.slice(0, 8).map((r) => `line ${r.line}${r.name ? ` (${esc(r.name)})` : ''} — ${esc(r.why)}`).join('; ')}${rejected.length > 8 ? ` and ${rejected.length - 8} more` : ''}.</div>` : ''}
+      ${workbookHeuristic ? `<div class="note" style="margin-top:10px">This file has no header row, so it was read using the known
+        management-workbook layout (item names in column B, costs in column C). Only rows that fit that shape are
+        listed above — check the "Items recognized" count against the workbook before confirming.</div>` : ''}
       ${(diff.changed.length || diff.added.length) ? `
         <div style="max-height:210px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:8px">
         <table><thead><tr><th style="text-align:left">Item</th><th>Now</th><th>Becomes</th></tr></thead><tbody>
@@ -580,7 +587,7 @@ async function handleCostFile(file, stage) {
         ? `<br>${res.skipped.length} row${res.skipped.length === 1 ? '' : 's'} skipped by the database: ${esc(res.skipped.map((s) => `${s.name} (${s.why})`).join('; '))}.`
         : '';
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} ET by ${esc(currentUser().email || 'operator')}.<br>
+        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'operator')}.<br>
         ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.
         Chef-confirmed values now replace the temporary estimates for those items.${skippedNote}<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;

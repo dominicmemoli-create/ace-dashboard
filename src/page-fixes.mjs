@@ -100,6 +100,11 @@ export function pgFixes(host) {
   const dates = [...new Set(actionable.map((a) => a.r.businessDate))].sort().reverse();
   const servers = [...new Set(actionable.map(serverOf).filter(Boolean))].sort();
   const kindsPresent = [...new Set(actionable.map((a) => a.kind))];
+  // a persisted filter value that no longer exists in the queue must not keep
+  // filtering invisibly while the select displays "All"
+  if (filters.kind !== 'all' && !kindsPresent.includes(filters.kind)) filters.kind = 'all';
+  if (filters.date !== 'all' && !dates.includes(filters.date)) filters.date = 'all';
+  if (filters.server !== 'all' && !servers.includes(filters.server)) filters.server = 'all';
 
   const visible = actionable.filter((a) =>
     (filters.kind === 'all' || a.kind === filters.kind)
@@ -172,7 +177,7 @@ function fixCard(item, idx) {
   el.setAttribute('aria-label', `${kindLabel} — ${midDate(r.businessDate)}${r.tableTokens?.length ? `, table ${r.tableTokens.join(', ')}` : ''}`);
   el.style.animationDelay = `${Math.min(idx, 8) * 50}ms`;
 
-  const saidOT = `${CHOICE_LABEL[r.intent] ?? r.intent}${(r.halfHalf || r.mixedMenuException) ? ' <span class="muted">· Half/Half note (half returning, half first-time — informational)</span>' : ''}` +
+  const saidOT = `${esc(CHOICE_LABEL[r.intent] ?? r.intent)}${(r.halfHalf || r.mixedMenuException) ? ' <span class="muted">· Half/Half note (half returning, half first-time — informational)</span>' : ''}` +
     (r.relevantTags?.length ? `<div class="sub" style="margin-top:4px">Host tags: ${esc(r.relevantTags.join(', '))}</div>` : '');
 
   const ev = r.matchEvidence ?? null;
@@ -194,6 +199,7 @@ function fixCard(item, idx) {
       <div class="fact"><div class="k">Time</div><div class="v">${esc(r.visitTime ?? '—')}</div></div>
       <div class="fact"><div class="k">OpenTable table${(r.tableTokens?.length ?? 0) > 1 ? 's' : ''}</div><div class="v">${esc(r.tableTokens?.join(', ') || '—')}</div></div>
       <div class="fact"><div class="k">Party size</div><div class="v">${esc(r.partySize ?? '—')}</div></div>
+      <div class="fact"><div class="k">Area</div><div class="v" style="font-size:12px">${esc(r.diningArea || 'not recorded by host')}</div></div>
     </div>
     <div class="said">
       <div><div class="k">What OpenTable said</div>${saidOT}</div>
@@ -272,7 +278,7 @@ function fixCard(item, idx) {
     dateVisits = visitsOf(checks, DATA.reference);
     return dateVisits;
   };
-  if (item.kind === KIND.MATCH && r.matchedOrderGuid) {
+  if (r.matchedOrderGuid) {   // any card with a stored candidate resolves it (never a stuck "Looking up…")
     loadVisits().then((vs) => {
       const v = vs.find((x) => x.orderGuid === r.matchedOrderGuid);
       if (!v) { toastSide.textContent = 'Suggested table could not be loaded.'; return; }

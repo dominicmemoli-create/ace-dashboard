@@ -70,7 +70,10 @@ async function main() {
     const matched = matchVisits(rows, tv, cfg);
     // annotate conversion facts: did the matched Toast visit ring an AYCE
     // entitlement, and which server owns it (final-owner attribution)?
-    const selections = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'live', `selections_${date}.json`), 'utf8'));
+    // A missing selections file (partial sync) degrades to "no AYCE evidence"
+    // for that date instead of aborting the whole import.
+    const selPath = path.join(ROOT, 'data', 'live', `selections_${date}.json`);
+    const selections = fs.existsSync(selPath) ? JSON.parse(fs.readFileSync(selPath, 'utf8')) : [];
     const ayceOrders = new Set(selections.filter((s) => !s.voided && /PER PERSON|\(kids\)/i.test(s.itemName ?? '')).map((s) => s.orderGuid));
     const orderServer = new Map(checks.map((c) => [c.orderGuid, c.serverGuid]));
     for (const r of matched) {

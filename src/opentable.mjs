@@ -144,6 +144,7 @@ export function sanitizeVisitCore(v, runId, rowHash) {
     partySize: v.size,
     status: v.status,
     tableTokens: tableTokens(v.table),
+    diningArea: v.diningArea || null,   // host-assigned area (often blank; display only)
     serverSoftLabel: serverSoftLabel(v.serverText),
     intent,
     halfHalf,           // returning/first-time mix note — metadata only
