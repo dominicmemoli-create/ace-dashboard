@@ -123,13 +123,14 @@ describe('24: presentation gate still works (and stays presentation-only)', () =
 });
 
 describe('25: pilot calculations and commission remain unchanged', () => {
-  it('frozen pilot payload is byte-identical (regression pin)', () => {
-    const hash = crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'data', 'ace_payload.js'))).digest('hex');
-    expect(hash).toBe('42960e3393b9b1ca40050c3b7050aebd9e8b80c3be507359c96e703ffcbdb78c');
+  // hashes are computed over LF-normalized bytes so Windows/Linux checkouts agree
+  const lfHash = (p) => crypto.createHash('sha256')
+    .update(fs.readFileSync(path.join(ROOT, p)).toString('binary').replace(/\r\n/g, '\n'), 'binary').digest('hex');
+  it('frozen pilot payload is content-identical (regression pin)', () => {
+    expect(lfHash('data/ace_payload.js')).toBe('7bfd4f98f0fc5f1a65f6b75fa678415ae73ad76f65199f8a0033623cb71fbc44');
   });
   it('legacy pilot snapshot untouched', () => {
-    const hash = crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'legacy', 'index.html'))).digest('hex');
-    expect(hash).toBe('418764b9faa4db87bc573f096100f71e6502c4ee17237d2571857e23bb579fad');
+    expect(lfHash('legacy/index.html')).toBe('ee03618c4b45438c40b1e97f65d3e1dd699da91ab6d780468eee6fc7d24cd6f6');
   });
   it('commission program stays inactive with the pilot window preserved', () => {
     const ops = JSON.parse(read('config/operations.json'));
