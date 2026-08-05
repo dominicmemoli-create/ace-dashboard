@@ -55,10 +55,21 @@ describe('9: service credentials never reach the browser', () => {
       expect(src, f).not.toMatch(/SERVICE_ROLE|SUPABASE_DB_URL|TOAST_CLIENT_SECRET|ghp_|github_pat_/);
     }
   });
-  it('the published Supabase key is the anon role only', () => {
+  it('the published Supabase key is the publishable browser key only', () => {
+    const raw = read('data/supabase_config.json');
+    const cfg = JSON.parse(raw);
+    expect(cfg.publishableKey).toMatch(/^sb_publishable_/);
+    // no secret key, no service-role JWT, no legacy anon JWT
+    expect(raw).not.toMatch(/sb_secret_|service_role|SUPABASE_SECRET/);
+    expect(cfg.url).toMatch(/^https:\/\/[a-z]+\.supabase\.co$/);
+  });
+  it('the frontend points at the dedicated ace-dashboard project', () => {
     const cfg = JSON.parse(read('data/supabase_config.json'));
-    const payload = JSON.parse(Buffer.from(cfg.anonKey.split('.')[1], 'base64').toString());
-    expect(payload.role).toBe('anon');
+    expect(cfg.url).toBe('https://hgnijizgavveoadjeoqm.supabase.co');
+    // the previously shared project must not survive anywhere in the tree
+    for (const f of ['data/supabase_config.json', 'src/pages-live.mjs', 'docs/DEPLOY.md']) {
+      expect(read(f), f).not.toMatch(/cdqbiwgxezaoaibypvsi/);
+    }
   });
   it('the GitHub token lives in Vault, read only inside the definer function', () => {
     const sql = read('supabase/migrations/0003_manager_tools.sql');
@@ -75,67 +86,24 @@ describe('1/22: Toast automation intact; retry drives the same pipeline', () => 
     expect(wf).toMatch(/nightly\.mjs/);
   });
   it('retry-toast-update dispatches that exact workflow with cooldown protection', () => {
-    const sql = read('supabase/migrations/0006_public_access_rpc.sql');
+    const sql = read('supabase/migrations/0006_manager_writes.sql');
     expect(sql).toMatch(/nightly-ingest\.yml\/dispatches/);
-    const fn = sql.slice(sql.indexOf('ace_retry_toast_update'), sql.indexOf('ace_retry_status'));
-    expect(fn).toMatch(/ace_public_can_write\(\)/);
+    const fn = sql.slice(sql.indexOf('create or replace function ace_retry_toast_update'),
+      sql.indexOf('create or replace function ace_retry_status'));
+    expect(fn).toMatch(/ace_require_operator\(\)/);
     expect(fn).toMatch(/pg_try_advisory_xact_lock/);
     expect(fn).toMatch(/retry_cooldown/);
+    expect(fn).toMatch(/retry_daily_limit/);
+    // the cooldown must not be keyed on the caller-supplied business date,
+    // which would let a caller cycle dates to dispatch unlimited runs
+    const cooldown = fn.slice(fn.indexOf('retry_cooldown') - 400, fn.indexOf('retry_cooldown'));
+    expect(cooldown).not.toMatch(/businessDate/);
   });
   // live proof: verify-live.mjs --with-retry → dispatch accepted (HTTP 204),
   // nightly run recorded, run finished success.
 });
 
-describe('6/7/8/17/19/21: authorization + audit are enforced in the database', () => {
-  const sql6 = read('supabase/migrations/0006_public_access_rpc.sql');
-  it('public writes are limited to the anon RPC allowlist', () => {
-    expect(sql6).toMatch(/ace_public_can_write/);
-    expect(sql6).toMatch(/coalesce\(auth\.role\(\), ''\) in \('anon', 'service_role'\) or ace_is_operator\(\)/);
-    for (const fn of [
-      'ace_upload_opentable\\(jsonb, text, text, text\\)',
-      'ace_upload_costs\\(jsonb, text, text, text, text, text\\)',
-      'ace_replace_metrics\\(jsonb, jsonb, jsonb, text\\)',
-      'ace_save_review_fix\\(text, text, text, text, text, text, text\\)',
-      'ace_retry_toast_update\\(text, text\\)',
-      'ace_retry_status\\(bigint, text\\)',
-      'ace_whoami\\(\\)',
-    ]) {
-      expect(sql6).toMatch(new RegExp(fn));
-    }
-    expect(sql6).toMatch(/grant execute on function %s to anon, authenticated, service_role/);
-    expect(sql6).not.toMatch(/grant\s+(insert|update|delete|all).*on\s+(table\s+)?ace_/i);
-  });
-  it('public session identity is required and audited', () => {
-    expect(sql6).toMatch(/invalid_session/);
-    expect(sql6).toMatch(/public-site visitor/);
-    expect(sql6).toMatch(/alter table ace_correction_audit alter column user_id drop not null/);
-    expect(sql6).toMatch(/add column if not exists actor_session_id text/);
-    expect(sql6).toMatch(/ace_correction_audit \(row_hash, action, original, corrected, reason, note, user_id, user_email, actor_session_id\)/);
-  });
-  it('the browser keeps write buttons available after the presentation gate', () => {
-    for (const f of ['src/page-update.mjs', 'src/page-fixes.mjs']) {
-      expect(read(f), f).toMatch(/requireOperator\(/);
-    }
-    const mm = read('src/manager-mode.mjs');
-    expect(mm).toMatch(/export const isOperator = \(\) => true/);
-    expect(mm).toMatch(/No sign-in is needed/);
-    expect(mm).not.toMatch(/Shift lead|shift-lead only|manager-only/i); // no hierarchy labels
-    const auth = read('src/auth.mjs');
-    expect(auth).toMatch(/p_actor_session_id: publicSessionId\(\)/);
-    expect(auth).not.toMatch(/signInWithOtp|magic link/i);
-  });
-  it('corrections store public actor metadata, never a typed name', () => {
-    const fix = sql6.slice(sql6.indexOf('ace_save_review_fix'), sql6.indexOf('ace_retry_toast_update'));
-    expect(fix).toMatch(/actorSessionId/);
-    expect(fix).toMatch(/pilot_history_frozen/);
-    expect(fix).toMatch(/ace_correction_audit/);
-    expect(fix).toMatch(/'REVERT'/);        // reversal path exists
-    const ui = read('src/page-fixes.mjs');
-    expect(ui).not.toMatch(/prompt\(/);     // no "type your name" prompts anywhere
-  });
-  // live proof: apply 0006, then verify anon RPC writes, idempotent re-upload,
-  // public audit identity, pilot-history rejection, and REVERT restores original.
-});
+// Authorization and audit posture moved to test/authorization.test.mjs.
 
 describe('18: no correction JSON downloads anywhere', () => {
   it('no dashboard surface creates a corrections file', () => {

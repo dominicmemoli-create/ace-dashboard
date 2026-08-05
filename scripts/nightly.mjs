@@ -18,6 +18,7 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { ToastClient, resolveCredentials, loadDotEnv } from './lib/toast-client.mjs';
+import { isPilotDate, resolveTargetDate, missingSecrets } from './lib/ingest-rules.mjs';
 import { comparableBaselineDates } from '../src/food-cost-engine.mjs';
 import { buildMetricsForDate } from './build-metrics.mjs';
 
@@ -26,12 +27,7 @@ const ROOT = path.resolve(__dirname, '..');
 loadDotEnv(ROOT);
 const RESTAURANT_GUID = process.env.TOAST_RESTAURANT_GUID || 'e574444c-c511-4468-ab89-93d0abbec72b';
 
-function nyYesterday() {
-  const now = new Date();
-  const ny = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  ny.setDate(ny.getDate() - 1);
-  return `${ny.getFullYear()}${String(ny.getMonth() + 1).padStart(2, '0')}${String(ny.getDate()).padStart(2, '0')}`;
-}
+export { PILOT_WINDOW, isPilotDate, nyYesterday, resolveTargetDate, missingSecrets } from './lib/ingest-rules.mjs';
 
 const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 const sum = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
@@ -141,7 +137,17 @@ async function upsertDate(client, date, checks, selections, reference, costs) {
 }
 
 async function main() {
-  const target = /^\d{8}$/.test(process.argv[2] ?? '') ? process.argv[2] : nyYesterday();
+  const absent = missingSecrets();
+  if (absent.length) {
+    console.error(`Missing required secret(s): ${absent.join(', ')}. `
+      + 'Set them as GitHub Actions repository secrets (see docs/CREDENTIALS.md).');
+    process.exit(1);
+  }
+  const target = resolveTargetDate(process.argv[2]);
+  if (isPilotDate(target)) {
+    console.error(`Refusing to ingest ${target}: Jul 31 – Aug 2 2026 pilot history is frozen.`);
+    process.exit(1);
+  }
   const client = new pg.Client({ connectionString: process.env.SUPABASE_DB_URL, ssl: { rejectUnauthorized: false } });
   await client.connect();
 
@@ -154,7 +160,7 @@ async function main() {
       d.setUTCDate(d.getUTCDate() - i);
       return d.toISOString().slice(0, 10).replace(/-/g, '');
     }), 4).perDate[target].requested;
-  const toIngest = [target, ...wantedBaseline.filter((d) => !have.has(d))];
+  const toIngest = [target, ...wantedBaseline.filter((d) => !have.has(d))].filter((d) => !isPilotDate(d));
   console.log(`Target ${target}; ingesting: ${toIngest.join(', ')} (baseline gaps included)`);
 
   const runId = `nightly-${target}-${Date.now()}`;
@@ -162,40 +168,58 @@ async function main() {
     `insert into ace_ingestion_runs (run_id, payload) values ($1, $2)`,
     [runId, JSON.stringify({ runId, source: 'toast_api', adapter: 'ToastApiAdapter/nightly', target, dates: toIngest, startedAt: new Date().toISOString(), status: 'running' })]);
 
-  const creds = resolveCredentials({ allowDesktopConfig: process.argv.includes('--allow-desktop-config') });
-  const toast = new ToastClient({ ...creds, restaurantGuid: RESTAURANT_GUID });
-  await toast.authenticate();
-
-  const refRow = await client.query('select payload from ace_reference where id = 1');
-  const reference = refRow.rows[0].payload;
-  const costRows = await client.query('select payload from ace_item_costs');
-  const costs = costRows.rows.map((r) => r.payload);
-
   const results = {};
   let failed = null;
-  for (const date of toIngest) {
-    try {
-      const orders = await toast.ordersForBusinessDate(date);
-      // raw snapshot (CI artifact / local dir; never public)
-      const rawDir = path.join(ROOT, 'data', 'raw', date);
-      fs.mkdirSync(rawDir, { recursive: true });
-      fs.writeFileSync(path.join(rawDir, 'orders.json.gz'), zlib.gzipSync(JSON.stringify(orders)));
-      const { selections, checks } = normalize(orders, date);
-      results[date] = await upsertDate(client, date, checks, selections, reference, costs);
-      console.log(`${date}: ${orders.length} orders → ${results[date].checks} checks, ${results[date].selections} selections, ${results[date].metricRows} metric rows`);
-    } catch (e) {
-      failed = `${date}: ${e.message}`;
-      console.error(`FAILED ${failed}`);
-      break;
+  try {
+    const creds = resolveCredentials({ allowDesktopConfig: process.argv.includes('--allow-desktop-config') });
+    const toast = new ToastClient({ ...creds, restaurantGuid: RESTAURANT_GUID });
+    await toast.authenticate();
+
+    const refRow = await client.query('select payload from ace_reference where id = 1');
+    if (!refRow.rows[0]) {
+      throw new Error('ace_reference is empty — seed the project first (node scripts/deploy-supabase.mjs).');
     }
+    const reference = refRow.rows[0].payload;
+    const costRows = await client.query('select payload from ace_item_costs');
+    const costs = costRows.rows.map((r) => r.payload);
+
+    for (const date of toIngest) {
+      try {
+        const orders = await toast.ordersForBusinessDate(date);
+        // raw snapshot (CI artifact / local dir; never public)
+        const rawDir = path.join(ROOT, 'data', 'raw', date);
+        fs.mkdirSync(rawDir, { recursive: true });
+        fs.writeFileSync(path.join(rawDir, 'orders.json.gz'), zlib.gzipSync(JSON.stringify(orders)));
+        const { selections, checks } = normalize(orders, date);
+        results[date] = await upsertDate(client, date, checks, selections, reference, costs);
+        console.log(`${date}: ${orders.length} orders → ${results[date].checks} checks, ${results[date].selections} selections, ${results[date].metricRows} metric rows`);
+      } catch (e) {
+        failed = `${date}: ${e.message}`;
+        console.error(`FAILED ${failed}`);
+        break;
+      }
+    }
+  } catch (e) {
+    // Toast auth, reference lookup and connection failures used to escape
+    // before the run row was finalized, leaving it stuck on "running" and the
+    // dashboard unable to distinguish a failure from an update in progress.
+    failed = failed ?? `setup: ${e.message}`;
+    console.error(`FAILED ${failed}`);
   }
 
-  await client.query(
-    `update ace_ingestion_runs set payload = payload || $2 where run_id = $1`,
-    [runId, JSON.stringify({ status: failed ? 'failed' : 'success', error: failed, results, finishedAt: new Date().toISOString() })]);
-  await client.end();
+  try {
+    await client.query(
+      `update ace_ingestion_runs set payload = payload || $2 where run_id = $1`,
+      [runId, JSON.stringify({ status: failed ? 'failed' : 'success', error: failed, results, finishedAt: new Date().toISOString() })]);
+  } finally {
+    await client.end();
+  }
   if (failed) process.exit(1);
   console.log('Nightly ingestion complete.');
 }
 
-main().catch((e) => { console.error('NIGHTLY FAILED:', e.message); process.exit(1); });
+// Only run when executed directly — the date and secret helpers above are
+// imported by the unit tests, which must not open a database connection.
+if (process.argv[1]?.endsWith('nightly.mjs')) {
+  main().catch((e) => { console.error('NIGHTLY FAILED:', e.message); process.exit(1); });
+}
