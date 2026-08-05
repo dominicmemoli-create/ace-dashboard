@@ -1,39 +1,58 @@
 # Security notes
 
-## Current state (static hosting, honest posture)
+## Access model (current)
 
-- The passcode gate (`ACE2026`) is **presentation-level only** and is labeled as such
-  in the app. Anyone with the URL + file access can read the published data. This was
-  true of the pilot and remains true until the Supabase backend ships.
-- What we publish is therefore curated: normalized, PII-free operational data
-  (server names + sales figures — the same data the pilot dashboard already showed).
-- Guest PII never leaves the operator machine: raw Toast payloads are gitignored
-  (`data/raw/`), and normalization strips customer objects entirely.
-- No credentials exist anywhere in the repository or the deployed site. CI greps for
-  secret patterns on every push; `.env` is gitignored; tests verify `.env.example`
-  holds placeholders only.
+Two independent layers, honestly labeled:
+
+1. **Presentation gate** (passcode `ACE2026`): hides the read-only dashboard
+   from casual visitors. It is embedded in the page, provides **no security**,
+   and — by design — **authorizes no writes whatsoever**.
+2. **Manager Mode** (Supabase Auth, email magic links): every write goes
+   through security-definer database functions that re-check the signed-in
+   user's role (`user_profiles`: executive / manager / shift_lead / server)
+   on the server. Anonymous users cannot execute any write function; anon key
+   holders get read-only access to the same PII-free data the static site
+   already published.
+
+Role matrix:
+
+| Action | manager/executive | shift_lead | anyone else |
+|---|---|---|---|
+| Read dashboard | ✓ | ✓ | ✓ (behind passcode) |
+| Upload OpenTable file | ✓ | ✓ | ✗ |
+| Resolve Fixes Needed items | ✓ | everyday items only (no pilot window, no mixed-menu policy calls) | ✗ |
+| Upload chef costs | ✓ | ✗ | ✗ |
+| Retry Toast Update | ✓ | ✗ | ✗ |
+
+Approved emails: `ace_approved_emails` (managed by
+`scripts/admin/add-manager.mjs`); unknown emails cannot request a sign-in
+link, and any user created another way lands as role `server` with no writes.
 
 ## Credential handling
 
-- Toast API credentials: environment / local `.env` / operator's desktop config —
-  read at runtime by the ingestion script, never written anywhere.
-- Supabase service-role key: Edge Functions only. Browser code gets the anon key
-  only after RLS is applied and tested.
-- Payroll: no source configured; feature flag off; schema exists but no data flows.
+- **Browser code carries only the public anon key.** Verified by tests: no
+  service-role key, database URL, Toast secret, or GitHub token appears in any
+  browser-loaded file.
+- **Toast credentials**: GitHub Actions secrets (nightly ingestion) and the
+  operator machine only.
+- **GitHub token for Retry Toast Update**: Supabase Vault (`ace_github_pat`),
+  read only inside the `ace_retry_toast_update` definer function. Rotate with
+  `scripts/admin/set-github-token.mjs`; prefer a fine-grained PAT scoped to
+  this repository with Actions read/write only.
+- `.env` is gitignored; CI greps for leaked secrets on every push.
 
-## Backend security design (scaffolded, not yet live)
+## Data protection
 
-- Authorization enforced by Postgres RLS (deny-by-default), not by hiding UI.
-- Roles: executive / manager / shift_lead / server via `user_profiles`.
-- Server access is keyed by `employee_user_links` (auth user ↔ employee GUID),
-  **never by display name**.
-- Payroll tables carry stricter, separate policies than performance data.
-- Ambiguous intent matches carry `review_status` and are structurally excluded from
-  commission until resolved.
-- Server portal and payroll pages stay behind disabled feature flags until the RLS
-  suite (brief tests 20–22) passes against a live instance.
+- Guest PII (names, phones, requests, notes) is stripped in the browser before
+  upload and **rejected server-side** if it ever appears in an upload payload.
+- Raw Toast payloads stay in gitignored local storage / CI artifacts.
+- Corrections are append-only audited (`ace_correction_audit`) with the
+  authenticated identity — never a typed name — and are reversible.
 
 ## Known gaps (deliberate, disclosed)
 
-See docs/LIMITATIONS.md — most importantly: published dashboard data is readable by
-anyone with the URL until Supabase Auth replaces the static gate.
+- Published dashboard data remains readable by anyone with the URL + passcode;
+  acceptable because it is the same PII-free dataset the pilot already
+  published. Tightening read access = replace the anon read policies with
+  authenticated-only policies (one migration; UI already handles auth).
+- Server portal and payroll stay feature-flagged off (see docs/LIMITATIONS.md).

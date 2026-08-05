@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex, nofollow">
-<title>AYCE Pilot Command — Chasin' Tails Falls Church</title>
+<title>AYCE Performance Dashboard — Chasin' Tails Falls Church</title>
 <style>/* ============================================================
    AYCE Pilot Command — design system
    Deep navy nav · warm cream canvas · white analytical surfaces
@@ -399,6 +399,57 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
 .st.excl{background:var(--surface-3);color:var(--text-2)}
 .st.rev{background:var(--neg-soft);color:var(--neg)}
 
+/* nav badge (Fixes Needed count) */
+.nb{margin-left:auto;background:var(--accent-strong);color:#fff;border-radius:99px;
+  font-size:10.5px;font-weight:700;padding:1px 7px;min-width:19px;text-align:center}
+
+/* system status panel */
+.sys{display:flex;align-items:flex-start;gap:12px;border-radius:var(--r-lg);padding:15px 18px;
+  border:1px solid var(--border);font-size:13.5px;line-height:1.6;background:var(--surface)}
+.sys .si{width:12px;height:12px;border-radius:50%;flex:none;margin-top:5px}
+.sys.green{border-color:var(--pos);background:var(--pos-soft)}
+.sys.green .si{background:var(--pos)}
+.sys.yellow{border-color:var(--gold-line);background:var(--gold-soft)}
+.sys.yellow .si{background:var(--gold)}
+.sys.red{border-color:var(--neg);background:var(--neg-soft)}
+.sys.red .si{background:var(--neg)}
+.sys .sh2{font-weight:700;font-size:14.5px}
+.sys .sm{color:var(--text-2);margin-top:2px}
+
+/* upload dropzone + big action buttons */
+.dz{border:2px dashed var(--border-2);border-radius:14px;padding:26px 18px;text-align:center;
+  cursor:pointer;transition:border-color var(--dur),background var(--dur)}
+.dz:hover,.dz.over{border-color:var(--accent);background:var(--accent-soft)}
+.dz .dzt{font-size:14.5px;font-weight:650}
+.dz .dzs{font-size:12px;color:var(--text-3);margin-top:5px}
+.bigbtn{display:inline-flex;align-items:center;gap:8px;background:var(--accent-strong);color:#fff;
+  border:none;border-radius:var(--r);padding:11px 20px;font-size:14px;font-weight:650;cursor:pointer;
+  transition:filter var(--dur)}
+.bigbtn:hover{filter:brightness(1.07)}
+.bigbtn:disabled{opacity:.55;cursor:default}
+.bigbtn.ghost{background:var(--surface);color:var(--text-2);border:1px solid var(--border-2)}
+
+/* fixes-needed cards */
+.fixcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);padding:16px 18px;margin-top:14px}
+.fixcard .fk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.fixcard .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.fixcard .fact{background:var(--surface-2);padding:8px 11px}
+.fixcard .fact .k{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);font-weight:650}
+.fixcard .fact .v{font-size:14px;font-weight:650;margin-top:2px}
+.fixcard .said{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fixcard .said>div{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 13px;font-size:13px;line-height:1.55}
+.fixcard .said .k{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--text-3);
+  font-weight:650;margin-bottom:4px}
+.fixbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.fixbtn{background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);
+  padding:8px 13px;font-size:13px;cursor:pointer;color:var(--text);transition:border-color var(--dur),background var(--dur)}
+.fixbtn:hover{border-color:var(--accent)}
+.fixbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:650}
+@media(max-width:700px){.fixcard .said{grid-template-columns:1fr}}
+
 /* ---------------- charts ---------------- */
 .chart{width:100%}
 .chart svg{width:100%;height:auto;display:block;overflow:visible}
@@ -548,8 +599,8 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
 <div id="gate">
   <div class="gb">
     <div class="gm"><span class="dot"></span><span style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;font-weight:650;color:#8c99a8">Chasin' Tails</span></div>
-    <h2>AYCE Pilot Command</h2>
-    <div class="gs">Founders Row · Falls Church<br>Pilot weekend Jul 31 – Aug 2, 2026</div>
+    <h2>AYCE Performance Dashboard</h2>
+    <div class="gs">Founders Row · Falls Church<br>Live operations · Pilot history</div>
     <form id="gform" autocomplete="off">
       <label class="sr" for="pw">Passcode</label>
       <input id="pw" type="password" placeholder="passcode" autocomplete="off" inputmode="text">
@@ -565,12 +616,13 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
   <aside id="side">
     <div class="brand">
       <div class="mark"><span class="dot"></span>
-        <h1>AYCE Pilot Command</h1></div>
-      <div class="sub">Chasin' Tails · Founders Row<br>Pilot weekend Jul 31 – Aug 2, 2026</div>
+        <h1>AYCE Performance Dashboard</h1></div>
+      <div class="sub">Chasin' Tails · Founders Row</div>
     </div>
-    <div class="navlbl">Analysis</div>
     <nav id="navlist" aria-label="Primary"></nav>
     <div class="foot">
+      <button class="themebtn" id="mmBtn" type="button" style="display:none">
+        <span>Manager Mode</span><span id="mmLabel">Sign in</span></button>
       <button class="themebtn" id="themeBtn" type="button">
         <span>Appearance</span><span id="themeLabel">Light</span></button>
       <div class="gen">Data generated<br><span id="genstamp"></span></div>
@@ -580,16 +632,16 @@ tfoot td{padding:11px 10px;text-align:right;font-weight:700;background:var(--sur
   <div id="main">
     <div id="mobilebar">
       <button id="menuBtn" type="button" aria-label="Open navigation">☰</button>
-      <div><div class="mt" id="mtitle">Pilot overview</div>
-        <div class="mb-sub">Chasin' Tails · AYCE pilot</div></div>
+      <div><div class="mt" id="mtitle">Overview</div>
+        <div class="mb-sub">Chasin' Tails · AYCE dashboard</div></div>
     </div>
 
     <div id="topbar">
       <div class="tb-in">
         <div class="tb-row">
-          <span class="tb-title" id="pgtitle">Pilot overview</span>
+          <span class="tb-title" id="pgtitle">Overview</span>
           <span class="tb-spacer"></span>
-          <span class="prov">Provisional rates — not payroll</span>
+          <span class="prov" id="provpill">Pilot commission is informational — not payroll</span>
         </div>
         <div id="filterbar"></div>
       </div>
@@ -2252,7 +2304,7 @@ function pgMethod(host) {
         <tr><td>Pre-decided AYCE (weekend)</td><td>${fmt(P.overall.conversion.predecidedTables)}</td><td><span class="st partial">In mix, out of conversion</span></td></tr>
         <tr><td>AYCE tables where AYCE items ≠ guest count</td><td>${fmt(q.aceCoversNeGuests)}</td><td><span class="st ok">Retained</span></td></tr>
       </tbody></table></div>
-      <div class="foot">Checks aggregate to one record per table visit — split checks are combined.</div></div>
+      <div class="foot">Each table visit counts once, no matter how the bill was divided.</div></div>
   </div>`;
 
   /* reconciliation */
@@ -2337,7 +2389,7 @@ function pgMethod(host) {
       <dt>Off-premise</dt><dd>${fmt(q.noTable)} orders with no table (takeout, delivery, online) excluded.</dd>
       <dt>Large party</dt><dd>Six or more seated covers.</dd>
       <dt>Revenue</dt><dd>Pre-tax food &amp; beverage. AYCE table revenue is the full F&amp;B total of tables that rang AYCE items.</dd>
-      <dt>Split checks</dt><dd>Aggregated to one record per table visit.</dd></dl>`],
+      <dt>Divided bills</dt><dd>Each table visit counts once, no matter how the bill was divided.</dd></dl>`],
     ["Derived indicators added in this dashboard", `<dl>
       <dt>Gap to average</dt><dd>eligible × (restaurant average conversion − server conversion) ÷ 100, floored at zero,
         shown only for servers with ${LB_MIN_GAP}+ eligible tables. Pure arithmetic. It is <b>not</b> an employee evaluation
@@ -2375,10 +2427,10 @@ function pgMethod(host) {
 
 /* ================================== SHELL ================================= */
 const PAGES = {
-  overview: { label: "Overview", icon: "◈", fn: pgOverview, title: "Pilot overview" },
-  servers: { label: "Server performance", icon: "◑", fn: pgServers, title: "Server performance" },
-  commission: { label: "Commission", icon: "◆", fn: pgCommission, title: "Commission ledger" },
-  method: { label: "Data & methodology", icon: "◇", fn: pgMethod, title: "Data & methodology" },
+  overview: { label: "Overview", icon: "◈", fn: pgOverview, title: "Pilot Review — overview", group: "Historical", pilotFilters: true },
+  servers: { label: "Server performance", icon: "◑", fn: pgServers, title: "Pilot Review — server performance", group: "Historical", pilotFilters: true },
+  commission: { label: "Commission", icon: "◆", fn: pgCommission, title: "Pilot Review — commission ledger", group: "Historical", pilotFilters: true },
+  method: { label: "How This Works", icon: "◇", fn: pgMethod, title: "How This Works", group: "Help" },
 };
 
 /* Extension hook — src/pages-live.mjs registers additional pages (Food Cost,
@@ -2386,6 +2438,7 @@ const PAGES = {
 window.__ACE_APP__ = {
   PAGES, S, ROWS, SRV, P,
   render: (...a) => render(...a),
+  renderNav: (...a) => renderNav(...a),
   setPage: (...a) => setPage(...a),
   scatter: (...a) => scatter(...a),
   emptyState: (...a) => emptyState(...a),
@@ -2394,10 +2447,20 @@ window.__ACE_APP__ = {
 function renderNav() {
   const n = $("#navlist");
   n.innerHTML = "";
+  let lastGroup = null;
   Object.keys(PAGES).forEach(k => {
-    const p = PAGES[k], b = document.createElement("button");
+    const p = PAGES[k];
+    if (p.group && p.group !== lastGroup) {
+      const l = document.createElement("div");
+      l.className = "navlbl";
+      l.textContent = p.group;
+      n.appendChild(l);
+      lastGroup = p.group;
+    }
+    const b = document.createElement("button");
     b.type = "button";
-    b.innerHTML = `<span class="ic">${p.icon}</span><span>${esc(p.label)}</span>`;
+    b.innerHTML = `<span class="ic">${p.icon}</span><span>${esc(p.label)}</span>` +
+      (p.badge ? `<span class="nb" aria-label="${p.badge} items need a decision">${p.badge}</span>` : "");
     if (S.page === k) b.setAttribute("aria-current", "page");
     b.addEventListener("click", () => setPage(k));
     n.appendChild(b);
@@ -2425,7 +2488,11 @@ function render() {
   renderNav();
   $("#pgtitle").textContent = PAGES[S.page].title;
   const mt = $("#mtitle"); if (mt) mt.textContent = PAGES[S.page].title;
-  renderFilters($("#filterbar"));
+  /* pilot cross-filters + the not-payroll pill only make sense on pilot pages */
+  const pilot = !!PAGES[S.page].pilotFilters;
+  const fb = $("#filterbar");
+  if (pilot) renderFilters(fb); else fb.innerHTML = "";
+  const pp = $("#provpill"); if (pp) pp.style.display = pilot ? "" : "none";
   renderBody();
 }
 

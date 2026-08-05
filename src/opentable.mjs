@@ -1,8 +1,11 @@
 // OpenTable GuestCenter export handling — parsing, intent normalization,
 // table-token normalization, PII-stripping sanitization.
-// Node-side module (used by scripts/import-opentable.mjs and tests); the
-// browser only ever sees the sanitized output via Supabase.
-import crypto from 'node:crypto';
+// Environment-agnostic: Node (scripts/import-opentable.mjs, tests) uses the
+// sync sanitizeVisit(); the browser upload flow uses sanitizeVisitAsync().
+// Both produce byte-identical rowHash values, so browser uploads stay
+// idempotent against rows imported earlier from the CLI.
+let nodeCrypto = null;
+try { nodeCrypto = (await import('node:crypto')).default; } catch { /* browser */ }
 
 /** CSV parser with quoted-field support (GuestCenter quotes multi-tag cells). */
 export function parseCsv(text) {
@@ -112,13 +115,23 @@ export function visitMinutes(visitTime) {
   return h * 60 + Number(m[2]);
 }
 
+/** Stable dedup key: sha256 of the raw source row, first 24 hex chars. */
+export function rowHashOf(raw) {
+  if (!nodeCrypto) throw new Error('rowHashOf is Node-only; use rowHashOfAsync in the browser');
+  return nodeCrypto.createHash('sha256').update(JSON.stringify(raw)).digest('hex').slice(0, 24);
+}
+export async function rowHashOfAsync(raw) {
+  const data = new TextEncoder().encode(JSON.stringify(raw));
+  const buf = await globalThis.crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 24);
+}
+
 /**
  * Sanitized operational record — everything the shared dashboard may see.
  * NO guest name, NO phone, NO free-text requests/notes.
  */
-export function sanitizeVisit(v, runId) {
+export function sanitizeVisitCore(v, runId, rowHash) {
   const { intent, mixedMenuException, relevantTags } = classifyIntentTags(v.reservationTags);
-  const rowHash = crypto.createHash('sha256').update(JSON.stringify(v.raw)).digest('hex').slice(0, 24);
   return {
     rowHash,
     runId,
@@ -138,4 +151,11 @@ export function sanitizeVisit(v, runId) {
     matchConfidence: null,
     reviewStatus: (intent === 'REVIEW_REQUIRED' || mixedMenuException) ? 'pending_review' : 'auto',
   };
+}
+
+export function sanitizeVisit(v, runId) {
+  return sanitizeVisitCore(v, runId, rowHashOf(v.raw));
+}
+export async function sanitizeVisitAsync(v, runId) {
+  return sanitizeVisitCore(v, runId, await rowHashOfAsync(v.raw));
 }
