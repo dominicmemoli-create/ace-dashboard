@@ -1,5 +1,7 @@
-#!/usr/bin/env node
 // Deterministic database bootstrap for a clean ACE Supabase project.
+// Run with: node scripts/admin/bootstrap.mjs   (no shebang: this module is also
+// imported by test/ingestion.test.mjs, and a CRLF checkout breaks shebang
+// stripping in the test transformer.)
 //
 //   node scripts/admin/bootstrap.mjs              # live stack (recommended)
 //   node scripts/admin/bootstrap.mjs --with-legacy-schema
