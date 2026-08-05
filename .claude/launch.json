@@ -4,8 +4,9 @@
     {
       "name": "ace-dashboard",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "5173", "."],
-      "port": 5173
+      "runtimeArgs": ["serve", "."],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
