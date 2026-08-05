@@ -1,76 +1,176 @@
--- Temporary public-access RPC posture.
+-- Production authorization posture.
 --
--- ACE2026 is a presentation gate only. This migration allows anon execution
--- for the exact dashboard write/status RPC allowlist while preserving RLS and
--- keeping all operational table writes inside security-definer functions.
+-- Replaces the withdrawn 0006_public_access_rpc.sql, which granted anon EXECUTE
+-- on the write RPCs. Under that migration any visitor holding the publishable
+-- key could replace metrics, upload costs, rewrite review decisions and dispatch
+-- Toast ingestion runs, with an audit trail keyed on a browser-supplied string.
+-- None of that survives here.
 --
--- Apply with: node scripts/admin/apply-sql.mjs supabase/migrations/0006_public_access_rpc.sql
+-- The posture this file establishes:
+--   * ACE2026 is a presentation gate in the browser and authorizes nothing.
+--   * anon may SELECT exactly the PII-free data the public dashboard renders.
+--   * every write requires a signed-in user whose user_profiles.role is an
+--     approved operator role — enforced in the database, not in the UI.
+--   * audit attribution comes from auth.uid() / auth.jwt(), never from input.
+--   * Jul 31 - Aug 2 2026 pilot history is frozen against all writes.
+--
+-- Apply with: node scripts/admin/bootstrap.mjs
 -- Idempotent: safe to re-run.
 
-alter table ace_correction_audit alter column user_id drop not null;
-alter table ace_correction_audit add column if not exists actor_session_id text;
-alter table ace_import_runs add column if not exists actor_session_id text;
+-- ===========================================================================
+-- 1. Withdraw every artifact the open-access migration introduced.
+-- ===========================================================================
+-- These signatures carry the trailing browser-supplied actor argument. Dropping them
+-- by exact signature matters: leaving them in place would leave anon-executable
+-- overloads resolvable alongside the hardened functions below.
+drop function if exists ace_upload_opentable(jsonb, text, text, text);
+drop function if exists ace_upload_costs(jsonb, text, text, text, text, text);
+drop function if exists ace_replace_metrics(jsonb, jsonb, jsonb, text);
+drop function if exists ace_save_review_fix(text, text, text, text, text, text, text);
+drop function if exists ace_retry_toast_update(text, text);
+drop function if exists ace_retry_status(bigint, text);
+drop function if exists ace_public_can_write();
+drop function if exists ace_public_actor(text);
 
-create or replace function ace_public_can_write() returns boolean
+-- The client-supplied actor session is not an identity. Remove it entirely
+-- rather than leaving a spoofable column that looks like attribution.
+alter table if exists ace_correction_audit drop column if exists actor_session_id;
+alter table if exists ace_import_runs      drop column if exists actor_session_id;
+
+-- Restore audit integrity. On a clean project there is nothing to clean up; on a
+-- project where the open-access migration ran, unattributable rows must be dealt
+-- with deliberately by an administrator rather than silently deleted here.
+do $$
+declare v_orphans int;
+begin
+  if exists (select 1 from information_schema.columns
+             where table_name = 'ace_correction_audit' and column_name = 'user_id') then
+    select count(*) into v_orphans from ace_correction_audit where user_id is null;
+    if v_orphans = 0 then
+      alter table ace_correction_audit alter column user_id set not null;
+    else
+      raise notice 'ace_correction_audit has % unattributable row(s) from the open-access build. Review them, then re-run this migration to restore the NOT NULL constraint. See docs/SECURITY.md.', v_orphans;
+    end if;
+  end if;
+end $$;
+
+-- ===========================================================================
+-- 2. Read posture — least privilege for anon.
+-- ===========================================================================
+-- Dashboard-visible, PII-free, already published on the static site.
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'ace_manifest','ace_reference','ace_metrics','ace_item_metrics',
+    'ace_intents','ace_ingestion_runs']
+  loop
+    execute format('drop policy if exists poc_read on %I;', t);
+    execute format('drop policy if exists public_read on %I;', t);
+    execute format('create policy public_read on %I for select using (true);', t);
+  end loop;
+end $$;
+
+-- Operator-only. ace_checks / ace_selections are check-level restaurant sales
+-- with server identifiers, read only by the manager match and recalculation
+-- flows; the public dashboard renders the aggregated ace_metrics instead.
+-- ace_import_runs carries operator emails and uploaded file names.
+do $$
+declare t text;
+begin
+  foreach t in array array['ace_checks','ace_selections','ace_item_costs','ace_import_runs']
+  loop
+    execute format('drop policy if exists poc_read on %I;', t);
+    execute format('drop policy if exists public_read on %I;', t);
+    execute format('drop policy if exists operator_read on %I;', t);
+    execute format('create policy operator_read on %I for select using (ace_is_operator());', t);
+  end loop;
+end $$;
+
+-- Sanitized projections so signed-out visitors keep a working dashboard without
+-- seeing operator identity. Views run with definer rights, so they read past the
+-- operator_read policies above by design; each one strips the sensitive fields.
+create or replace view ace_item_costs_public as
+  select id,
+         canonical_name,
+         effective_from,
+         payload - 'updatedBy' - 'actorSessionId' as payload,
+         updated_at
+  from ace_item_costs;
+
+create or replace view ace_import_runs_public as
+  select kind,
+         status,
+         error,
+         counts - 'actor' - 'actorSessionId' as counts,
+         created_at
+  from ace_import_runs;
+
+-- ===========================================================================
+-- 3. Authorization helpers.
+-- ===========================================================================
+create or replace function ace_is_operator() returns boolean
 language sql stable security definer set search_path = public as $$
-  select coalesce(auth.role(), '') in ('anon', 'service_role') or ace_is_operator();
+  select coalesce((select role from user_profiles where id = auth.uid()), 'none')
+         in ('executive','manager','shift_lead');
 $$;
 
-create or replace function ace_public_actor(p_actor_session_id text default null) returns jsonb
+-- Identity for audit rows. Always derived from the verified JWT.
+create or replace function ace_require_operator() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
-  v_email text := coalesce(auth.jwt() ->> 'email', '');
-  v_session text := nullif(trim(coalesce(p_actor_session_id, '')), '');
 begin
-  if v_uid is not null then
-    return jsonb_build_object('userId', v_uid, 'email', v_email, 'sessionId', v_session);
+  if v_uid is null then
+    raise exception 'not_signed_in' using errcode = '42501';
   end if;
-
-  if v_session is null or v_session !~ '^[A-Za-z0-9._:-]{8,96}$' then
-    raise exception 'invalid_session' using errcode = '22023';
+  if not ace_is_operator() then
+    raise exception 'not_authorized' using errcode = '42501';
   end if;
-
-  return jsonb_build_object('userId', null, 'email', 'public-site visitor', 'sessionId', v_session);
+  return jsonb_build_object('userId', v_uid, 'email', coalesce(auth.jwt() ->> 'email', ''));
 end $$;
 
 create or replace function ace_whoami()
 returns jsonb
 language sql stable security definer set search_path = public as $$
   select case
-    when auth.uid() is null then jsonb_build_object('role', 'public', 'email', 'public-site visitor')
-    else jsonb_build_object('role', ace_role(), 'email', coalesce(auth.jwt() ->> 'email', ''))
+    when auth.uid() is null then jsonb_build_object('role', 'public', 'email', '')
+    when ace_is_operator()  then jsonb_build_object('role', ace_role(), 'email', coalesce(auth.jwt() ->> 'email', ''))
+    else jsonb_build_object('role', 'unauthorized', 'email', coalesce(auth.jwt() ->> 'email', ''))
   end;
 $$;
 
--- =============================== ace_upload_opentable ======================
+-- Single source of truth for the frozen pilot window.
+create or replace function ace_pilot_window() returns text[]
+language sql immutable as $$ select array['20260731','20260802']; $$;
+
+-- ===========================================================================
+-- 4. Write RPCs — signed-in approved operators only.
+-- ===========================================================================
+
+-- ------------------------------------------------------ ace_upload_opentable --
 create or replace function ace_upload_opentable(
   p_rows jsonb,
   p_file_name text default null,
-  p_file_hash text default null,
-  p_actor_session_id text default null)
+  p_file_hash text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_actor jsonb;
   v_email text;
   v_uid uuid;
-  v_session text;
   v_total int;
   v_inserted int := 0;
   v_updated int := 0;
   v_dupfile boolean := false;
   v_dates jsonb;
+  v_pilot text[] := ace_pilot_window();
   r jsonb;
   k text;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
-  end if;
-  v_actor := ace_public_actor(p_actor_session_id);
+  v_actor := ace_require_operator();
   v_email := v_actor ->> 'email';
-  v_uid := nullif(v_actor ->> 'userId', '')::uuid;
-  v_session := v_actor ->> 'sessionId';
+  v_uid := (v_actor ->> 'userId')::uuid;
 
   if p_rows is null or jsonb_typeof(p_rows) <> 'array' then
     raise exception 'invalid_payload';
@@ -95,9 +195,11 @@ begin
     v_dupfile := true;
   end if;
 
+  -- Frozen pilot rows are never inserted or updated, whoever is signed in.
   insert into ace_intents (row_hash, business_date, payload)
   select x ->> 'rowHash', x ->> 'businessDate', x
   from jsonb_array_elements(p_rows) x
+  where (x ->> 'businessDate') not between v_pilot[1] and v_pilot[2]
   on conflict (row_hash) do nothing;
   get diagnostics v_inserted = row_count;
 
@@ -105,6 +207,7 @@ begin
   set payload = x
   from jsonb_array_elements(p_rows) x
   where i.row_hash = x ->> 'rowHash'
+    and i.business_date not between v_pilot[1] and v_pilot[2]
     and i.payload -> 'correction' is null
     and coalesce(i.payload ->> 'reviewStatus', 'auto') <> 'confirmed'
     and coalesce((i.payload ->> 'excluded')::boolean, false) = false
@@ -116,35 +219,34 @@ begin
   select coalesce(jsonb_agg(distinct d order by d), '[]'::jsonb) into v_dates
   from (select x ->> 'businessDate' d from jsonb_array_elements(p_rows) x) s;
 
-  insert into ace_import_runs (kind, file_name, file_hash, counts, created_by, created_by_email, actor_session_id)
+  insert into ace_import_runs (kind, file_name, file_hash, counts, created_by, created_by_email)
   values ('opentable', p_file_name, p_file_hash,
           jsonb_build_object('total', v_total, 'inserted', v_inserted, 'updated', v_updated,
                              'duplicates', v_total - v_inserted - v_updated, 'dates', v_dates,
-                             'duplicateFile', v_dupfile, 'actor', v_email, 'actorSessionId', v_session),
-          v_uid, v_email, v_session);
+                             'duplicateFile', v_dupfile),
+          v_uid, v_email);
 
   return jsonb_build_object('inserted', v_inserted, 'updated', v_updated,
                             'duplicates', v_total - v_inserted - v_updated,
                             'total', v_total, 'dates', v_dates, 'duplicateFile', v_dupfile);
 end $$;
 
--- =============================== ace_upload_costs ==========================
+-- ---------------------------------------------------------- ace_upload_costs --
 create or replace function ace_upload_costs(
   p_records jsonb,
   p_effective_from text,
   p_source text default 'chef_confirmed',
   p_file_name text default null,
-  p_file_hash text default null,
-  p_actor_session_id text default null)
+  p_file_hash text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_actor jsonb;
   v_email text;
   v_uid uuid;
-  v_session text;
   v_day_before text;
   v_now timestamptz := now();
+  v_pilot text[] := ace_pilot_window();
   rec jsonb;
   v_name text; v_cost numeric; v_norm text; v_guid text;
   v_open record;
@@ -156,13 +258,9 @@ declare
   v_verification text;
   v_aliases jsonb;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
-  end if;
-  v_actor := ace_public_actor(p_actor_session_id);
+  v_actor := ace_require_operator();
   v_email := v_actor ->> 'email';
-  v_uid := nullif(v_actor ->> 'userId', '')::uuid;
-  v_session := v_actor ->> 'sessionId';
+  v_uid := (v_actor ->> 'userId')::uuid;
 
   if p_records is null or jsonb_typeof(p_records) <> 'array' or jsonb_array_length(p_records) = 0 then
     raise exception 'invalid_payload';
@@ -170,6 +268,11 @@ begin
   if jsonb_array_length(p_records) > 2000 then raise exception 'too_many_rows'; end if;
   if p_effective_from !~ '^[0-9]{8}$' then raise exception 'invalid_effective_date'; end if;
   if p_source not in ('chef_confirmed','manual','rough_workbook') then raise exception 'invalid_source'; end if;
+  -- A cost effective inside or before the pilot window would retroactively
+  -- recalculate frozen pilot results.
+  if p_effective_from <= v_pilot[2] then
+    raise exception 'pilot_history_frozen' using errcode = '42501';
+  end if;
   v_day_before := to_char(to_date(p_effective_from, 'YYYYMMDD') - 1, 'YYYYMMDD');
   v_verification := case when p_source = 'chef_confirmed' then 'verified' else 'unverified' end;
 
@@ -185,7 +288,11 @@ begin
 
   for rec in select * from jsonb_array_elements(p_records) loop
     v_name := trim(coalesce(rec ->> 'name', ''));
-    v_cost := (rec ->> 'cost')::numeric;
+    begin
+      v_cost := (rec ->> 'cost')::numeric;
+    exception when others then
+      v_cost := null;
+    end;
     if v_name = '' or v_cost is null or v_cost <= 0 or v_cost >= 500 then
       v_skipped := v_skipped || jsonb_build_array(jsonb_build_object('name', v_name, 'why', 'invalid name or cost'));
       continue;
@@ -250,48 +357,39 @@ begin
       'notes', coalesce(rec ->> 'notes', ''),
       'createdAt', v_now,
       'updatedAt', v_now,
-      'updatedBy', v_email,
-      'actorSessionId', v_session), v_now)
+      'updatedBy', v_email), v_now)
     on conflict (id) do update set payload = excluded.payload, updated_at = v_now;
     v_added := v_added + 1;
   end loop;
 
-  insert into ace_import_runs (kind, file_name, file_hash, counts, created_by, created_by_email, actor_session_id)
+  insert into ace_import_runs (kind, file_name, file_hash, counts, created_by, created_by_email)
   values ('costs', p_file_name, p_file_hash,
           jsonb_build_object('recognized', v_recognized, 'changed', v_changed,
                              'unchanged', v_unchanged, 'added', v_added, 'closed', v_closed,
                              'skipped', v_skipped, 'effectiveFrom', p_effective_from,
-                             'source', p_source, 'actor', v_email, 'actorSessionId', v_session),
-          v_uid, v_email, v_session);
+                             'source', p_source),
+          v_uid, v_email);
 
   return jsonb_build_object('recognized', v_recognized, 'changed', v_changed,
                             'unchanged', v_unchanged, 'added', v_added, 'closed', v_closed,
                             'skipped', v_skipped, 'changedItems', v_changed_items);
 end $$;
 
--- ============================== ace_replace_metrics ========================
-create or replace function ace_replace_metrics(
-  p_dates jsonb,
-  p_rows jsonb,
-  p_item_rows jsonb,
-  p_actor_session_id text default null)
+-- ------------------------------------------------------- ace_replace_metrics --
+create or replace function ace_replace_metrics(p_dates jsonb, p_rows jsonb, p_item_rows jsonb)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_actor jsonb;
   v_email text;
   v_uid uuid;
-  v_session text;
+  v_pilot text[] := ace_pilot_window();
   d text;
   v_rows int := 0; v_items int := 0;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
-  end if;
-  v_actor := ace_public_actor(p_actor_session_id);
+  v_actor := ace_require_operator();
   v_email := v_actor ->> 'email';
-  v_uid := nullif(v_actor ->> 'userId', '')::uuid;
-  v_session := v_actor ->> 'sessionId';
+  v_uid := (v_actor ->> 'userId')::uuid;
 
   if p_dates is null or jsonb_typeof(p_dates) <> 'array' or jsonb_array_length(p_dates) = 0
      or jsonb_array_length(p_dates) > 120 then
@@ -299,6 +397,9 @@ begin
   end if;
   for d in select jsonb_array_elements_text(p_dates) loop
     if d !~ '^[0-9]{8}$' then raise exception 'invalid_dates'; end if;
+    if d between v_pilot[1] and v_pilot[2] then
+      raise exception 'pilot_history_frozen' using errcode = '42501';
+    end if;
   end loop;
   if exists (select 1 from jsonb_array_elements(p_rows) x
              where not (p_dates ? (x ->> 'businessDate'))) or
@@ -324,33 +425,29 @@ begin
   on conflict (unique_key) do update set payload = excluded.payload;
   get diagnostics v_items = row_count;
 
-  insert into ace_import_runs (kind, counts, created_by, created_by_email, actor_session_id)
+  insert into ace_import_runs (kind, counts, created_by, created_by_email)
   values ('metrics_rebuild',
-          jsonb_build_object('dates', p_dates, 'rows', v_rows, 'itemRows', v_items,
-                             'actor', v_email, 'actorSessionId', v_session),
-          v_uid, v_email, v_session);
+          jsonb_build_object('dates', p_dates, 'rows', v_rows, 'itemRows', v_items),
+          v_uid, v_email);
 
   return jsonb_build_object('dates', p_dates, 'rows', v_rows, 'itemRows', v_items);
 end $$;
 
--- ============================== ace_save_review_fix ========================
+-- ------------------------------------------------------- ace_save_review_fix --
 create or replace function ace_save_review_fix(
   p_row_hash text,
   p_action text,
   p_reason text,
   p_note text default null,
   p_order_guid text default null,
-  p_server_guid text default null,
-  p_actor_session_id text default null)
+  p_server_guid text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
-  c_pilot_from text := '20260731';
-  c_pilot_to text := '20260802';
+  v_pilot text[] := ace_pilot_window();
   v_actor jsonb;
   v_email text;
   v_uid uuid;
-  v_session text;
   v_row record;
   v_payload jsonb;
   v_original jsonb;
@@ -359,13 +456,9 @@ declare
   v_server text;
   v_corrected jsonb;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
-  end if;
-  v_actor := ace_public_actor(p_actor_session_id);
+  v_actor := ace_require_operator();
   v_email := v_actor ->> 'email';
-  v_uid := nullif(v_actor ->> 'userId', '')::uuid;
-  v_session := v_actor ->> 'sessionId';
+  v_uid := (v_actor ->> 'userId')::uuid;
 
   if p_action not in ('UNDECIDED','ALC','PREDECIDED_AYCE','EXCLUDE','CONNECT','KEEP_FINAL','SET_SERVER','REVERT','REOPEN') then
     raise exception 'invalid_action';
@@ -374,7 +467,7 @@ begin
 
   select row_hash, business_date, payload into v_row from ace_intents where row_hash = p_row_hash;
   if v_row.row_hash is null then raise exception 'unknown_row'; end if;
-  if v_row.business_date between c_pilot_from and c_pilot_to then
+  if v_row.business_date between v_pilot[1] and v_pilot[2] then
     raise exception 'pilot_history_frozen' using errcode = '42501';
   end if;
   v_payload := v_row.payload;
@@ -394,14 +487,14 @@ begin
     v_corrected := to_jsonb(p_action);
     v_patch := jsonb_build_object(
       'correction', jsonb_build_object('original', v_original, 'corrected', v_corrected,
-        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'actorSessionId', v_session, 'at', now()),
+        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'at', now()),
       'intentEffective', p_action, 'reviewStatus', 'confirmed', 'excluded', false, 'reopened', false);
 
   elsif p_action = 'EXCLUDE' then
     v_corrected := to_jsonb('EXCLUDE'::text);
     v_patch := jsonb_build_object(
       'correction', jsonb_build_object('original', v_original, 'corrected', v_corrected,
-        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'actorSessionId', v_session, 'at', now()),
+        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'at', now()),
       'intentEffective', null, 'reviewStatus', 'confirmed', 'excluded', true, 'reopened', false);
 
   elsif p_action = 'CONNECT' then
@@ -423,7 +516,7 @@ begin
     v_corrected := jsonb_build_object('matchedOrderGuid', p_order_guid, 'hasAyceSales', v_has_ayce);
     v_patch := jsonb_build_object(
       'correction', jsonb_build_object('original', v_original, 'corrected', v_corrected,
-        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'actorSessionId', v_session, 'at', now()),
+        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'at', now()),
       'matchStatus', 'matched', 'matchedOrderGuid', p_order_guid, 'matchConfidence', 1,
       'matchMethod', 'manual', 'hasAyceSales', v_has_ayce, 'matchedServerGuid', v_server,
       'reviewStatus', 'confirmed', 'excluded', false, 'reopened', false);
@@ -432,7 +525,7 @@ begin
     v_corrected := to_jsonb('KEEP_FINAL'::text);
     v_patch := jsonb_build_object(
       'correction', jsonb_build_object('original', v_original, 'corrected', v_corrected,
-        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'actorSessionId', v_session, 'at', now()),
+        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'at', now()),
       'reviewStatus', 'confirmed', 'reopened', false);
 
   elsif p_action = 'SET_SERVER' then
@@ -442,7 +535,7 @@ begin
     v_corrected := jsonb_build_object('attributedServerGuid', p_server_guid);
     v_patch := jsonb_build_object(
       'correction', jsonb_build_object('original', v_original, 'corrected', v_corrected,
-        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'actorSessionId', v_session, 'at', now()),
+        'reason', p_reason, 'note', p_note, 'user', v_email, 'userId', v_uid, 'at', now()),
       'matchedServerGuid', p_server_guid, 'reviewStatus', 'confirmed', 'reopened', false);
 
   elsif p_action = 'REVERT' or p_action = 'REOPEN' then
@@ -462,33 +555,29 @@ begin
 
   update ace_intents set payload = payload || v_patch where row_hash = p_row_hash;
 
-  insert into ace_correction_audit (row_hash, action, original, corrected, reason, note, user_id, user_email, actor_session_id)
-  values (p_row_hash, p_action, v_original, v_corrected, p_reason, p_note, v_uid, v_email, v_session);
+  insert into ace_correction_audit (row_hash, action, original, corrected, reason, note, user_id, user_email)
+  values (p_row_hash, p_action, v_original, v_corrected, p_reason, p_note, v_uid, v_email);
 
   return jsonb_build_object('saved', true, 'rowHash', p_row_hash, 'action', p_action);
 end $$;
 
--- =========================== ace_retry_toast_update ========================
-create or replace function ace_retry_toast_update(
-  p_business_date text default null,
-  p_actor_session_id text default null)
+-- ---------------------------------------------------- ace_retry_toast_update --
+-- Cooldown is global, not per business date: keying it on the caller-supplied
+-- date let a caller cycle dates to dispatch unlimited workflow runs.
+create or replace function ace_retry_toast_update(p_business_date text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_actor jsonb;
   v_email text;
   v_uid uuid;
-  v_session text;
   v_token text;
   v_req bigint;
+  v_today int;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
-  end if;
-  v_actor := ace_public_actor(p_actor_session_id);
+  v_actor := ace_require_operator();
   v_email := v_actor ->> 'email';
-  v_uid := nullif(v_actor ->> 'userId', '')::uuid;
-  v_session := v_actor ->> 'sessionId';
+  v_uid := (v_actor ->> 'userId')::uuid;
 
   if p_business_date is not null and p_business_date !~ '^[0-9]{8}$' then
     raise exception 'invalid_business_date';
@@ -496,13 +585,20 @@ begin
   if not pg_try_advisory_xact_lock(hashtext('ace_retry_toast_update')) then
     raise exception 'retry_in_progress' using errcode = '55P03';
   end if;
+
+  -- 10 minutes between dispatches of any kind, for anyone.
   if exists (
     select 1 from ace_import_runs
-    where kind = 'toast_retry'
-      and created_at > now() - interval '10 minutes'
-      and coalesce(counts ->> 'businessDate', '') = coalesce(p_business_date, '')
+    where kind = 'toast_retry' and created_at > now() - interval '10 minutes'
   ) then
     raise exception 'retry_cooldown' using errcode = '42901';
+  end if;
+
+  -- Backstop against a compromised operator session burning Actions minutes.
+  select count(*) into v_today from ace_import_runs
+  where kind = 'toast_retry' and created_at > now() - interval '24 hours';
+  if v_today >= 20 then
+    raise exception 'retry_daily_limit' using errcode = '42901';
   end if;
 
   select decrypted_secret into v_token from vault.decrypted_secrets where name = 'ace_github_pat';
@@ -521,27 +617,33 @@ begin
                      else jsonb_build_object('businessDate', p_business_date) end)
   ) into v_req;
 
-  insert into ace_import_runs (kind, counts, created_by, created_by_email, actor_session_id)
+  insert into ace_import_runs (kind, counts, created_by, created_by_email)
   values ('toast_retry',
           jsonb_build_object('requestId', v_req, 'businessDate', p_business_date,
-                             'actor', v_email, 'actorSessionId', v_session, 'cooldownMinutes', 10),
-          v_uid, v_email, v_session);
+                             'cooldownMinutes', 10),
+          v_uid, v_email);
 
   return jsonb_build_object('status', 'Update started', 'requestId', v_req);
 end $$;
 
-create or replace function ace_retry_status(
-  p_request_id bigint,
-  p_actor_session_id text default null)
+-- ---------------------------------------------------------- ace_retry_status --
+-- Scoped: only request ids this application recorded are readable, so the
+-- function cannot be used to enumerate unrelated pg_net responses.
+create or replace function ace_retry_status(p_request_id bigint)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v_rec record;
 begin
-  if not ace_public_can_write() then
-    raise exception 'not_authorized' using errcode = '42501';
+  perform ace_require_operator();
+
+  if not exists (
+    select 1 from ace_import_runs
+    where kind = 'toast_retry' and (counts ->> 'requestId')::bigint = p_request_id
+  ) then
+    raise exception 'unknown_request';
   end if;
-  perform ace_public_actor(p_actor_session_id);
+
   select status_code, error_msg into v_rec from net._http_response where id = p_request_id;
   if not found then
     return jsonb_build_object('done', false);
@@ -551,22 +653,46 @@ begin
                             'error', v_rec.error_msg);
 end $$;
 
--- ------------------------------------------------------------------ grants --
+-- ===========================================================================
+-- 5. Grants — anon executes nothing that writes.
+-- ===========================================================================
 do $$
 declare f text;
 begin
   foreach f in array array[
-    'ace_upload_opentable(jsonb, text, text, text)',
-    'ace_upload_costs(jsonb, text, text, text, text, text)',
-    'ace_replace_metrics(jsonb, jsonb, jsonb, text)',
-    'ace_save_review_fix(text, text, text, text, text, text, text)',
-    'ace_retry_toast_update(text, text)',
-    'ace_retry_status(bigint, text)',
-    'ace_whoami()']
+    'ace_upload_opentable(jsonb, text, text)',
+    'ace_upload_costs(jsonb, text, text, text, text)',
+    'ace_replace_metrics(jsonb, jsonb, jsonb)',
+    'ace_save_review_fix(text, text, text, text, text, text)',
+    'ace_retry_toast_update(text)',
+    'ace_retry_status(bigint)',
+    'ace_is_operator()',
+    'ace_require_operator()',
+    'ace_role()']
   loop
-    execute format('revoke all on function %s from public;', f);
-    execute format('grant execute on function %s to anon, authenticated, service_role;', f);
+    execute format('revoke all on function %s from public, anon;', f);
+    execute format('grant execute on function %s to authenticated, service_role;', f);
   end loop;
-  revoke all on function ace_public_can_write() from public;
-  revoke all on function ace_public_actor(text) from public;
+
+  -- Identity is safe to expose: it only ever reports the caller's own state,
+  -- and the signed-out UI needs it to render the correct sign-in affordance.
+  revoke all on function ace_whoami() from public;
+  grant execute on function ace_whoami() to anon, authenticated, service_role;
+  revoke all on function ace_pilot_window() from public;
+  grant execute on function ace_pilot_window() to anon, authenticated, service_role;
 end $$;
+
+-- Table-level grants. RLS still applies on top of these for the base tables.
+revoke all on ace_checks, ace_selections, ace_item_costs, ace_import_runs from anon;
+grant select on ace_checks, ace_selections, ace_item_costs, ace_import_runs to authenticated;
+grant select on ace_manifest, ace_reference, ace_metrics, ace_item_metrics,
+                ace_intents, ace_ingestion_runs to anon, authenticated;
+grant select on ace_item_costs_public, ace_import_runs_public to anon, authenticated;
+
+-- No client role may write to any table directly; every mutation goes through
+-- the security-definer functions above or the service role used by ingestion.
+revoke insert, update, delete on
+  ace_manifest, ace_reference, ace_checks, ace_selections, ace_ingestion_runs,
+  ace_item_costs, ace_metrics, ace_item_metrics, ace_intents,
+  ace_import_runs, ace_correction_audit
+from anon, authenticated;

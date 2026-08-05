@@ -29,13 +29,14 @@ import {
   comparableBaselineDates, weekdayOf, DEFAULT_THRESHOLDS,
   computeFoodCost, filterAyceProgram, isIncludedCheck, servicePeriodOf,
   perCheckCostStats,
-} from './food-cost-engine.mjs?v=20260805-open-access';
-import { resolveRange } from './date-range.mjs?v=20260805-open-access';
-import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260805-open-access';
-import { triageIntents } from './triage.mjs?v=20260805-open-access';
-import { initManagerMode } from './manager-mode.mjs?v=20260805-open-access';
-import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260805-open-access';
-import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260805-open-access';
+} from './food-cost-engine.mjs?v=20260806-manager-auth';
+import { resolveRange } from './date-range.mjs?v=20260806-manager-auth';
+import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260806-manager-auth';
+import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
+import { initManagerMode } from './manager-mode.mjs?v=20260806-manager-auth';
+import { hasConfig, browserKey } from './auth.mjs?v=20260806-manager-auth';
+import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260806-manager-auth';
+import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260806-manager-auth';
 
 const APP = window.__ACE_APP__;
 if (!APP) throw new Error('pages-live: legacy shell did not expose __ACE_APP__');
@@ -67,14 +68,16 @@ async function fetchJson(url) {
 // skipping rows past the first 1000.
 const PK_ORDER = {
   ace_metrics: 'unique_key', ace_item_metrics: 'unique_key', ace_intents: 'row_hash',
-  ace_item_costs: 'id', ace_checks: 'check_guid', ace_selections: 'selection_guid',
+  ace_item_costs: 'id', ace_item_costs_public: 'id',
+  ace_checks: 'check_guid', ace_selections: 'selection_guid',
 };
 async function sbRows(cfg, table, select, filter = '') {
   const out = [];
   const order = !/[&?]order=/.test(filter) && PK_ORDER[table] ? `&order=${PK_ORDER[table]}` : '';
   for (let from = 0; ; from += 1000) {
+    const key = browserKey(cfg);
     const res = await fetch(`${cfg.url}/rest/v1/${table}?select=${select}${filter}${order}`, {
-      headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}`, Range: `${from}-${from + 999}` },
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + 999}` },
     });
     if (!res.ok && res.status !== 206) throw new Error(`${table}: HTTP ${res.status}`);
     const batch = await res.json();
@@ -96,16 +99,19 @@ function loadLive() {
       DATA.ops = await fetchJson('config/operations.json');
       const cfg = await configReady;
       let db = false;
-      if (cfg?.url && cfg?.anonKey) {
+      if (hasConfig(cfg)) {
         try {
+          // Public dashboard reads go through the sanitized views: identical
+          // numbers, without operator emails or uploaded file names. Manager
+          // flows read the base tables with a signed-in token (see auth.mjs).
           const [man, ref, costs, metrics, items, intents, imports, ing] = await Promise.all([
             sbRows(cfg, 'ace_manifest', '*'),
             sbRows(cfg, 'ace_reference', 'payload'),
-            sbRows(cfg, 'ace_item_costs', 'payload'),
+            sbRows(cfg, 'ace_item_costs_public', 'payload'),
             sbRows(cfg, 'ace_metrics', 'payload'),
             sbRows(cfg, 'ace_item_metrics', 'payload'),
             sbRows(cfg, 'ace_intents', 'payload'),
-            sbRows(cfg, 'ace_import_runs', 'kind,file_name,counts,status,error,created_by_email,created_at', '&order=created_at.desc&limit=40'),
+            sbRows(cfg, 'ace_import_runs_public', 'kind,counts,status,error,created_at', '&order=created_at.desc&limit=40'),
             sbRows(cfg, 'ace_ingestion_runs', 'payload', '&order=run_id.desc&limit=25'),
           ]);
           if (!metrics.length) throw new Error('ace_metrics empty');
@@ -1189,8 +1195,9 @@ function pgHelp(host) {
         <dd>The short list of visits that genuinely need a decision — a conflicting starting choice or one likely
           table connection to confirm. Everything unclear is excluded automatically instead of becoming work.</dd>
         <dt style="font-weight:650;white-space:nowrap">Who can do what</dt>
-        <dd>Every visitor who passes the presentation gate can upload files, update food costs, resolve fixes and
-          retry Toast updates. The database accepts only those narrow public actions and records a public session id for each write.</dd>
+        <dd>Anyone who passes the presentation gate can view the dashboard. Uploading files, updating food costs,
+          resolving fixes and retrying Toast updates require signing in with an approved manager email — the
+          database checks that on every write and records who made it.</dd>
       </dl></div></div>
 
     <div class="sec">
@@ -1238,7 +1245,7 @@ function pgHelp(host) {
           ${mrow('Food-cost precedence', 'Toast modifiers/notes and trivial drinks excluded → chef-confirmed costs → explicit portion overrides (½-lb shrimp $2.50, 1-pc crab cake $4) → explicit temporary costs → workbook estimates → $2 supplied-menu fallback → true missing (never $0).')}
           ${mrow('Recent imports', (DATA.importRuns ?? []).slice(0, 5).map((r) => `${esc(r.kind)} · ${fmtEt(r.created_at)} · ${esc(r.status)}${r.counts?.inserted != null ? ` · ${r.counts.inserted} new` : ''}${r.created_by_email ? ` · ${esc(r.created_by_email.split('@')[0])}` : ''}`).join('<br>') || '—')}
           ${mrow('Commission', `Pilot rates $5/$7.50/$10 per converted COVER, active ${fmtDate(DATA.ops.commission.activeFrom)}–${fmtDate(DATA.ops.commission.activeTo)} only. Program inactive — no new accrual.`)}
-          ${mrow('Access model', 'The passcode screen is a presentation gate. Public writes are limited to an anon RPC allowlist for uploads, fixes and Toast retry; each write carries a public session id into the audit tables. Service credentials never reach the browser.')}
+          ${mrow('Access model', 'The passcode screen is a presentation gate and authorizes nothing. Anonymous visitors have read-only access to the published dashboard data. Every write requires a signed-in, approved manager (Supabase Auth magic link) and is authorized in the database, so a direct API call is refused the same way. Audit rows carry the authenticated user id and email. Service credentials never reach the browser.')}
           ${mrow('CLI fallback', 'Administrator command-line tools remain in scripts/ (see docs/TECHNICAL_RUNBOOK.md) for credentials, backfills and operational recovery.')}
         </tbody></table>
         <div id="legacyMethod"></div>`;

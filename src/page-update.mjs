@@ -2,14 +2,14 @@
 // Three status cards (Toast Sales · OpenTable Guest Status · Food Costs),
 // a compact green/yellow/red system panel, and complete in-browser upload
 // workflows. Writes go through the protected database functions with the
-// public session identity; no commands, no JSON, no configuration.
-import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260805-open-access';
-import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260805-open-access';
-import { triageIntents } from './triage.mjs?v=20260805-open-access';
-import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260805-open-access';
-import { buildMetricsForDate } from './metrics-builder.mjs?v=20260805-open-access';
-import { rpc, restGet } from './auth.mjs?v=20260805-open-access';
-import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260805-open-access';
+// signed-in manager's identity; no commands, no JSON, no configuration.
+import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260806-manager-auth';
+import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260806-manager-auth';
+import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
+import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260806-manager-auth';
+import { buildMetricsForDate } from './metrics-builder.mjs?v=20260806-manager-auth';
+import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
+import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260806-manager-auth';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }
@@ -422,7 +422,7 @@ async function handleOpenTableFile(file, stage) {
       });
       const connected = all.filter((s) => s.intent !== 'UNKNOWN' && s.matchStatus === 'matched').length;
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().displayName || currentUser().email || 'public-site visitor')}.<br>
+        <b>Dashboard updated successfully</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'manager')}.<br>
         ${fmt(connected)} visits connected to Toast.<br>
         ${fmt(unmarked)} visits had no recorded starting choice — they still count in sales, covers and food
         cost; only conversion rates leave them out.<br>
@@ -605,7 +605,7 @@ async function handleCostFile(file, stage) {
         ? `<br>${res.skipped.length} row${res.skipped.length === 1 ? '' : 's'} skipped by the database: ${esc(res.skipped.map((s) => `${s.name} (${s.why})`).join('; '))}.`
         : '';
       out.innerHTML = `<div class="note" style="border-left-color:var(--pos)">
-        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().displayName || currentUser().email || 'public-site visitor')}.<br>
+        <b>Food costs updated</b> — ${fmtWhen(new Date().toISOString())} by ${esc(currentUser().email || 'manager')}.<br>
         ${fmt(res.changed)} cost${res.changed === 1 ? '' : 's'} changed, ${fmt(res.unchanged)} unchanged.
         Chef-confirmed values now replace rough costs for those items.${skippedNote}<br>
         ${allDates.length ? `${allDates.length} day${allDates.length === 1 ? '' : 's'} of numbers recalculated.` : 'No existing days needed recalculating.'}</div>`;

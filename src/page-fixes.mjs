@@ -4,15 +4,15 @@
 // summarized honestly: unmarked visits still count in every operational
 // figure — only conversion leaves them out. Half/Half is a guest-mix note and
 // never creates work. Decisions save straight to the shared database with a
-// public session id and are reversible from the audit history.
+// signed-in manager and are reversible from the audit history.
 //
 // Accessibility: every field id is unique per card (no duplicate DOM ids),
 // decisions are native radio groups inside a fieldset, and the queue offers
 // filters by issue type, date and server with the global count always shown
 // next to the filtered count.
-import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260805-open-access';
-import { rpc, restGet } from './auth.mjs?v=20260805-open-access';
-import { requireOperator, notify } from './manager-mode.mjs?v=20260805-open-access';
+import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260806-manager-auth';
+import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
+import { requireOperator, notify } from './manager-mode.mjs?v=20260806-manager-auth';
 
 let CTX = null;
 export function initFixesPage(ctx) { CTX = ctx; }
@@ -418,7 +418,7 @@ function renderDecided(host) {
       <td style="text-align:left">${esc(midDate(r.businessDate))}</td>
       <td style="text-align:left">${esc(r.tableTokens?.join(', ') || '—')}</td>
       <td style="text-align:left">${esc(describeDecision(r))}</td>
-      <td style="text-align:left">${esc(r.correction.user || 'public-site visitor')}</td>
+      <td style="text-align:left">${esc(r.correction.user || 'manager')}</td>
       <td><button class="btn ghost sm" type="button" data-undo="${i}"
         aria-label="Undo the decision for ${esc(midDate(r.businessDate))} table ${esc(r.tableTokens?.join(', ') || '')}">Undo</button></td></tr>`).join('')}
     </tbody></table></div></div>`;

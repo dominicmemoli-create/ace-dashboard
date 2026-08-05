@@ -24,7 +24,10 @@ for (const line of fs.readFileSync(path.join(ROOT, '.env'), 'utf8').split(/\r?\n
   if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
 }
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL } = process.env;
-const ANON = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'supabase_config.json'), 'utf8')).anonKey;
+const BROWSER_CFG = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'supabase_config.json'), 'utf8'));
+// `publishableKey` is the current name; `anonKey` is the legacy one.
+const ANON = BROWSER_CFG.publishableKey ?? BROWSER_CFG.anonKey;
+if (!ANON) throw new Error('data/supabase_config.json has no publishableKey');
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -94,7 +97,9 @@ async function main() {
     console.log('\n[whoami / operator capability]');
     ok('manager.test is an operator', ['executive', 'manager', 'shift_lead'].includes((await rpcAs(mgr, 'ace_whoami')).body.role));
     ok('lead.test is an operator', ['executive', 'manager', 'shift_lead'].includes((await rpcAs(lead, 'ace_whoami')).body.role));
-    ok('unapproved user is not an operator', (await rpcAs(out, 'ace_whoami')).body.role === 'server');
+    // ace_whoami reports a distinct 'unauthorized' state for a signed-in user
+    // who is not on the approved list, so the UI can say so plainly.
+    ok('unapproved user is not an operator', (await rpcAs(out, 'ace_whoami')).body.role === 'unauthorized');
 
     console.log('\n[authorization matrix — writes]');
     const rows = [syntheticRow(1), syntheticRow(2, { intent: 'REVIEW_REQUIRED', relevantTags: ['AYCE', 'UNDECIDED'], reviewStatus: 'pending_review' })];
@@ -136,13 +141,17 @@ async function main() {
     row = (await db.query('select payload from ace_intents where row_hash = $1', [T(2)])).rows[0].payload;
     ok('reversal restores original intent state', row.intentEffective == null && row.reviewStatus === 'pending_review' && (row.correction == null));
 
-    console.log('\n[operator equality — no per-role restrictions]');
+    console.log('\n[frozen pilot history — refused for every operator]');
     await db.query(
       `insert into ace_intents (row_hash, business_date, payload) values ($1, $2, $3)
        on conflict (row_hash) do update set payload = excluded.payload`,
       [T(3), PILOT_DATE, JSON.stringify(syntheticRow(3, { businessDate: PILOT_DATE, intent: 'REVIEW_REQUIRED', reviewStatus: 'pending_review' }))]);
     r = await rpcAs(lead, 'ace_save_review_fix', { p_row_hash: T(3), p_action: 'UNDECIDED', p_reason: 'Host entry correction' });
-    ok('any operator may decide a pilot-window item', r.status === 200, JSON.stringify(r.body).slice(0, 120));
+    ok('approved operator CANNOT edit pilot-window history', r.status >= 400 && JSON.stringify(r.body).includes('pilot_history_frozen'),
+      JSON.stringify(r.body).slice(0, 120));
+    r = await rpcAs(mgr, 'ace_replace_metrics', { p_dates: [PILOT_DATE], p_rows: [], p_item_rows: [] });
+    ok('pilot metrics cannot be replaced either', r.status >= 400 && JSON.stringify(r.body).includes('pilot_history_frozen'),
+      JSON.stringify(r.body).slice(0, 120));
 
     console.log('\n[replace-metrics authorization]');
     r = await rpcAs(out, 'ace_replace_metrics', { p_dates: [TEST_DATE], p_rows: [], p_item_rows: [] });
