@@ -22,8 +22,9 @@
      6  surfaces        drawer · modal · popover · tooltip · toast
      7  workflows       update cards · fix cards · accordion
      8  states          loading · empty · error · success
-     9  responsive      desktop ≥1181 · tablet 861–1180 · mobile ≤860
-    10  motion & print
+     9  ace system      rhythm · filter bar · KPI band · panels · plots
+    10  responsive      desktop ≥1181 · tablet 861–1180 · mobile ≤860
+    11  motion & print
    ========================================================================== */
 
 /* == 1 · tokens ============================================================ */
@@ -747,7 +748,169 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
 .empty .et{font-size:var(--fs-md);font-weight:650;color:var(--text-2);margin-bottom:5px}
 .empty .es{font-size:var(--fs-cap);max-width:48ch;margin:0 auto var(--sp-4);line-height:1.6}
 
-/* == 9 · responsive ======================================================== */
+/* == 9 · ace system ========================================================
+   The shared vocabulary the dashboard is migrating onto, Overview first.
+   Additive on purpose: nothing below restyles .hero, .kstrip or the frozen
+   pilot markup, so pages cross over one at a time instead of the app spending
+   a release looking half-redesigned.
+   ========================================================================== */
+
+/* -- rhythm --
+   Sections space themselves; callers stop hand-writing margin-bottom:14px. */
+.stack>*+*{margin-top:var(--sp-6)}
+.stack>.close+*{margin-top:var(--sp-4)}
+
+/* -- reporting context --
+   One line under the filters answering "what am I looking at, and is it
+   current". The page title lives in the sticky header; this is the period. */
+.ctx{display:flex;align-items:baseline;gap:var(--sp-3) var(--sp-5);flex-wrap:wrap;padding:0 2px}
+.ctx .cx-p{font-size:var(--fs-md);font-weight:650;letter-spacing:-.2px}
+.ctx .cx-d{font-size:var(--fs-cap);color:var(--text-3)}
+.ctx .cx-s{margin-left:auto;font-size:var(--fs-cap);color:var(--text-3);text-align:right}
+
+/* -- filter bar --
+   The range controls are page chrome, not a card of content: one quiet strip,
+   controls left, resolved range right, always in the same place on every page
+   that scopes by date. */
+.fbar{display:flex;align-items:flex-end;gap:var(--sp-4) var(--sp-5);flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:var(--sp-4) var(--sp-5);box-shadow:var(--shadow-1)}
+.fbar .field{min-width:148px}
+.fbar .ctl{min-height:32px;padding:5px 11px;font-size:var(--fs-cap)}
+.fbar select.ctl{padding-right:28px;background-position:calc(100% - 13px) 50%,calc(100% - 8px) 50%}
+.fbar .rangenote{font-size:var(--fs-cap);color:var(--text-3);line-height:1.45}
+.fbar .errbox{flex:1 1 100%;margin:0}
+
+/* -- KPI band --
+   A lead metric that carries the comparison, and supporting figures at a
+   deliberately quieter weight — not five numbers shouting at equal volume.
+   Hairline separators come from a 1px grid gap over the border colour, so no
+   cell owns a border of its own. */
+.kpis{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-1)}
+.kpi{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;min-width:0}
+.kpi-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-4)}
+.kpi-k{font-size:var(--fs-xs);letter-spacing:.7px;text-transform:uppercase;color:var(--text-3);
+  font-weight:700;line-height:1.35;display:flex;align-items:center;gap:5px;min-width:0}
+.kpi-v{font-size:var(--fs-2xl);font-weight:670;letter-spacing:-.9px;line-height:1.08;margin-top:var(--sp-3)}
+.kpi-m{font-size:var(--fs-sm);color:var(--text-3);margin-top:4px;line-height:1.45}
+.kpi-m b{color:var(--text-2);font-weight:650}
+.kpi-v.pos{color:var(--pos)} .kpi-v.neg{color:var(--neg)} .kpi-v.gold{color:var(--gold)}
+.kpi-v.quiet{color:var(--text-2)}
+
+/* the lead cell owns the left column across both rows and carries history */
+.kpi.lead{grid-row:span 2;padding:var(--sp-6)}
+.kpi.lead .kpi-k{font-size:var(--fs-sm);letter-spacing:.5px;color:var(--text-2)}
+.kpi.lead .kpi-v{font-size:var(--fs-3xl);letter-spacing:-2px;margin-top:var(--sp-4)}
+.kpi.lead .kpi-m{font-size:var(--fs-cap);margin-top:var(--sp-3);max-width:38ch}
+.kpi-spark{margin-top:auto;padding-top:var(--sp-5)}
+
+/* -- change indicator --
+   Direction is an arrow and a sign; sentiment is the colour. They are separate
+   on purpose — a rise in food cost points up and reads negative. */
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-cap);font-weight:650;
+  color:var(--text-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.delta::before{font-size:8px;line-height:1;position:relative;top:-1px}
+.delta.up::before{content:"\25B2"}
+.delta.down::before{content:"\25BC"}
+.delta.flat::before{content:"\2014";font-size:10px}
+.delta.good{color:var(--pos)}
+.delta.bad{color:var(--neg)}
+.delta .du{font-weight:500;color:var(--text-3)}
+
+/* -- analytical panel --
+   The same anatomy as .card (header · body · foot) plus an action slot for
+   legends, and a shared plot height so panels sitting in a row agree. */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.panel-h{display:flex;align-items:flex-start;gap:var(--sp-5);padding:var(--sp-5) var(--sp-5) 0}
+.panel-h .pt{font-size:var(--fs-md);font-weight:650;letter-spacing:-.2px}
+.panel-h .pd{font-size:var(--fs-cap);color:var(--text-3);margin-top:3px;line-height:1.5;max-width:76ch}
+.panel-h .pa{margin-left:auto;flex:none;display:flex;align-items:center;gap:var(--sp-4);padding-top:2px}
+.panel-b{padding:var(--sp-5);flex:1;min-width:0}
+.panel-b.flush{padding:0}
+.panel-f{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border);background:var(--surface-2);
+  font-size:var(--fs-cap);color:var(--text-3);line-height:1.55}
+
+/* -- plots --
+   One height across the app. Gridlines orient, they do not decorate: faint,
+   horizontal only, and never drawn over the data. */
+/* Height follows the viewBox aspect, so two plots of equal width are always of
+   equal height and rows line up without hard-coding pixels. */
+.plot{width:100%}
+.plot svg{width:100%;height:auto;display:block;overflow:visible}
+.plot .gl{stroke:var(--border);stroke-width:1;shape-rendering:crispEdges}
+.plot .gl.zero{stroke:var(--border-2)}
+.plot .gl.base{stroke:var(--text-3);stroke-dasharray:4 3;opacity:.7}
+/* size comes from the element's font-size attribute in user units — setting it
+   here would override that and shrink every label */
+.plot .ax{fill:var(--text-3);font-family:var(--ff);font-variant-numeric:tabular-nums}
+.plot .ax.mid{font-weight:600;fill:var(--text-2)}
+.plot .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.plot .ar{fill:var(--accent);opacity:.07}
+.plot .pt{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.plot .br{fill:var(--fill-blue)}
+.plot .br.q{fill:var(--s4);opacity:.45}
+.plot .hot{fill:transparent;cursor:pointer;outline:none}
+.plot .hot:hover{fill:var(--text);fill-opacity:.045}
+.plot .hot:focus-visible{fill:var(--accent);fill-opacity:.12}
+.plot.spark svg{height:34px}
+
+/* legend that reads as a caption, not a control */
+.plegend{display:flex;gap:var(--sp-5);flex-wrap:wrap;font-size:var(--fs-cap);color:var(--text-2)}
+.plegend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.plegend i{width:10px;height:10px;border-radius:2.5px;display:block;flex:none}
+.plegend i.ln{height:0;width:15px;border-radius:0;border-top:2px solid var(--accent)}
+.plegend i.dash{height:0;width:15px;border-radius:0;border-top:2px dashed var(--text-3)}
+
+/* A dominant plot beside a short list. They stack early: a chart squeezed into
+   half a tablet is less use than a chart with the room to be read. */
+.pair{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--sp-4);align-items:start}
+@media(max-width:1180px){ .pair{grid-template-columns:1fr} }
+
+/* -- exceptions --
+   What needs a human. Every row states the number and the fact; colour is a
+   second signal, never the only one. */
+.attn{list-style:none;display:flex;flex-direction:column}
+.attn li{display:flex;align-items:flex-start;gap:var(--sp-4);padding:var(--sp-4) 0;
+  border-bottom:1px solid var(--border);font-size:var(--fs-base);line-height:1.5}
+.attn li:first-child{padding-top:0}
+.attn li:last-child{border-bottom:none;padding-bottom:0}
+.attn .an{font-size:var(--fs-lg);font-weight:670;letter-spacing:-.4px;min-width:46px;text-align:right;
+  flex:none;font-variant-numeric:tabular-nums;line-height:1.3}
+.attn .an.ok{color:var(--pos)} .attn .an.warn{color:var(--gold)} .attn .an.bad{color:var(--neg)}
+.attn .at{min-width:0}
+.attn .at b{display:block;color:var(--text);font-weight:650}
+.attn .at span{color:var(--text-3);font-size:var(--fs-cap)}
+.attn .at a,.attn .at button.linkbtn{font-size:var(--fs-cap)}
+
+/* A long table scrolls inside its own panel so the sticky header sticks to the
+   panel rather than to the viewport, where the app header would cover it. */
+.tw.tall{max-height:min(62vh,560px);overflow-y:auto}
+
+/* -- panel empty state --
+   Occupies the plot's height so a missing series never collapses the row. */
+.pempty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  min-height:var(--plot-h,236px);padding:var(--sp-6) var(--sp-5);color:var(--text-3)}
+.pempty .pe-t{font-size:var(--fs-base);font-weight:650;color:var(--text-2);margin-bottom:5px}
+.pempty .pe-s{font-size:var(--fs-cap);max-width:46ch;line-height:1.6}
+
+/* -- loading --
+   The skeleton mirrors the layout it becomes, so nothing jumps on arrival. */
+.sk{background:var(--surface-3);border-radius:var(--r-xs);animation:sh 1.2s infinite linear;
+  background-image:linear-gradient(90deg,var(--surface-3) 25%,var(--surface-2) 50%,var(--surface-3) 75%);
+  background-size:200% 100%}
+.sk-fbar{height:66px;border-radius:var(--r-lg)}
+.sk-kpis{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.sk-kpis>div{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4)}
+.sk-kpis>div:first-child{grid-row:span 2;padding:var(--sp-6)}
+.sk-kpis .sk{height:11px}
+.sk-kpis .sk.v{height:26px;width:58%}
+.sk-kpis>div:first-child .sk.v{height:40px;width:64%}
+.sk-panel{height:318px;border-radius:var(--r-lg)}
+
+/* == 10 · responsive ======================================================= */
 /* wide desktop: let the KPI rail breathe into four columns */
 @media(max-width:1180px){
   /* tablet: the sidebar becomes an icon rail so content keeps its width */
@@ -773,6 +936,10 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
 @media(max-width:1000px){
   .g23,.g3{grid-template-columns:1fr}
   .hero-rail{grid-template-columns:1fr 1fr}
+  /* the lead metric keeps the full width and the supporting four pair up */
+  .kpis,.sk-kpis{grid-template-columns:1fr 1fr}
+  .kpi.lead,.sk-kpis>div:first-child{grid-row:auto;grid-column:span 2}
+  .kpi.lead .kpi-m{max-width:none}
 }
 @media(max-width:860px){ .g2{grid-template-columns:1fr} }
 @media(max-width:780px){
@@ -822,6 +989,22 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
   .drawer{width:100vw}
   .fixcard .said{grid-template-columns:1fr}
 
+  /* ace system: the filter bar stacks, the lead metric loses its display size */
+  .fbar{padding:var(--sp-4)}
+  .fbar .field{min-width:0;flex:1 1 160px}
+  .fbar .ctl{min-height:44px;font-size:var(--fs-base)}
+  .fbar .rangenote{flex:1 1 100%;margin-left:0;text-align:left}
+  .ctx .cx-s{margin-left:0;text-align:left;flex:1 1 100%}
+  .kpi{padding:var(--sp-4)}
+  .kpi.lead{padding:var(--sp-5)}
+  .kpi.lead .kpi-v{font-size:34px;letter-spacing:-1.4px}
+  .panel-h{padding:var(--sp-4) var(--sp-4) 0}
+  .panel-h .pa{margin-left:0;width:100%;padding-top:var(--sp-3)}
+  .panel-h{flex-wrap:wrap}
+  .panel-b{padding:var(--sp-4)}
+  .panel-f{padding:var(--sp-4)}
+  .pempty{min-height:200px}
+
   /* comfortable touch targets */
   .btn,.bigbtn,.fixbtn,.seg button,.tog,.fbtn,.ctl,.srch input{min-height:44px}
   .btn.sm{min-height:38px}
@@ -845,10 +1028,15 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
   .drawer .db{padding:var(--sp-4) var(--sp-4) var(--sp-7)}
   .fixcard{padding:var(--sp-4)}
   .field,.fieldrow>*{width:100%}
+  /* one KPI per row below this width — two columns would truncate the values */
+  .kpis,.sk-kpis{grid-template-columns:1fr}
+  .kpi.lead,.sk-kpis>div:first-child{grid-column:auto}
+  .fbar .field{flex:1 1 100%}
+  .pempty{min-height:180px}
 }
 @media(max-width:400px){ .hero-rail{grid-template-columns:1fr} }
 
-/* == 10 · motion & print =================================================== */
+/* == 11 · motion & print =================================================== */
 .pg{animation:pgIn .22s var(--ease)}
 @keyframes pgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .rise{animation:rise .3s var(--ease) backwards}
@@ -863,7 +1051,7 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
     transition-duration:.001ms!important;scroll-behavior:auto!important}
   .draw{stroke-dashoffset:0}
-  .skel{animation:none;background:var(--surface-3)}
+  .skel,.sk{animation:none;background-image:none;background:var(--surface-3)}
 }
 
 @media print{
@@ -872,7 +1060,10 @@ tfoot td{padding:10px;text-align:right;font-weight:700;background:var(--surface-
   #shell{grid-template-columns:1fr}
   body{background:#fff;font-size:11px}
   .container{padding:0;max-width:none}
-  .card,.kstrip,.sys{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .card,.kstrip,.sys,.panel,.kpis,.fbar{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .kpis{background:#ccc} .kpi{background:#fff}
+  .panel-f,.panel-b,.attn li{break-inside:avoid}
+  .sk{animation:none;background:#fff}
   .hero{background:#fff!important;color:#000!important;border:1px solid #ccc}
   .hero-delta .big,.hero-summary p,.hero-summary p b,.hr-cell .v,.hero-line,.hero-line b{color:#000!important}
   .hr-cell{background:#fff!important} .hero-summary{background:#fff!important}

@@ -37,6 +37,10 @@ import { initManagerMode } from './manager-mode.mjs?v=20260806-manager-auth';
 import { hasConfig, browserKey } from './auth.mjs?v=20260806-manager-auth';
 import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260806-manager-auth';
 import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260806-manager-auth';
+import {
+  panel, kpiBand, delta, linePlot, stackedBars, sparkline, drawPlots,
+  skeletonOverview, plotEmpty, moneyK,
+} from './ui.mjs?v=20260806-manager-auth';
 
 const APP = window.__ACE_APP__;
 if (!APP) throw new Error('pages-live: legacy shell did not expose __ACE_APP__');
@@ -394,17 +398,24 @@ function fmtDate(yyyymmdd) {
 }
 
 /* --------------------------------------------------------- shared header --- */
-function opsControls(state, onchange) {
+/**
+ * Shared date-range + service-period control.
+ *
+ * `opts.variant === 'bar'` renders the ACE filter bar: the same controls and
+ * the same resolved-range wording, presented as page chrome rather than as a
+ * card of content. It is opt-in so pages adopt it as they are redesigned
+ * instead of the app spending a release with two half-matching headers.
+ */
+function opsControls(state, onchange, opts = {}) {
   const presets = [
     ['yesterday', 'Latest day'], ['week', 'Current week'], ['prevweek', 'Previous week'],
     ['month', 'Current month'], ['prevmonth', 'Previous month'], ['pilot', 'Pilot weekend'], ['custom', 'Custom'],
   ];
   const avail = opDates();
   const range = resolveRange(state, avail);
-  const el = document.createElement('div');
-  el.className = 'card';
-  el.style.marginBottom = '14px';
-  el.innerHTML = `<div class="body fieldrow">
+  const bar = opts.variant === 'bar';
+
+  const fields = `
     <label class="field"><span>Date range</span>
       <select class="ctl" id="opsPreset">
         ${presets.map(([v, l]) => `<option value="${v}" ${state.preset === v ? 'selected' : ''}>${l}</option>`).join('')}
@@ -426,10 +437,23 @@ function opsControls(state, onchange) {
     <div class="rangenote sub" role="status">
       <span class="rn-1">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
       <span class="rn-2">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
-    </div>
-  </div>
-  ${range.invalid ? `<div class="errbox" role="alert" style="margin:0 var(--sp-5) var(--sp-5)"><b>Check the custom range.</b>
-    ${esc(range.invalid.message)} <button class="btn ghost sm" type="button" id="opsSwap" style="margin-left:8px">Swap dates</button></div>` : ''}`;
+    </div>`;
+
+  const invalid = (style) => (range.invalid
+    ? `<div class="errbox" role="alert"${style ? ` style="${style}"` : ''}><b>Check the custom range.</b>
+    ${esc(range.invalid.message)} <button class="btn ghost sm" type="button" id="opsSwap" style="margin-left:8px">Swap dates</button></div>`
+    : '');
+
+  const el = document.createElement('div');
+  if (bar) {
+    el.className = 'fbar';
+    el.innerHTML = `${fields}${invalid('')}`;
+  } else {
+    el.className = 'card';
+    el.style.marginBottom = '14px';
+    el.innerHTML = `<div class="body fieldrow">${fields}</div>
+  ${invalid('margin:0 var(--sp-5) var(--sp-5)')}`;
+  }
   const apply = () => {
     const next = {
       preset: el.querySelector('#opsPreset').value,
@@ -451,8 +475,8 @@ function opsControls(state, onchange) {
   return el;
 }
 
-function withData(host, renderFn) {
-  host.innerHTML = '<div class="skel skel-hero" role="status" aria-label="Loading dashboard data"></div>';
+function withData(host, renderFn, skeleton) {
+  host.innerHTML = skeleton ?? '<div class="skel skel-hero" role="status" aria-label="Loading dashboard data"></div>';
   loadLive().then(() => {
     if (DATA.error) {
       host.innerHTML = `<div class="errbox"><b>The dashboard data could not load.</b>
@@ -465,18 +489,28 @@ function withData(host, renderFn) {
 
 /** Standard guard: invalid custom range renders the validation message and
  * nothing else — never an unexplained empty dashboard. */
-function rangeOrExplain(host, state, renderFn) {
+function rangeOrExplain(host, state, renderFn, opts) {
   const range = resolveRange(state, opDates());
   host.innerHTML = '';
-  host.appendChild(opsControls(state, () => renderFn(host)));
+  host.appendChild(opsControls(state, () => renderFn(host), opts));
   return range.invalid ? null : range;
 }
 
 /* ==================================================== OPERATIONS OVERVIEW == */
-function pgOps(host) { withData(host, renderOps); }
+function pgOps(host) { withData(host, renderOps, skeletonOverview()); }
+
+/**
+ * Operations overview.
+ *
+ * Ordered to answer, in this sequence: how are we performing, what changed,
+ * where is it weak, what needs attention, what should I look at next. Every
+ * figure below already existed on this page or is the same aggregate drawn per
+ * day — no metric is introduced here.
+ */
 function renderOps(host) {
   const state = opsState();
-  const range = rangeOrExplain(host, state, renderOps);
+  host.className = 'pg stack';
+  const range = rangeOrExplain(host, state, renderOps, { variant: 'bar' });
   if (!range) return;
   const periods = periodsOf(state);
   const t = sumMetrics(range.dates, periods);
@@ -486,66 +520,217 @@ function renderOps(host) {
   const triAll = triageIntents(DATA.intents);
   const tri = triageIntents(DATA.intents.filter((r) => range.dates.includes(r.businessDate)));
 
-  const div = document.createElement('div');
-  div.innerHTML = `
-  <section class="hero rise"><div class="hero-top">
-    <div class="hero-verdict">
-      <div class="hero-eyebrow">Operations — ${esc(range.label)}
-        <span class="verdict-badge neu">${DATA.source === 'supabase' ? 'SHARED DATA' : 'BACKUP DATA'} THROUGH ${esc(fmtDate(range.dates[range.dates.length - 1]))}</span></div>
-      <div class="hero-delta"><span class="big">${pct(t.guests ? (t.entitlementCovers / t.guests) * 100 : null)}</span>
-        <span class="unit">AYCE cover mix<br>${fmt(Math.round(t.entitlementCovers))} AYCE covers of ${fmt(t.guests)} guests</span></div>
-      <div class="hero-line"><b>${fmt(t.checks)}</b> dining-room &amp; patio checks · <b>${usd0(t.floorNet)}</b> net floor sales ·
-        <b>${usd0(t.entitlementNet)}</b> AYCE sales on <b>${fmt(t.ayceChecks)}</b> AYCE checks.</div>
-    </div>
-    <div class="hero-rail">
-      <div class="hr-cell"><div class="k">AYCE food cost (est.)</div><div class="v">${pct(fc)}</div>
-        <div class="m">usually ${pct(base.pct)} on similar shifts</div></div>
-      <div class="hr-cell"><div class="k">Conversion rate</div><div class="v">${pct(conv.rate)}</div>
-        <div class="m">${conv.converted} of ${conv.eligible} recorded &amp; connected tables${conv.total === 0 ? ' · no OpenTable data in range' : ''}</div></div>
-      <div class="hr-cell"><div class="k">Conversion unavailable</div><div class="v">${fmt(conv.unknown + conv.notConnected + conv.ambiguous)}</div>
-        <div class="m">${conv.unknown} no recorded choice · ${conv.notConnected + conv.ambiguous} not reliably connected — still in all sales figures</div></div>
-      <div class="hr-cell"><div class="k">Fixes needed</div><div class="v">${fmt(tri.badge)}</div>
-        <div class="m">${tri.badge ? `in this range · ${triAll.badge} total` : `nothing in this range · ${triAll.badge} total`}</div></div>
-    </div>
-  </div>
-  <div class="hero-summary"><div class="sh">Scope</div>
-    <p>Dining-room and patio tables only — bar, takeout, delivery and non-table sales are excluded.
-    AYCE food cost is <b>estimated from items recorded in Toast; it measures recorded consumption,
-    not physical inventory usage or kitchen waste</b>. Every seated table counts in checks, covers, sales
-    and food cost whether or not the host recorded a starting choice. Conversion rates use only tables with
-    a recorded choice that connect to a Toast check — for the rest, conversion is simply unavailable.</p></div>
-  </section>`;
-  host.appendChild(div);
-
   const rows = range.dates.map((d) => {
     const a = sumMetrics([d], periods);
     return { d, ...a, fc: fcPctOf(a) };
   });
-  const tbl = document.createElement('div');
-  tbl.className = 'card sec';
-  tbl.innerHTML = `<header><div><div class="ttl">By day</div>
-    <div class="sub">${periods.join(' + ')} · AYCE program figures per business date.</div></div></header>
-    <div class="body tw"><table>
-    <caption class="sr">AYCE program figures for each business date in the selected range</caption>
-    <thead><tr><th scope="col">Date</th><th scope="col">Day</th><th scope="col">Checks</th><th scope="col">Guests</th><th scope="col">Floor sales</th>
-      <th scope="col">AYCE covers</th><th scope="col">AYCE sales</th><th scope="col">Est. food cost $</th><th scope="col">Food cost %</th></tr></thead><tbody>
-    ${rows.map((r) => `<tr>
-      <td>${fmtDate(r.d)}</td><td>${WD[weekdayOf(r.d)].slice(0, 3)}</td>
-      <td>${fmt(r.checks)}</td><td>${fmt(r.guests)}</td>
-      <td>${usd0(r.floorNet)}</td>
-      <td>${fmt(Math.round(r.entitlementCovers))}</td>
-      <td>${usd0(r.entitlementNet)}</td>
-      <td>${usd0(r.roundCost)}</td>
-      <td><b>${pct(r.fc)}</b></td></tr>`).join('')}
-    </tbody>
-    <tfoot><tr><td>Total</td><td>${range.dates.length} day${range.dates.length === 1 ? '' : 's'}</td>
-      <td>${fmt(t.checks)}</td><td>${fmt(t.guests)}</td><td>${usd0(t.floorNet)}</td>
-      <td>${fmt(Math.round(t.entitlementCovers))}</td><td>${usd0(t.entitlementNet)}</td>
-      <td>${usd0(t.roundCost)}</td><td>${pct(fc)}</td></tr></tfoot>
-    </table></div>
-    <div class="foot">Totals are the range aggregate; the food-cost % is weighted (total estimated cost ÷ total
-    AYCE sales), never an average of the daily percentages.</div>`;
-  host.appendChild(tbl);
+
+  const days = range.dates.length;
+  const dayWord = `${days} day${days === 1 ? '' : 's'}`;
+  const mix = t.guests ? (t.entitlementCovers / t.guests) * 100 : null;
+  const vsUsual = (fc != null && base.pct != null) ? fc - base.pct : null;
+  const costed = rows.filter((r) => r.fc != null);
+  const aboveUsual = base.pct == null ? [] : costed.filter((r) => r.fc > base.pct);
+  const unavailable = conv.unknown + conv.notConnected + conv.ambiguous;
+  const lastDay = fmtDate(range.dates[range.dates.length - 1]);
+  const dayLabel = (d) => `${WD[weekdayOf(d)].slice(0, 3)} ${fmtDate(d)}`;
+
+  const frag = document.createDocumentFragment();
+  const add = (html) => {
+    const w = document.createElement('div');
+    w.innerHTML = html;
+    while (w.firstElementChild) frag.appendChild(w.firstElementChild);
+  };
+
+  /* Plots are drawn after insertion, sized to the box they land in, so axis
+     type stays the same size on a phone as on a desktop. */
+  const plotSpecs = [];
+  const plotBox = (build) => {
+    const id = `opsPlot${plotSpecs.length}`;
+    plotSpecs.push({ id, build });
+    return `<div class="plot" id="${id}"></div>`;
+  };
+
+  /* -- what am I looking at ------------------------------------------------ */
+  add(`<div class="ctx">
+    <span class="cx-p">${esc(range.label)}</span>
+    <span class="cx-d">${dayWord} · ${periods.join(' + ')} · dining room &amp; patio</span>
+    <span class="cx-s">${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} through ${esc(lastDay)}</span>
+  </div>`);
+
+  /* -- how are we performing, and what changed ----------------------------- */
+  add(kpiBand([
+    {
+      lead: true,
+      k: 'AYCE food cost (estimated)',
+      v: pct(fc),
+      delta: delta(vsUsual, { goodWhen: 'down', suffix: 'vs usual' }),
+      m: base.pct == null
+        ? 'No comparable shifts in the last four weeks to measure this against.'
+        : `Usually <b>${pct(base.pct)}</b> on similar shifts, from ${base.found} comparable day${base.found === 1 ? '' : 's'}.`,
+      spark: sparkline(rows.map((r) => r.fc), `AYCE food cost by day across ${dayWord}`),
+    },
+    {
+      k: 'AYCE cover mix',
+      v: pct(mix),
+      m: `<b>${fmt(Math.round(t.entitlementCovers))}</b> AYCE covers of ${fmt(t.guests)} guests`,
+    },
+    {
+      k: 'AYCE sales',
+      v: usd0(t.entitlementNet),
+      m: `on <b>${fmt(t.ayceChecks)}</b> AYCE checks · ${usd0(t.floorNet)} net floor sales`,
+    },
+    {
+      k: 'Conversion rate',
+      v: pct(conv.rate),
+      m: conv.total === 0
+        ? 'No OpenTable data in this range'
+        : `<b>${conv.converted}</b> of ${conv.eligible} recorded &amp; connected tables`,
+    },
+    {
+      k: 'Fixes needed',
+      v: fmt(tri.badge),
+      tone: tri.badge ? 'gold' : 'quiet',
+      m: tri.badge
+        ? `in this range · ${triAll.badge} total`
+        : `nothing in this range · ${triAll.badge} total`,
+    },
+  ], 'Operations key figures'));
+
+  /* -- where is performance weak ------------------------------------------- */
+  const trend = costed.length
+    ? plotBox((w) => linePlot({
+      points: rows.map((r) => ({
+        label: fmtDate(r.d),
+        value: r.fc,
+        tip: {
+          title: dayLabel(r.d),
+          rows: [
+            ['Food cost', pct(r.fc)],
+            ['AYCE sales', usd0(r.entitlementNet)],
+            ['Estimated cost', usd0(r.roundCost)],
+          ],
+          note: base.pct == null ? '' : `Usual for similar shifts: ${pct(base.pct)}`,
+        },
+      })),
+      reference: base.pct,
+      referenceLabel: base.pct == null ? '' : `usual ${pct(base.pct)}`,
+      fmtTick: (v) => `${v.toFixed(0)}%`,
+      aria: `AYCE food cost percentage by business date across ${dayWord}${base.pct == null ? '' : `, against the usual ${pct(base.pct)} for similar shifts`}. The same figures appear in the by-day table below.`,
+    }, w))
+    : plotEmpty('No AYCE sales in this range',
+      'Food cost is a share of AYCE sales, so there is no percentage to plot for these dates.');
+
+  add(panel({
+    title: 'AYCE food cost by day',
+    desc: 'Estimated cost of recorded AYCE rounds as a share of AYCE sales, per business date.',
+    action: base.pct == null ? '' : `<div class="plegend">
+      <span><i class="ln"></i>Food cost</span>
+      <span><i class="dash"></i>Usual for similar shifts</span></div>`,
+    body: trend,
+    foot: `Estimated from items recorded in Toast — recorded consumption, not physical inventory
+      usage or kitchen waste. Days with no AYCE sales have no percentage and break the line rather
+      than being drawn as zero.`,
+  }));
+
+  /* -- supporting detail and the exception list ---------------------------- */
+  const salesPlot = plotBox((w) => stackedBars({
+    bars: rows.map((r) => {
+      const other = Math.max(0, (r.floorNet ?? 0) - (r.entitlementNet ?? 0));
+      return {
+        label: fmtDate(r.d),
+        base: r.entitlementNet,
+        top: other,
+        tip: {
+          title: dayLabel(r.d),
+          rows: [
+            ['AYCE entitlement', usd0(r.entitlementNet)],
+            ['Other floor sales', usd0(other)],
+            ['Net floor sales', usd0(r.floorNet)],
+          ],
+          note: `${fmt(r.checks)} checks · ${fmt(r.guests)} guests`,
+        },
+      };
+    }),
+    fmtTick: moneyK,
+    aria: `Net floor sales by business date, split into AYCE entitlement revenue and other floor sales, across ${dayWord}.`,
+  }, w));
+
+  const attnRow = (n, tone, title, detail, action = '') => `<li>
+    <span class="an ${tone}">${n}</span>
+    <span class="at"><b>${title}</b><span>${detail}</span>${action}</span></li>`;
+
+  const attention = `<ul class="attn">
+    ${attnRow(fmt(tri.badge), tri.badge ? 'warn' : 'ok', 'Visits needing a decision',
+    tri.badge
+      ? `Conflicting or unresolved starting choices in this range. ${triAll.badge} across all dates.`
+      : `Nothing in this range. ${triAll.badge} across all dates.`,
+    triAll.badge ? '<button class="linkbtn" type="button" id="opsGoFixes">Open Fixes Needed</button>' : '')}
+    ${attnRow(fmt(aboveUsual.length), aboveUsual.length ? 'warn' : 'ok', 'Days above the usual food cost',
+    base.pct == null
+      ? 'No comparable shifts available to compare against.'
+      : `Of ${costed.length} day${costed.length === 1 ? '' : 's'} with AYCE sales, measured against the usual ${pct(base.pct)}.`)}
+    ${attnRow(fmt(unavailable), unavailable ? 'warn' : 'ok', 'Tables without a usable conversion',
+    `${conv.unknown} with no recorded choice · ${conv.notConnected + conv.ambiguous} not reliably connected to a check. All of them still count in every sales, cover and food-cost figure.`)}
+  </ul>`;
+
+  add(`<div class="pair">
+    ${panel({
+    title: 'Sales by day',
+    desc: 'Net floor sales per business date, split by what the AYCE entitlement contributed.',
+    action: `<div class="plegend">
+        <span><i style="background:var(--fill-blue)"></i>AYCE entitlement</span>
+        <span><i style="background:var(--s4);opacity:.45"></i>Other floor sales</span></div>`,
+    body: salesPlot,
+  })}
+    ${panel({
+    title: 'Needs attention',
+    desc: 'Exceptions in this range, and where to resolve them.',
+    body: attention,
+  })}
+  </div>`);
+
+  /* -- what should I investigate next -------------------------------------- */
+  add(panel({
+    title: 'By day',
+    desc: `${periods.join(' + ')} · AYCE program figures per business date.`,
+    bodyCls: 'flush',
+    body: `<div class="tw${rows.length > 12 ? ' tall' : ''}"><table>
+      <caption class="sr">AYCE program figures for each business date in the selected range</caption>
+      <thead><tr><th scope="col">Date</th><th scope="col">Day</th><th scope="col">Checks</th><th scope="col">Guests</th><th scope="col">Floor sales</th>
+        <th scope="col">AYCE covers</th><th scope="col">AYCE sales</th><th scope="col">Est. food cost $</th><th scope="col">Food cost %</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr>
+        <td>${fmtDate(r.d)}</td><td>${WD[weekdayOf(r.d)].slice(0, 3)}</td>
+        <td>${fmt(r.checks)}</td><td>${fmt(r.guests)}</td>
+        <td>${usd0(r.floorNet)}</td>
+        <td>${fmt(Math.round(r.entitlementCovers))}</td>
+        <td>${usd0(r.entitlementNet)}</td>
+        <td>${usd0(r.roundCost)}</td>
+        <td><b>${pct(r.fc)}</b></td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr><td>Total</td><td>${dayWord}</td>
+        <td>${fmt(t.checks)}</td><td>${fmt(t.guests)}</td><td>${usd0(t.floorNet)}</td>
+        <td>${fmt(Math.round(t.entitlementCovers))}</td><td>${usd0(t.entitlementNet)}</td>
+        <td>${usd0(t.roundCost)}</td><td>${pct(fc)}</td></tr></tfoot>
+      </table></div>`,
+    foot: `Totals are the range aggregate; the food-cost % is weighted (total estimated cost ÷ total
+      AYCE sales), never an average of the daily percentages.`,
+  }));
+
+  /* -- scope, kept verbatim ------------------------------------------------ */
+  add(panel({
+    title: 'Scope',
+    body: `<p class="sub" style="max-width:104ch">Dining-room and patio tables only — bar, takeout, delivery and
+      non-table sales are excluded. AYCE food cost is <b>estimated from items recorded in Toast; it measures
+      recorded consumption, not physical inventory usage or kitchen waste</b>. Every seated table counts in
+      checks, covers, sales and food cost whether or not the host recorded a starting choice. Conversion rates
+      use only tables with a recorded choice that connect to a Toast check — for the rest, conversion is simply
+      unavailable.</p>`,
+  }));
+
+  host.appendChild(frag);
+  drawPlots(host, plotSpecs);
+  host.querySelector('#opsGoFixes')?.addEventListener('click', () => APP.setPage('fixes'));
 }
 
 /**
