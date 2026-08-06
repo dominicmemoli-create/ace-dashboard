@@ -10,7 +10,7 @@
 // moment a signed-out person attempts a write.
 import {
   initAuth, handleAuthCallback, signInWithEmail, signOut, whoami, onAuthChange, hasConfig,
-} from './auth.mjs?v=20260806-manager-auth';
+} from './auth.mjs?v=20260806-v2';
 
 let APP = null;
 let who = { role: 'none', email: '' };

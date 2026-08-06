@@ -123,7 +123,7 @@
   --gold:var(--warn); --gold-soft:var(--warn-soft); --gold-line:var(--warn-line);
   --s1:var(--chart-1); --s2:var(--chart-2); --s3:var(--chart-3);
   --s4:var(--chart-4); --s5:var(--chart-5);
-  --fill-blue:var(--chart-1); --fill-coral:var(--chart-3);
+  --fill-blue:var(--chart-1); --fill-coral:var(--chart-2);
   --fill-gold:var(--chart-3); --fill-grey:var(--chart-4);
 }
 
@@ -297,7 +297,11 @@ svg.ic{flex:none;display:block}
 .iconbtn:hover{color:var(--text);background:var(--surface-3)}
 
 /* reporting-period context, sitting with the header utilities */
-.tb-per{font-size:var(--fs-xs);color:var(--text-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tb-per{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--text-2);
+  white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:500;
+  background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-pill);padding:3px 11px}
+.tb-per::before{content:"";width:13px;height:13px;flex:none;background:var(--text-4);
+  -webkit-mask:var(--m-cal) center/contain no-repeat;mask:var(--m-cal) center/contain no-repeat}
 .tb-per:empty{display:none}
 /* the navigation trigger is a mobile affordance only */
 #menuBtn{display:none}
@@ -390,10 +394,12 @@ svg.ic{flex:none;display:block}
 .g23{display:grid;grid-template-columns:1.35fr 1fr;gap:var(--sp-4);align-items:start}
 
 /* band — several regions sharing ONE surface, divided by hairlines. This is
-   what stops a page reading as a column of unrelated cards. */
-.band{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);
+   what stops a page reading as a column of unrelated cards: two panels sitting
+   side by side become one region with a rule down the middle. */
+.band{display:grid;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-lg);overflow:hidden}
-.band>*{background:var(--surface);border:none!important;border-radius:0!important}
+.band>*{background:var(--surface);border:none;border-radius:0;
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 
 /* -- lead result band (dark ink) — used by the pilot pages -- */
 .hero{background:var(--ink);border:1px solid var(--ink-line);border-radius:var(--r-lg);
@@ -412,8 +418,10 @@ svg.ic{flex:none;display:block}
 .hero-rail{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ink-line);
   border-top:1px solid var(--ink-line);margin-top:var(--sp-5)}
 .hr-cell{background:var(--ink-2);padding:var(--sp-4)}
-.hr-cell .k{font-size:var(--fs-micro);letter-spacing:.6px;text-transform:uppercase;color:var(--ink-fg-dim);
-  font-weight:650;display:flex;align-items:center;gap:5px;line-height:1.35}
+/* sentence case: the eyebrow above is the page's one deliberate uppercase
+   accent, and four more uppercase labels under it stop being an accent */
+.hr-cell .k{font-size:var(--fs-xs);letter-spacing:0;text-transform:none;color:var(--ink-fg-dim);
+  font-weight:600;display:flex;align-items:center;gap:5px;line-height:1.4}
 .hr-cell .v{font-size:var(--fs-kpi);font-weight:650;color:#fff;letter-spacing:-1.2px;margin-top:6px;line-height:1.08}
 .hr-cell .m{font-size:var(--fs-micro);color:var(--ink-fg-dim);margin-top:var(--sp-1);line-height:1.45}
 .hr-cell .v.gold{color:#e6b866} .hr-cell .v.up{color:#5fd39d} .hr-cell .v.down{color:#f79683}
@@ -421,8 +429,8 @@ svg.ic{flex:none;display:block}
 .hero-bar i{display:block;height:100%;transition:width .6s var(--ease)}
 .hero-summary{padding:var(--sp-4) var(--sp-6) var(--sp-5);border-top:1px solid var(--ink-line);
   background:rgba(0,0,0,.2)}
-.hero-summary .sh{font-size:var(--fs-micro);letter-spacing:.8px;text-transform:uppercase;color:var(--ink-fg-dim);
-  font-weight:650;margin-bottom:6px}
+.hero-summary .sh{font-size:var(--fs-xs);letter-spacing:0;text-transform:none;color:var(--ink-fg-dim);
+  font-weight:600;margin-bottom:6px}
 .hero-summary p{font-size:var(--fs-sm);line-height:1.65;color:#b4bfcb;max-width:110ch}
 .hero-summary p b{color:#e4eaf1;font-weight:640}
 .hero-summary .interp{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--ink-line);
@@ -435,9 +443,16 @@ svg.ic{flex:none;display:block}
    One reusable band for every route: a lead metric that carries the comparison
    and supporting figures at a deliberately quieter weight. Hairlines come from
    a 1px grid gap over the border colour, so no cell owns a border. */
-.kpis{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:1px;background:var(--border);
+/* Hairlines are drawn by each cell as a right/bottom box-shadow rather than by
+   a 1px grid gap over a coloured container. The gap technique paints any grid
+   area a cell does not occupy — so a strip whose items do not fill the last row
+   showed a solid block of border colour. Shadows on the trailing edge fall
+   outside the padding box and are clipped, so the outer edge stays a single
+   hairline and empty areas stay surface-coloured. */
+.kpis{display:grid;grid-template-columns:1.2fr 1fr 1fr;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.kpi{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;min-width:0}
+.kpi{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;min-width:0;
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 .kpi-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}
 .kpi-k{font-size:var(--fs-xs);letter-spacing:0;color:var(--text-3);text-transform:none;
   font-weight:600;line-height:1.4;display:flex;align-items:center;gap:5px;min-width:0}
@@ -458,9 +473,10 @@ svg.ic{flex:none;display:block}
 .kpi-spark{margin-top:auto;padding-top:var(--sp-5)}
 
 /* -- stat strip (secondary KPI rows) -- */
-.kstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));gap:1px;
-  background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.kcell{background:var(--surface);padding:var(--sp-4) var(--sp-5)}
+.kstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.kcell{background:var(--surface);padding:var(--sp-4) var(--sp-5);
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 .kcell .k{font-size:var(--fs-xs);letter-spacing:0;text-transform:none;color:var(--text-3);
   font-weight:600;display:flex;align-items:center;gap:5px;line-height:1.4}
 .kcell .v{font-size:var(--fs-kpi);font-weight:650;letter-spacing:-1.1px;margin-top:6px;line-height:1.06;
@@ -582,6 +598,20 @@ select.ctl{padding-right:32px;cursor:pointer;
 .seg button:hover{color:var(--text)}
 .seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--surface);color:var(--text);
   box-shadow:var(--shadow-1)}
+/* segmented control built on real radios — the input is clipped, not hidden,
+   so it keeps native focus, arrow-key navigation and a single tab stop */
+.seg-w{display:inline-flex;background:var(--surface-3);border:1px solid var(--border);
+  border-radius:var(--r);padding:3px;gap:2px;max-width:100%}
+.seg-o{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 13px;border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--text-3);
+  cursor:pointer;white-space:nowrap;min-height:28px;font-weight:600;
+  transition:background var(--dur),color var(--dur)}
+.seg-o input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.seg-o:hover{color:var(--text)}
+.seg-o.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow-1)}
+.seg-o:focus-within{box-shadow:var(--ring);z-index:2}
+.seg-o.on:focus-within{box-shadow:var(--shadow-1),var(--ring)}
+
 .tog{display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-xs);color:var(--text-2);cursor:pointer;
   padding:6px 12px;min-height:34px;border:1px solid var(--border-2);border-radius:var(--r);
   background:var(--surface);transition:border-color var(--dur),color var(--dur)}
@@ -606,6 +636,11 @@ select.ctl{padding-right:32px;cursor:pointer;
   border:1px solid var(--neg-line);border-left:3px solid var(--neg);border-radius:var(--r);
   color:var(--text);font-size:var(--fs-sm);line-height:1.6}
 .errbox b{display:block;margin-bottom:3px;color:var(--neg)}
+/* a page's closing qualification: quieter than a panel, and it sits on the
+   canvas rather than claiming a surface of its own */
+.close-note{background:transparent;border-color:var(--border);border-left-color:var(--border-3);
+  color:var(--text-3);font-size:var(--fs-xs);margin-top:0}
+.close-note b{color:var(--text-2)}
 
 .sys{display:flex;align-items:flex-start;gap:var(--sp-4);border-radius:var(--r-lg);
   padding:var(--sp-5) var(--sp-5);border:1px solid var(--border);font-size:var(--fs-sm);
@@ -693,7 +728,9 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
 .plot .ax{fill:var(--text-3);font-family:var(--ff);font-variant-numeric:tabular-nums}
 .plot .ax.mid{font-weight:600;fill:var(--text-2)}
 .plot .ln{fill:none;stroke:var(--c-1,var(--chart-1));stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.plot .ar{fill:var(--c-1,var(--chart-1));opacity:.08}
+/* the area's fill is a gradient set on the element — a CSS fill would win over
+   the attribute and flatten it back to a solid tint */
+.plot .ar{stroke:none}
 .plot .pt{fill:var(--surface);stroke:var(--c-1,var(--chart-1));stroke-width:2}
 .plot .br{fill:var(--c-1,var(--chart-1))}
 .plot .br.q{fill:var(--c-2,var(--chart-2))}
@@ -772,9 +809,10 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
   border-radius:var(--r);cursor:pointer;color:var(--text-2);display:grid;place-items:center;
   flex:none;transition:background var(--dur),color var(--dur)}
 .xbtn:hover{background:var(--neg-soft);color:var(--neg);border-color:var(--neg-line)}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border);
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));background:var(--surface);
   border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp-5)}
-.dcell{background:var(--surface);padding:var(--sp-3) var(--sp-4)}
+.dcell{background:var(--surface);padding:var(--sp-3) var(--sp-4);
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 .dcell .k{font-size:var(--fs-micro);letter-spacing:0;text-transform:none;color:var(--text-3);font-weight:600}
 .dcell .v{font-size:var(--fs-lg);font-weight:650;margin-top:3px;letter-spacing:-.4px;
   font-variant-numeric:tabular-nums}
@@ -843,6 +881,7 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
 :root{
   --m-check:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5 10-11'/%3E%3C/svg%3E");
   --m-alert:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.6v5'/%3E%3Cpath d='M12 16.3h.01'/%3E%3C/svg%3E");
+  --m-cal:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.2' y='5' width='17.6' height='16' rx='2'/%3E%3Cpath d='M3.2 10h17.6'/%3E%3Cpath d='M8 3v4M16 3v4'/%3E%3C/svg%3E");
 }
 
 /* == 7 · workflows ========================================================= */
@@ -880,10 +919,11 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
 .fixcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
   padding:var(--sp-5);margin-top:var(--sp-4)}
 .fixcard .fk{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:var(--sp-4)}
-.fixcard .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:1px;
-  background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+.fixcard .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
   margin-bottom:var(--sp-4)}
-.fixcard .fact{background:var(--surface-2);padding:var(--sp-3) var(--sp-4)}
+.fixcard .fact{background:var(--surface-2);padding:var(--sp-3) var(--sp-4);
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 .fixcard .fact .k{font-size:var(--fs-micro);letter-spacing:0;text-transform:none;color:var(--text-3);font-weight:600}
 .fixcard .fact .v{font-size:var(--fs-sm);font-weight:640;margin-top:3px}
 .fixcard .said{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);margin-bottom:var(--sp-4)}
@@ -948,9 +988,10 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
 .skel-c{height:260px}
 .skel-line{height:12px;border-radius:var(--r-xs);margin-bottom:8px}
 .sk-fbar{height:72px;border-radius:var(--r-lg)}
-.sk-kpis{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:1px;background:var(--border);
+.sk-kpis{display:grid;grid-template-columns:1.2fr 1fr 1fr;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.sk-kpis>div{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4)}
+.sk-kpis>div{background:var(--surface);padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);
+  box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
 .sk-kpis>div:first-child{grid-row:span 2}
 .sk-kpis .sk{height:11px}
 .sk-kpis .sk.v{height:30px;width:58%}
@@ -2203,7 +2244,7 @@ function pgOverview(host) {
   /* revenue */
   const nonAce = r2(sc.revenue - sc.aceRevenue);
   $("#cRev", wrap).appendChild(stackBar([
-    { v: sc.aceRevenue, color: "var(--fill-coral)", label: "AYCE tables", short: "AYCE tables", fv: usd0(sc.aceRevenue),
+    { v: sc.aceRevenue, color: "var(--chart-1)", label: "AYCE tables", short: "AYCE tables", fv: usd0(sc.aceRevenue),
       tip: tipHTML({ title: "AYCE table revenue", rows: [["F&B revenue", usd(sc.aceRevenue)], ["Share of floor", pct(100 * sc.aceRevenue / (sc.revenue || 1))], ["AYCE tables", fmt(sc.aceTables)]], def: DEFS.rev }) },
     { v: nonAce, color: "var(--fill-grey)", label: "Non-AYCE tables", short: "Non-AYCE", fv: usd0(nonAce),
       tip: tipHTML({ title: "Non-AYCE table revenue", rows: [["F&B revenue", usd(nonAce)], ["Share of floor", pct(100 * nonAce / (sc.revenue || 1))], ["Tables", fmt(sc.tables - sc.aceTables)]], def: DEFS.rev }) },
@@ -2215,10 +2256,10 @@ function pgOverview(host) {
 
   /* intent */
   $("#cIntent", wrap).appendChild(compareBars([
-    { label: "Undecided", rate: sc.undecided.rate, n: sc.undecided.elig, cls: "und", color: "var(--s2)",
+    { label: "Undecided", rate: sc.undecided.rate, n: sc.undecided.elig, cls: "und", color: "var(--chart-1)",
       sub: `${sc.undecided.conv} of ${sc.undecided.elig} tables converted · ${fmt(sc.undecided.convCov != null ? sc.undecided.convCov : "—")} covers`,
       tip: tipHTML({ title: "Undecided → AYCE", rows: [["Converted tables", fmt(sc.undecided.conv)], ["Eligible tables", fmt(sc.undecided.elig)], ["Conversion rate", pct(sc.undecided.rate)]], def: DEFS.convT }) },
-    { label: "A la carte", rate: sc.alc.rate, n: sc.alc.elig, cls: "alc", color: "var(--accent)",
+    { label: "A la carte", rate: sc.alc.rate, n: sc.alc.elig, cls: "alc", color: "var(--chart-2)",
       sub: `${sc.alc.conv} of ${sc.alc.elig} tables converted`,
       tip: tipHTML({ title: "A-la-carte → AYCE", rows: [["Converted tables", fmt(sc.alc.conv)], ["Eligible tables", fmt(sc.alc.elig)], ["Conversion rate", pct(sc.alc.rate)]], def: DEFS.convT }) },
   ]));
@@ -2230,10 +2271,10 @@ function pgOverview(host) {
   const lg = lpLarge ? { mix: lpLarge.mixCovers, tables: lpLarge.tables, rate: lpLarge.conversion.convRateTables, elig: lpLarge.conversion.eligibleTables, conv: lpLarge.conversion.convertedTables }
     : (a => ({ mix: a.mixCovers, tables: a.tables, rate: a.convRateTables, elig: a.eligibleTables, conv: a.convertedTables }))(agg(sc.rows.filter(r => r.covers >= 6)));
   $("#cLarge", wrap).appendChild(compareBars([
-    { label: "Parties under 6", rate: sm.rate, n: sm.elig, cls: "unk", color: "var(--s4)",
+    { label: "Parties under 6", rate: sm.rate, n: sm.elig, cls: "unk", color: "var(--chart-4)",
       sub: `${sm.tables} tables · ${pct(sm.mix)} AYCE mix · ${sm.conv} of ${sm.elig} converted`,
       tip: tipHTML({ title: "Parties of 1–5 covers", rows: [["Tables", fmt(sm.tables)], ["AYCE cover mix", pct(sm.mix)], ["Converted", `${sm.conv} of ${sm.elig}`], ["Conversion rate", pct(sm.rate)]], def: DEFS.large }) },
-    { label: "Parties of 6+", rate: lg.rate, n: lg.elig, cls: "pre", color: "var(--gold)",
+    { label: "Parties of 6+", rate: lg.rate, n: lg.elig, cls: "pre", color: "var(--chart-1)",
       sub: `${lg.tables} tables · ${pct(lg.mix)} AYCE mix · ${lg.conv} of ${lg.elig} converted`,
       tip: tipHTML({ title: "Parties of 6 or more covers", rows: [["Tables", fmt(lg.tables)], ["AYCE cover mix", pct(lg.mix)], ["Converted", `${lg.conv} of ${lg.elig}`], ["Conversion rate", pct(lg.rate)]], def: DEFS.large }) },
   ]));
@@ -2602,7 +2643,7 @@ function renderDrawer() {
     h += `<div class="card" style="margin-bottom:14px"><header><div><div class="ttl">Intent &amp; tier</div></div></header><div class="body">`;
     h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;font-weight:650;margin-bottom:8px">Conversion by intent</div>`;
-    [["Undecided", use.und, "var(--s2)"], ["A la carte", use.alc, "var(--accent)"]].forEach(([l, o, c]) => {
+    [["Undecided", use.und, "var(--chart-1)"], ["A la carte", use.alc, "var(--chart-2)"]].forEach(([l, o, c]) => {
       h += `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
         <span>${l} <span class="muted">n=${o.elig}</span></span><b>${pct(o.rate)}</b></div>
         <div style="height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden">
@@ -3107,6 +3148,7 @@ window.__ACE_APP__ = {
   render: (...a) => render(...a),
   renderNav: (...a) => renderNav(...a),
   setPage: (...a) => setPage(...a),
+  setProv: (...a) => setProv(...a),
   scatter: (...a) => scatter(...a),
   emptyState: (...a) => emptyState(...a),
   helpers: { $, $$, esc, fmt, pct, usd, usd0, sgn, r1, r2, initials, avColor, reduced },
@@ -3171,14 +3213,29 @@ function render() {
      rather than the long page title. */
   const gp = $("#pggroup"); if (gp) gp.textContent = page.group || "Dashboard";
   const cur = $("#pgcur"); if (cur) cur.textContent = page.label || page.title;
+  /* Reporting period. Cleared here and refilled by whichever page owns a date
+     range, so a page without one never inherits the previous page's label. */
+  const per = $("#pgperiod"); if (per) per.textContent = "";
   const mt = $("#mtitle"); if (mt) mt.textContent = page.title;
   document.title = `${page.title} — AYCE Performance Dashboard`;
   /* pilot cross-filters + the not-payroll pill only make sense on pilot pages */
   const pilot = !!PAGES[S.page].pilotFilters;
   const fb = $("#filterbar");
   if (pilot) renderFilters(fb); else fb.innerHTML = "";
-  const pp = $("#provpill"); if (pp) pp.style.display = pilot ? "" : "none";
+  /* Provenance chip. Reset on every route so a page never inherits the previous
+     one's claim about where its numbers came from; live pages refill it. */
+  setProv(pilot ? "Pilot commission is informational — not payroll" : "");
   renderBody();
+}
+
+/** @param {string} text  empty hides the chip
+ *  @param {string} tone  '' | 'warn' | 'alert' */
+function setProv(text, tone = "") {
+  const pp = $("#provpill");
+  if (!pp) return;
+  pp.textContent = text;
+  pp.className = `prov${tone ? ` ${tone}` : ""}`;
+  pp.style.display = text ? "" : "none";
 }
 
 /* skeleton */
@@ -3291,6 +3348,6 @@ $("#pw").focus();
 
 })();
 </script>
-<script type="module" src="src/pages-live.mjs?v=20260806-manager-auth"></script>
+<script type="module" src="src/pages-live.mjs?v=20260806-v2"></script>
 </body>
 </html>

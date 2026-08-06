@@ -18,9 +18,13 @@ const PAGES = ['ops', 'servers', 'foodcost', 'update', 'fixes', 'pilot', 'help']
 
 fs.mkdirSync(OUT, { recursive: true });
 
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-});
+/* CHROMIUM_PATH pins a specific binary (CI). Without it, drive an installed
+   Chrome rather than a hard-coded Linux path, so the harness runs on a
+   developer machine too. */
+const browser = await chromium.launch(process.env.CHROMIUM_PATH
+  ? { executablePath: process.env.CHROMIUM_PATH }
+  : { channel: process.env.BROWSER_CHANNEL || 'chrome' });
+const THEME = process.env.THEME || 'light';
 const errors = [];
 
 for (const vp of VIEWPORTS) {
@@ -37,6 +41,9 @@ for (const vp of VIEWPORTS) {
   if (vp.name === 'desktop') {
     await page.screenshot({ path: path.join(OUT, 'gate.png') });
   }
+  /* the shell reads the saved theme on boot, so it has to be set before unlock */
+  await page.evaluate((t) => localStorage.setItem('ace.theme', JSON.stringify(t)), THEME);
+  await page.reload({ waitUntil: 'networkidle' });
   await page.fill('#pw', 'ACE2026');
   await page.click('#gform button[type=submit]');
   await page.waitForTimeout(1400);

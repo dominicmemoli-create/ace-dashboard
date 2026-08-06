@@ -3,13 +3,13 @@
 // a compact green/yellow/red system panel, and complete in-browser upload
 // workflows. Writes go through the protected database functions with the
 // signed-in manager's identity; no commands, no JSON, no configuration.
-import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260806-manager-auth';
-import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260806-manager-auth';
-import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
-import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260806-manager-auth';
-import { buildMetricsForDate } from './metrics-builder.mjs?v=20260806-manager-auth';
-import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
-import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260806-manager-auth';
+import { parseGuestCenter, sanitizeVisitAsync, rowHashOfAsync } from './opentable.mjs?v=20260806-v2';
+import { toastVisits, matchVisits } from './ot-matcher.mjs?v=20260806-v2';
+import { triageIntents } from './triage.mjs?v=20260806-v2';
+import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffCosts, stillUncosted, normalizeName } from './costs-shared.mjs?v=20260806-v2';
+import { buildMetricsForDate } from './metrics-builder.mjs?v=20260806-v2';
+import { rpc, restGet } from './auth.mjs?v=20260806-v2';
+import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260806-v2';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }

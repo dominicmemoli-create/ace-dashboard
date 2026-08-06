@@ -10,9 +10,9 @@
 // decisions are native radio groups inside a fieldset, and the queue offers
 // filters by issue type, date and server with the global count always shown
 // next to the filtered count.
-import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260806-manager-auth';
-import { rpc, restGet } from './auth.mjs?v=20260806-manager-auth';
-import { requireOperator, notify } from './manager-mode.mjs?v=20260806-manager-auth';
+import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260806-v2';
+import { rpc, restGet } from './auth.mjs?v=20260806-v2';
+import { requireOperator, notify } from './manager-mode.mjs?v=20260806-v2';
 
 let CTX = null;
 export function initFixesPage(ctx) { CTX = ctx; }

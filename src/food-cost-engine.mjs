@@ -27,7 +27,7 @@
 // food item with no cost stays in the MISSING queue — never silently $0.
 import {
   isModifierName, isDrinkName, portionOverrideFor, ruleCostRecords, costRank, costTierOf,
-} from './cost-rules.mjs?v=20260806-manager-auth';
+} from './cost-rules.mjs?v=20260806-v2';
 
 export function normalizeName(name) {
   return String(name ?? '')
