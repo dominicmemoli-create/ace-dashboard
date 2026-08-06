@@ -4,7 +4,7 @@
 // code before writing them through the protected ace_replace_metrics function).
 import {
   computeFoodCost, filterAyceProgram, isIncludedCheck, servicePeriodOf, weekdayOf,
-} from './food-cost-engine.mjs?v=20260806-manager-auth';
+} from './food-cost-engine.mjs?v=20260806-v2';
 
 const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 

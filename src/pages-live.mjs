@@ -29,18 +29,22 @@ import {
   comparableBaselineDates, weekdayOf, DEFAULT_THRESHOLDS,
   computeFoodCost, filterAyceProgram, isIncludedCheck, servicePeriodOf,
   perCheckCostStats,
-} from './food-cost-engine.mjs?v=20260806-manager-auth';
-import { resolveRange } from './date-range.mjs?v=20260806-manager-auth';
-import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260806-manager-auth';
-import { triageIntents } from './triage.mjs?v=20260806-manager-auth';
-import { initManagerMode } from './manager-mode.mjs?v=20260806-manager-auth';
-import { hasConfig, browserKey } from './auth.mjs?v=20260806-manager-auth';
-import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260806-manager-auth';
-import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260806-manager-auth';
+} from './food-cost-engine.mjs?v=20260806-v2';
+import { resolveRange } from './date-range.mjs?v=20260806-v2';
+import { toastVisits, scorePair } from './ot-matcher.mjs?v=20260806-v2';
+import { triageIntents } from './triage.mjs?v=20260806-v2';
+import { initManagerMode } from './manager-mode.mjs?v=20260806-v2';
+import { hasConfig, browserKey } from './auth.mjs?v=20260806-v2';
+import { initUpdatePage, pgUpdate } from './page-update.mjs?v=20260806-v2';
+import { initFixesPage, pgFixes } from './page-fixes.mjs?v=20260806-v2';
 import {
-  panel, kpiBand, delta, linePlot, stackedBars, sparkline, drawPlots,
-  skeletonOverview, plotEmpty, moneyK,
-} from './ui.mjs?v=20260806-manager-auth';
+  panel, chartPanel, kpiBand, delta, linePlot, stackedBars, sparkline, drawPlots,
+  skeletonOverview, plotEmpty, moneyK, segmented,
+} from './ui.mjs?v=20260806-v2';
+/* Importing the icon set here is what publishes it to the shell: index.html is
+   a classic script and cannot import a module, so src/icons.mjs assigns
+   window.ACE_ICON on load and the shell borrows it for its own chrome. */
+import { icon } from './icons.mjs?v=20260806-v2';
 
 const APP = window.__ACE_APP__;
 if (!APP) throw new Error('pages-live: legacy shell did not expose __ACE_APP__');
@@ -406,6 +410,9 @@ function fmtDate(yyyymmdd) {
  * card of content. It is opt-in so pages adopt it as they are redesigned
  * instead of the app spending a release with two half-matching headers.
  */
+/** Header provenance chip — where these figures came from, and how current. */
+function setProvenance(text, tone = '') { APP.setProv?.(text, tone); }
+
 function opsControls(state, onchange, opts = {}) {
   const presets = [
     ['yesterday', 'Latest day'], ['week', 'Current week'], ['prevweek', 'Previous week'],
@@ -428,12 +435,17 @@ function opsControls(state, onchange, opts = {}) {
       <select class="ctl" id="opsTo">
         ${avail.map((d) => `<option value="${d}" ${(state.to ?? avail[avail.length - 1]) === d ? 'selected' : ''}>${fmtDate(d)}</option>`).join('')}
       </select></label>
-    <label class="field"><span>Service period</span>
-      <select class="ctl" id="opsPeriod">
-        <option value="all" ${state.period === 'all' ? 'selected' : ''}>Lunch + dinner</option>
-        <option value="lunch" ${state.period === 'lunch' ? 'selected' : ''}>Lunch (before ${DATA.ops.servicePeriods.lunchBeforeHour - 12} PM)</option>
-        <option value="dinner" ${state.period === 'dinner' ? 'selected' : ''}>Dinner</option>
-      </select></label>
+    <div class="field"><span id="opsPeriodLbl">Service period</span>
+      ${segmented({
+    name: 'opsPeriod',
+    value: state.period,
+    label: 'Service period',
+    options: [
+      ['all', 'Lunch + dinner'],
+      ['lunch', 'Lunch', `before ${DATA.ops.servicePeriods.lunchBeforeHour - 12} PM`],
+      ['dinner', 'Dinner', `from ${DATA.ops.servicePeriods.lunchBeforeHour - 12} PM`],
+    ],
+  })}</div>
     <div class="rangenote sub" role="status">
       <span class="rn-1">Showing: <b>${esc(range.label)}</b>${range.invalid ? '' : ` · ${range.dates.length} day${range.dates.length === 1 ? '' : 's'}`}</span>
       <span class="rn-2">Available data: ${fmtDate(avail[0])}–${fmtDate(avail[avail.length - 1])} (${avail.length} days)</span>
@@ -443,6 +455,13 @@ function opsControls(state, onchange, opts = {}) {
     ? `<div class="errbox" role="alert"${style ? ` style="${style}"` : ''}><b>Check the custom range.</b>
     ${esc(range.invalid.message)} <button class="btn ghost sm" type="button" id="opsSwap" style="margin-left:8px">Swap dates</button></div>`
     : '');
+
+  /* The resolved period also goes in the sticky header, where it stays visible
+     after the filter bar has scrolled away. */
+  const perEl = document.getElementById('pgperiod');
+  if (perEl) perEl.textContent = range.invalid ? '' : range.label;
+  setProvenance(`${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} through ${fmtDate(avail[avail.length - 1])}`,
+    DATA.source === 'supabase' ? '' : 'warn');
 
   const el = document.createElement('div');
   if (bar) {
@@ -459,7 +478,9 @@ function opsControls(state, onchange, opts = {}) {
       preset: el.querySelector('#opsPreset').value,
       from: el.querySelector('#opsFrom').value,
       to: el.querySelector('#opsTo').value,
-      period: el.querySelector('#opsPeriod').value,
+      /* the service period is a radio group now; fall back to the state value
+         so a missing checked input can never silently reset the filter */
+      period: el.querySelector('input[name="opsPeriod"]:checked')?.value ?? state.period,
     };
     saveOpsState(next);
     onchange();
@@ -467,7 +488,7 @@ function opsControls(state, onchange, opts = {}) {
   el.querySelector('#opsPreset').addEventListener('change', apply);
   el.querySelector('#opsFrom').addEventListener('change', apply);
   el.querySelector('#opsTo').addEventListener('change', apply);
-  el.querySelector('#opsPeriod').addEventListener('change', apply);
+  el.querySelector('[role="radiogroup"]')?.addEventListener('change', apply);
   el.querySelector('#opsSwap')?.addEventListener('click', () => {
     saveOpsState({ ...state, from: state.to, to: state.from });
     onchange();
@@ -532,7 +553,6 @@ function renderOps(host) {
   const costed = rows.filter((r) => r.fc != null);
   const aboveUsual = base.pct == null ? [] : costed.filter((r) => r.fc > base.pct);
   const unavailable = conv.unknown + conv.notConnected + conv.ambiguous;
-  const lastDay = fmtDate(range.dates[range.dates.length - 1]);
   const dayLabel = (d) => `${WD[weekdayOf(d)].slice(0, 3)} ${fmtDate(d)}`;
 
   const frag = document.createDocumentFragment();
@@ -551,12 +571,10 @@ function renderOps(host) {
     return `<div class="plot" id="${id}"></div>`;
   };
 
-  /* -- what am I looking at ------------------------------------------------ */
-  add(`<div class="ctx">
-    <span class="cx-p">${esc(range.label)}</span>
-    <span class="cx-d">${dayWord} · ${periods.join(' + ')} · dining room &amp; patio</span>
-    <span class="cx-s">${DATA.source === 'supabase' ? 'Shared data' : 'Backup data'} through ${esc(lastDay)}</span>
-  </div>`);
+  /* The resolved range, the service period and the scope used to be repeated in
+     a context line here, under a filter bar that already states all three. What
+     was worth keeping — where the figures came from and how current they are —
+     is set by opsControls into the header, where it stays visible on scroll. */
 
   /* -- how are we performing, and what changed ----------------------------- */
   add(kpiBand([
@@ -604,13 +622,15 @@ function renderOps(host) {
         label: fmtDate(r.d),
         value: r.fc,
         tip: {
+          /* the third element is the series slot the number came from, so the
+             tooltip swatch matches the mark on the chart */
           title: dayLabel(r.d),
           rows: [
-            ['Food cost', pct(r.fc)],
+            ['Food cost', pct(r.fc), 1],
             ['AYCE sales', usd0(r.entitlementNet)],
             ['Estimated cost', usd0(r.roundCost)],
+            ...(base.pct == null ? [] : [['Usual for similar shifts', pct(base.pct), 'dash']]),
           ],
-          note: base.pct == null ? '' : `Usual for similar shifts: ${pct(base.pct)}`,
         },
       })),
       reference: base.pct,
@@ -621,12 +641,15 @@ function renderOps(host) {
     : plotEmpty('No AYCE sales in this range',
       'Food cost is a share of AYCE sales, so there is no percentage to plot for these dates.');
 
-  add(panel({
+  add(chartPanel({
     title: 'AYCE food cost by day',
     desc: 'Estimated cost of recorded AYCE rounds as a share of AYCE sales, per business date.',
-    action: base.pct == null ? '' : `<div class="plegend">
-      <span><i class="ln"></i>Food cost</span>
-      <span><i class="dash"></i>Usual for similar shifts</span></div>`,
+    value: pct(fc),
+    delta: delta(vsUsual, { goodWhen: 'down', suffix: 'vs usual' }),
+    config: {
+      fc: { label: 'Food cost', series: 1, kind: 'line' },
+      ...(base.pct == null ? {} : { usual: { label: 'Usual for similar shifts', series: 4, kind: 'dash' } }),
+    },
     body: trend,
     foot: `Estimated from items recorded in Toast — recorded consumption, not physical inventory
       usage or kitchen waste. Days with no AYCE sales have no percentage and break the line rather
@@ -644,8 +667,8 @@ function renderOps(host) {
         tip: {
           title: dayLabel(r.d),
           rows: [
-            ['AYCE entitlement', usd0(r.entitlementNet)],
-            ['Other floor sales', usd0(other)],
+            ['AYCE entitlement', usd0(r.entitlementNet), 1],
+            ['Other floor sales', usd0(other), 2],
             ['Net floor sales', usd0(r.floorNet)],
           ],
           note: `${fmt(r.checks)} checks · ${fmt(r.guests)} guests`,
@@ -674,13 +697,17 @@ function renderOps(host) {
     `${conv.unknown} with no recorded choice · ${conv.notConnected + conv.ambiguous} not reliably connected to a check. All of them still count in every sales, cover and food-cost figure.`)}
   </ul>`;
 
-  add(`<div class="pair">
-    ${panel({
+  /* one surface, one rule down the middle — the chart and the exception list are
+     read together, so they should not look like two unrelated cards */
+  add(`<div class="pair band">
+    ${chartPanel({
     title: 'Sales by day',
     desc: 'Net floor sales per business date, split by what the AYCE entitlement contributed.',
-    action: `<div class="plegend">
-        <span><i style="background:var(--fill-blue)"></i>AYCE entitlement</span>
-        <span><i style="background:var(--s4);opacity:.45"></i>Other floor sales</span></div>`,
+    value: usd0(t.floorNet),
+    config: {
+      ayce: { label: 'AYCE entitlement', series: 1 },
+      other: { label: 'Other floor sales', series: 2 },
+    },
     body: salesPlot,
   })}
     ${panel({
@@ -717,16 +744,15 @@ function renderOps(host) {
       AYCE sales), never an average of the daily percentages.`,
   }));
 
-  /* -- scope, kept verbatim ------------------------------------------------ */
-  add(panel({
-    title: 'Scope',
-    body: `<p class="sub" style="max-width:104ch">Dining-room and patio tables only — bar, takeout, delivery and
+  /* -- scope, wording kept verbatim ----------------------------------------
+     A closing footnote, not a seventh card: it qualifies everything above it
+     rather than presenting a section of its own. */
+  add(`<div class="note close-note"><b>Scope.</b> Dining-room and patio tables only — bar, takeout, delivery and
       non-table sales are excluded. AYCE food cost is <b>estimated from items recorded in Toast; it measures
       recorded consumption, not physical inventory usage or kitchen waste</b>. Every seated table counts in
       checks, covers, sales and food cost whether or not the host recorded a starting choice. Conversion rates
       use only tables with a recorded choice that connect to a Toast check — for the rest, conversion is simply
-      unavailable.</p>`,
-  }));
+      unavailable.</div>`);
 
   host.appendChild(frag);
   drawPlots(host, plotSpecs);
@@ -881,7 +907,7 @@ function renderServersLive(host) {
       <td>${usd0(r.a.entitlementNet)}</td>
       <td><b>${pct(r.p)}</b></td>
       <td>${r.median === undefined ? '<span class="muted">…</span>' : r.median === null ? '—'
-        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
+        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}${icon('alert', 12)}</span>` : ''}`}</td>
       <td>${pct(base.pct)}</td>
       <td>${r.conv.eligible ? `${pct((r.conv.converted / r.conv.eligible) * 100, 0)} <span class="muted">(${r.conv.converted}/${r.conv.eligible})</span>` : '<span class="muted" title="No recorded-and-connected eligible tables — conversion unavailable, not zero">n/a</span>'}</td>
       <td style="text-align:center">${costBadge(r)}</td>
@@ -942,7 +968,7 @@ function srvTh(key, label, view, thAttrs = '', tip = null) {
   return `<th scope="col" ${thAttrs}${ariaSort}>
     <button type="button" class="sortbtn" data-k="${key}" aria-label="Sort by ${esc(label)}${on ? (view.dir === 1 ? ', currently ascending' : ', currently descending') : ''}"
       style="background:none;border:none;cursor:pointer;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;padding:0">
-      ${esc(label)}<span class="sarr" aria-hidden="true">${on ? (view.dir === 1 ? '▲' : '▼') : '▾'}</span></button>${
+      ${esc(label)}<span class="sarr" aria-hidden="true">${on ? icon(view.dir === 1 ? 'arrowUp' : 'arrowDown', 12) : icon('chevronDown', 12)}</span></button>${
     tip ? `<button class="inf" type="button" aria-label="Definition of ${esc(label)}" data-tip="${esc(tip)}">i</button>` : ''}</th>`;
 }
 function costBadge(r) {
@@ -1042,14 +1068,14 @@ function openServerDrawer(guid, row, range, periods, base) {
       <div style="min-width:0"><h3>${esc(row.name)}</h3>
         <div class="meta"><span>${esc(range.label)} · ${periods.join(' + ')}</span>
           <span>${fmt(row.a.checks)} AYCE checks · ${usd0(row.a.entitlementNet)} AYCE sales</span></div></div>
-      <button class="xbtn" type="button" id="srvDrClose" aria-label="Close server detail">✕</button></div>
+      <button class="xbtn" type="button" id="srvDrClose" aria-label="Close server detail">${icon('close', 18)}</button></div>
     <div class="db">
       <div class="dgrid">
         <div class="dcell"><div class="k">Weighted food cost</div><div class="v">${pct(row.p)}</div>
           <div class="m">Σ cost ÷ Σ AYCE sales — the financial impact</div></div>
         <div class="dcell"><div class="k">Median check</div><div class="v">${stat ? pct(stat.medianPct) : '—'}</div>
           <div class="m">the typical table — whales can't distort it</div></div>
-        <div class="dcell"><div class="k">Middle 50% (IQR)</div><div class="v" style="font-size:15px">${stat && stat.q1Pct != null ? `${pct(stat.q1Pct, 0)}–${pct(stat.q3Pct, 0)}` : '—'}</div>
+        <div class="dcell"><div class="k">Middle 50% (IQR)</div><div class="v" style="font-size:var(--fs-md)">${stat && stat.q1Pct != null ? `${pct(stat.q1Pct, 0)}–${pct(stat.q3Pct, 0)}` : '—'}</div>
           <div class="m">${stat?.outlierCount ? `${stat.outlierCount} outlier check(s) above ${pct(stat.outlierAbovePct, 0)}` : 'no outlier checks'}</div></div>
         <div class="dcell"><div class="k">Restaurant baseline</div><div class="v">${pct(base.pct)}</div>
           <div class="m">same weekday + period, prior ${DATA.ops.baseline.weeks} wks</div></div>
@@ -1119,9 +1145,9 @@ function checkItemsHtml(c) {
   const items = (c.items ?? []).filter((x) => x.cls !== 'entitlement');
   const ent = (c.items ?? []).filter((x) => x.cls === 'entitlement');
   return `
-    <div style="padding:8px 4px;font-size:12.5px;line-height:1.6">
+    <div style="padding:8px 4px;font-size:var(--fs-xs);line-height:1.6">
       ${ent.length ? `<div style="margin-bottom:6px"><b>AYCE entitlement:</b> ${ent.map((x) => `${esc(x.name)} × ${fmt(x.qty)} (${usd0(x.net)})`).join(' · ')}</div>` : ''}
-      ${items.length ? `<table style="font-size:12.5px;max-width:640px">
+      ${items.length ? `<table style="font-size:var(--fs-xs);max-width:640px">
         <caption class="sr">Ordered items and their cost sources</caption>
         <thead><tr><th scope="col" style="text-align:left">Item</th><th scope="col">Qty</th><th scope="col">Est. cost</th><th scope="col" style="text-align:left">Cost source</th></tr></thead>
         <tbody>${items.map((x) => `<tr>
@@ -1341,27 +1367,27 @@ function pgHelp(host) {
     h.innerHTML = `
     <section class="hero rise"><div class="hero-top"><div class="hero-verdict">
       <div class="hero-eyebrow">How This Works</div>
-      <div class="hero-delta"><span class="big" style="font-size:26px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
+      <div class="hero-delta"><span class="big" style="font-size:28px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
     </div></div></section>
 
-    <div class="sec g3">
+    <div class="sec g3 band">
       <div class="card"><header><div><div class="ttl">1 · Toast sales — automatic</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">Every morning around 6 AM the previous
+        <div class="body" >Every morning around 6 AM the previous
         day's sales arrive from Toast by themselves. Nobody needs to do anything. If a morning is missed,
         <b>Update Dashboard</b> shows a Retry button.</div></div>
       <div class="card"><header><div><div class="ttl">2 · OpenTable file — after service</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">Download the reservations file from
+        <div class="body" >Download the reservations file from
         OpenTable GuestCenter and upload it under <b>Update Dashboard</b>. It carries each table's recorded
         starting choice (Undecided, À la carte, or AYCE) so conversion can be measured. Uploading the same
         file twice is always safe.</div></div>
       <div class="card"><header><div><div class="ttl">3 · Food costs — occasional</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">When the chef confirms item costs,
+        <div class="body" >When the chef confirms item costs,
         upload the cost sheet under <b>Update Dashboard → Food Costs</b>. Until then numbers
         are marked provisional. Past days keep their old costs — history never changes.</div></div>
     </div>
 
     <div class="card sec"><header><div><div class="ttl">What the numbers mean — in plain language</div></div></header>
-      <div class="body"><dl style="display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:13.5px;line-height:1.6">
+      <div class="body"><dl style="display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:var(--fs-sm);line-height:1.6">
         <dt style="font-weight:650;white-space:nowrap">AYCE food cost</dt>
         <dd>The estimated cost of AYCE food the kitchen sent out, divided by what guests paid for AYCE.
           Estimated from what was recorded in Toast — it is not an inventory count and says nothing about waste.
@@ -1387,7 +1413,7 @@ function pgHelp(host) {
 
     <div class="sec">
       <div class="acc"><button type="button" aria-expanded="false" id="advDetTgl">
-        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">▶</span></button>
+        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">${icon('chevronRight', 14)}</span></button>
         <div class="ab" hidden id="advDetBody"></div></div>
     </div>`;
 
@@ -1416,7 +1442,7 @@ function pgHelp(host) {
         const censusSum = conv.eligible + conv.predecided + conv.unknown + conv.review + conv.notConnected + conv.ambiguous + conv.excluded;
         const wrap = document.createElement('div');
         wrap.innerHTML = `
-        <table class="tb" style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:14px">
+        <table class="tb" style="width:100%;font-size:var(--fs-xs);border-collapse:collapse;margin-bottom:14px">
         <caption class="sr">Technical data and methodology details</caption><tbody>
           ${mrow('Data source', DATA.source === 'supabase' ? 'Shared database' : 'Static fallback files (database unreachable)')}
           ${mrow('Deployed commit', '<span id="deploySha">Checking GitHub Pages...</span>')}
@@ -1447,19 +1473,21 @@ let LEGACY = null;
 function registerPages() {
   LEGACY = { ...PAGES };
   for (const k of Object.keys(PAGES)) delete PAGES[k];
-  PAGES.ops = { label: 'Overview', icon: '◈', fn: pgOps, title: 'Operations overview', group: 'Operations',
+  /* `icon` is a name in the src/icons.mjs set, not a glyph — the shell resolves
+     it through window.ACE_ICON when it draws the navigation. */
+  PAGES.ops = { label: 'Overview', icon: 'overview', fn: pgOps, title: 'Operations overview', group: 'Operations',
     desc: 'AYCE mix, food cost and conversion for the selected range — dining room and patio only.' };
-  PAGES.servers = { label: 'Server Performance', icon: '◑', fn: pgServersLive, title: 'Server performance', group: 'Operations',
+  PAGES.servers = { label: 'Server Performance', icon: 'servers', fn: pgServersLive, title: 'Server performance', group: 'Operations',
     desc: 'AYCE checks, sales, food cost and conversion per server. Open a row for check-level detail.' };
-  PAGES.foodcost = { label: 'AYCE Food Cost', icon: '◐', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations',
+  PAGES.foodcost = { label: 'AYCE Food Cost', icon: 'foodcost', fn: pgFoodCost, title: 'AYCE food cost', group: 'Operations',
     desc: 'Estimated cost of AYCE food recorded in Toast against AYCE sales collected.' };
-  PAGES.update = { label: 'Update Dashboard', icon: '⬆', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations',
+  PAGES.update = { label: 'Update Dashboard', icon: 'update', fn: (h) => withData(h, pgUpdate), title: 'Update Dashboard', group: 'Operations',
     desc: 'Keep Toast sales, OpenTable guest status and food costs current.' };
-  PAGES.fixes = { label: 'Fixes Needed', icon: '▣', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0,
+  PAGES.fixes = { label: 'Fixes Needed', icon: 'fixes', fn: (h) => withData(h, pgFixes), title: 'Fixes Needed', group: 'Operations', badge: 0,
     desc: 'The short list of visits that genuinely need a decision — one card at a time.' };
-  PAGES.pilot = { label: 'Pilot Review', icon: '◆', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true,
+  PAGES.pilot = { label: 'Pilot Review', icon: 'pilot', fn: pgPilot, title: 'Pilot Review', group: 'Historical', pilotFilters: true,
     desc: 'Frozen pilot weekend, Jul 31 – Aug 2, 2026. Commission figures are informational.' };
-  PAGES.help = { label: 'How This Works', icon: '◇', fn: pgHelp, title: 'How This Works', group: 'Help',
+  PAGES.help = { label: 'How This Works', icon: 'help', fn: pgHelp, title: 'How This Works', group: 'Help',
     desc: 'Where the numbers come from, in plain language, with the technical detail one click away.' };
 
   // land on Operations Overview unless the visitor SAVED a page earlier;

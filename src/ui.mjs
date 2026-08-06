@@ -91,6 +91,78 @@ export function panel(o) {
     ${o.foot ? `<div class="panel-f">${o.foot}</div>` : ''}</section>`;
 }
 
+/* ------------------------------------------------------------- chart system --
+   One configuration object per chart drives the series colour, the legend and
+   the tooltip together, so those three can never disagree about what a colour
+   means. A series is declared once:
+
+     { ayce: { label: 'AYCE covers', series: 1 },
+       alc:  { label: 'À la carte',  series: 4, kind: 'dash' } }
+
+   `series` picks a slot in the theme's --chart-1..5 scale. The container binds
+   those slots to --c-1..5, and the plot marks paint with var(--c-N), so no
+   colour is ever written into plot geometry.
+*/
+
+/** Style attribute binding a config's series slots to the container. */
+function seriesVars(config) {
+  const seen = new Set();
+  const out = [];
+  Object.values(config || {}).forEach((c, i) => {
+    const slot = c.series ?? (i + 1);
+    if (seen.has(slot)) return;
+    seen.add(slot);
+    out.push(`--c-${out.length + 1}:var(--chart-${slot})`);
+  });
+  return out.length ? ` style="${out.join(';')}"` : '';
+}
+
+/**
+ * Legend rendered from a chart config. `kind` selects the swatch:
+ * 'dot' (default), 'line', 'dash' — the dashed swatch marks a reference series.
+ */
+export function chartLegend(config) {
+  const items = Object.values(config || {}).filter((c) => c.label && c.legend !== false);
+  if (!items.length) return '';
+  return `<div class="plegend">${items.map((c, i) => {
+    const slot = c.series ?? (i + 1);
+    const kind = c.kind === 'line' ? ' ln' : c.kind === 'dash' ? ' dash' : '';
+    const colour = c.kind === 'dash' ? '' : ` style="${c.kind === 'line' ? 'border-top-color' : 'background'}:var(--chart-${slot})"`;
+    return `<span><i class="${kind.trim()}"${colour}></i>${esc(c.label)}</span>`;
+  }).join('')}</div>`;
+}
+
+/**
+ * Chart panel — the shared container for every plot in the app.
+ *
+ * The header answers "what is this, what does it currently read, and did it
+ * move" before the reader looks at the geometry: title, headline value, delta
+ * badge, one supporting sentence, then the legend.
+ *
+ * @param {object} o
+ * @param {string} o.title
+ * @param {string} [o.desc]
+ * @param {string} [o.value]   formatted headline figure
+ * @param {string} [o.delta]   markup from delta()
+ * @param {object} [o.config]  chart config — drives series colours and legend
+ * @param {string} [o.legend]  explicit legend markup, overriding the config's
+ * @param {string} o.body      plot markup or a plot host element
+ * @param {string} [o.foot]
+ * @param {string} [o.cls]
+ */
+export function chartPanel(o) {
+  const legend = o.legend ?? (o.config ? chartLegend(o.config) : '');
+  const head = `<div class="chead">
+    <div class="ch-l"><div class="ch-t">${o.title}</div>${
+  o.desc ? `<div class="ch-d">${o.desc}</div>` : ''}</div>${
+  (o.value || o.delta) ? `<div class="ch-r">${
+    o.value ? `<div class="ch-v">${o.value}</div>` : ''}${o.delta ?? ''}</div>` : ''}
+  </div>`;
+  return `<section class="panel${o.cls ? ` ${o.cls}` : ''}"${seriesVars(o.config)}>${head}
+    <div class="panel-b">${legend ? `<div class="ch-lg">${legend}</div>` : ''}${o.body}</div>
+    ${o.foot ? `<div class="panel-f">${o.foot}</div>` : ''}</section>`;
+}
+
 /**
  * KPI band. The first cell is the lead metric and spans the band's full height;
  * the rest are supporting figures at a quieter weight.
@@ -113,6 +185,30 @@ export function kpiBand(cells, label = 'Key figures') {
 /** Status badge in the shell's existing badge language. */
 export function badge(text, tone = 'mute') {
   return `<span class="badge ${tone}">${esc(text)}</span>`;
+}
+
+/**
+ * Segmented control for a short, mutually exclusive choice — faster to read and
+ * to hit than a select when there are two to four options and they are all
+ * worth showing.
+ *
+ * Built on real radio inputs rather than buttons with aria-pressed: a native
+ * radio group already gives arrow-key navigation, roving focus, a single tab
+ * stop and the correct role, and it submits and restores like any other field.
+ * The input is clipped rather than display:none so it stays focusable.
+ *
+ * @param {object} o
+ * @param {string} o.name     radio group name (also the element id prefix)
+ * @param {string} o.value    currently selected value
+ * @param {Array<[string,string,string?]>} o.options  [value, label, hint?]
+ * @param {string} o.label    accessible group name
+ */
+export function segmented(o) {
+  const opts = o.options.map(([v, l, hint], i) => `<label class="seg-o${v === o.value ? ' on' : ''}"${
+    hint ? ` title="${esc(hint)}"` : ''}>
+    <input type="radio" name="${esc(o.name)}" id="${esc(o.name)}-${i}" value="${esc(v)}"${
+  v === o.value ? ' checked' : ''}${hint ? ` aria-label="${esc(`${l} — ${hint}`)}"` : ''}><span>${esc(l)}</span></label>`).join('');
+  return `<div class="seg-w" role="radiogroup" aria-label="${esc(o.label)}">${opts}</div>`;
 }
 
 /* ------------------------------------------------------------------ states -- */
@@ -145,6 +241,8 @@ export function plotEmpty(title, sub) {
    drawPlots(), after the panel is in the DOM and can be measured.
 */
 const VW = 1000;
+/* unique gradient ids: two plots on a page must not share one defs entry */
+let AREA_ID = 0;
 
 /** Geometry for a given rendered width, in user units that land on real px. */
 function geom(width, heightPx) {
@@ -164,13 +262,29 @@ function heightFor(width, tall) {
   return tall ? 280 : 250;
 }
 
-/** "Nice" axis maximum so ticks land on readable numbers. */
-function niceMax(max) {
-  if (!(max > 0)) return 1;
-  const mag = 10 ** Math.floor(Math.log10(max));
-  const norm = max / mag;
-  const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10;
-  return step * mag;
+/**
+ * Axis scale whose ticks land on numbers a person would actually write.
+ *
+ * Rounding the maximum alone is not enough: a max of 50 divided into four
+ * intervals gives 12.5, 25, 37.5 — printed as 13%, 25%, 38%, which reads as
+ * noise. This rounds the *step* instead, and tries both four and five intervals,
+ * keeping whichever covers the data with the least dead space above it.
+ *
+ * @returns {{max:number, ticks:number}}
+ */
+function niceScale(max) {
+  if (!(max > 0)) return { max: 1, ticks: 4 };
+  const round = (raw) => {
+    const mag = 10 ** Math.floor(Math.log10(raw));
+    const norm = raw / mag;
+    return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  };
+  let best = null;
+  for (const ticks of [4, 5]) {
+    const top = round(max / ticks) * ticks;
+    if (!best || top - max < best.max - max) best = { max: top, ticks };
+  }
+  return best;
 }
 
 /** Thin x labels so they never collide: how many fit is a function of width. */
@@ -179,11 +293,10 @@ function labelStride(n, width) {
   return n <= fits ? 1 : Math.ceil(n / fits);
 }
 
-function gridlines(g, max, fmtTick) {
+function gridlines(g, max, fmtTick, ticks = 4) {
   const { pad, font, VH } = g;
   const w = VW - pad.l - pad.r;
   const h = VH - pad.t - pad.b;
-  const ticks = 4;
   let s = '';
   for (let i = 0; i <= ticks; i++) {
     const y = pad.t + h - (h * i) / ticks;
@@ -194,15 +307,26 @@ function gridlines(g, max, fmtTick) {
   return s;
 }
 
-function xLabels(g, labels, width) {
+/**
+ * X axis labels.
+ *
+ * `banded` places each label at the centre of its own slice — right for bars,
+ * which occupy a band. A line plot puts its first and last point on the plot
+ * edges, so its labels have to sit on the points instead; anchoring is nudged
+ * at the ends so the outermost label cannot overhang the axis.
+ */
+function xLabels(g, labels, width, banded = true) {
   const { pad, font, VH } = g;
   const w = VW - pad.l - pad.r;
-  const stride = labelStride(labels.length, width);
-  const step = w / labels.length;
+  const n = labels.length;
+  const stride = labelStride(n, width);
+  const at = banded
+    ? (i) => pad.l + (w / n) * i + w / n / 2
+    : (i) => (n === 1 ? pad.l + w / 2 : pad.l + (w * i) / (n - 1));
   return labels.map((l, i) => {
-    if (i % stride !== 0 && i !== labels.length - 1) return '';
-    const x = pad.l + step * i + step / 2;
-    return `<text class="ax" x="${x.toFixed(1)}" y="${(VH - pad.b + font * 1.6).toFixed(1)}" text-anchor="middle" font-size="${font.toFixed(1)}">${esc(l)}</text>`;
+    if (i % stride !== 0 && i !== n - 1) return '';
+    const anchor = banded || n === 1 ? 'middle' : (i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle'));
+    return `<text class="ax" x="${at(i).toFixed(1)}" y="${(VH - pad.b + font * 1.6).toFixed(1)}" text-anchor="${anchor}" font-size="${font.toFixed(1)}">${esc(l)}</text>`;
   }).join('');
 }
 
@@ -229,10 +353,15 @@ export function linePlot(o, width = 900) {
   const w = VW - pad.l - pad.r;
   const h = VH - pad.t - pad.b;
 
-  const max = niceMax(Math.max(...vals, reference ?? 0) * 1.12);
-  const step = w / points.length;
-  const cx = (i) => pad.l + step * i + step / 2;
+  const { max, ticks } = niceScale(Math.max(...vals, reference ?? 0) * 1.12);
+  /* A trend spans the plot: first and last point sit on the edges rather than
+     in the middle of a band. Band-centring belongs to bars — on a line it left
+     the series floating inside the panel with dead margins either side, and the
+     area beneath it read as a free-standing block. */
+  const n = points.length;
+  const cx = (i) => (n === 1 ? pad.l + w / 2 : pad.l + (w * i) / (n - 1));
   const cy = (v) => pad.t + h - (v / max) * h;
+  const band = n === 1 ? w : w / (n - 1);
 
   /* split into runs of consecutive present values so gaps stay gaps */
   const runs = [];
@@ -243,13 +372,21 @@ export function linePlot(o, width = 900) {
   });
   if (run.length) runs.push(run);
 
+  /* The area under the line fades out rather than filling flat. A flat tint on a
+     zero-based axis paints most of the panel as one solid block — it reads as a
+     shape in its own right and competes with the line it is supposed to
+     support. The gradient keeps the magnitude cue at the line and lets it go. */
+  const gid = `ag${(AREA_ID += 1)}`;
   const lines = runs.map((r) => {
     const d = r.map((pt, i) => `${i ? 'L' : 'M'}${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
     const area = r.length > 1
-      ? `<path class="ar" d="${d} L${r[r.length - 1].x.toFixed(1)} ${(pad.t + h).toFixed(1)} L${r[0].x.toFixed(1)} ${(pad.t + h).toFixed(1)} Z"/>`
+      ? `<path class="ar" fill="url(#${gid})" d="${d} L${r[r.length - 1].x.toFixed(1)} ${(pad.t + h).toFixed(1)} L${r[0].x.toFixed(1)} ${(pad.t + h).toFixed(1)} Z"/>`
       : '';
     return `${area}<path class="ln" d="${d}" stroke-width="${(2 * k).toFixed(2)}"/>`;
   }).join('');
+  const defs = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="var(--c-1,var(--chart-1))" stop-opacity=".16"/>
+    <stop offset="1" stop-color="var(--c-1,var(--chart-1))" stop-opacity="0"/></linearGradient></defs>`;
 
   const dots = runs.flat().map((pt) => `<circle class="pt" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${(3.2 * k).toFixed(2)}" stroke-width="${(2 * k).toFixed(2)}"/>`).join('');
 
@@ -261,13 +398,17 @@ export function linePlot(o, width = 900) {
   /* Pointer affordance only. The svg is role="img", so anything inside it is
      already hidden from assistive tech; the accessible equivalent of every
      plot on this page is the by-day table, which carries the same figures. */
-  const hits = points.map((p, i) => (p.tip
-    ? `<rect class="hot" x="${(pad.l + step * i).toFixed(1)}" y="${pad.t.toFixed(1)}" width="${step.toFixed(1)}" height="${h.toFixed(1)}"
-        aria-hidden="true" data-tip="${esc(JSON.stringify(p.tip))}"/>`
-    : '')).join('');
+  /* one hit zone per point, centred on it and clipped to the plot at the ends */
+  const hits = points.map((p, i) => {
+    if (!p.tip) return '';
+    const x0 = Math.max(pad.l, cx(i) - band / 2);
+    const x1 = Math.min(pad.l + w, cx(i) + band / 2);
+    return `<rect class="hot" x="${x0.toFixed(1)}" y="${pad.t.toFixed(1)}" width="${(x1 - x0).toFixed(1)}" height="${h.toFixed(1)}"
+        aria-hidden="true" data-tip="${esc(JSON.stringify(p.tip))}"/>`;
+  }).join('');
 
-  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${esc(aria)}" preserveAspectRatio="xMidYMid meet">
-    ${gridlines(g, max, fmtTick)}${ref}${lines}${dots}${xLabels(g, points.map((p) => p.label), width)}${hits}
+  return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${esc(aria)}" preserveAspectRatio="xMidYMid meet">${defs}
+    ${gridlines(g, max, fmtTick, ticks)}${ref}${lines}${dots}${xLabels(g, points.map((p) => p.label), width, false)}${hits}
   </svg>`;
 }
 
@@ -290,7 +431,7 @@ export function stackedBars(o, width = 900) {
   const w = VW - pad.l - pad.r;
   const ph = VH - pad.t - pad.b;
 
-  const max = niceMax(Math.max(...totals) * 1.1);
+  const { max, ticks } = niceScale(Math.max(...totals) * 1.1);
   const step = w / bars.length;
   const bw = Math.min(44 * k, step * 0.62);
   const h = (v) => ((v ?? 0) / max) * ph;
@@ -311,7 +452,7 @@ export function stackedBars(o, width = 900) {
     : '')).join('');
 
   return `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${esc(aria)}" preserveAspectRatio="xMidYMid meet">
-    ${gridlines(g, max, fmtTick)}${rects}${xLabels(g, bars.map((b) => b.label), width)}${hits}
+    ${gridlines(g, max, fmtTick, ticks)}${rects}${xLabels(g, bars.map((b) => b.label), width)}${hits}
   </svg>`;
 }
 
@@ -324,9 +465,11 @@ export function stackedBars(o, width = 900) {
  * rather than accumulating one per render.
  */
 let LIVE = null;
+let RO = null;
 export function drawPlots(root, specs) {
-  LIVE = { root, specs };
+  LIVE = { root, specs, widths: new Map() };
   paintPlots(LIVE);
+  observePlots(LIVE);
 }
 function paintPlots(live) {
   if (!live || !live.root || !live.root.isConnected) return;
@@ -336,15 +479,52 @@ function paintPlots(live) {
   }
   bindTips(live.root);
 }
-/* Debounced on a timer rather than requestAnimationFrame: rAF is suspended
-   while the tab is hidden, so a window resized in the background would leave
-   the plots at their old geometry until the next full re-render. */
-if (typeof window !== 'undefined') {
+
+/*
+   Plots are measured against the element they land in, not the window.
+
+   A window-resize listener misses every container-only change — collapsing the
+   sidebar is the obvious one: the viewport never changes, so the charts would
+   keep drawing at the old width and their axis labels would sit wrong until the
+   next full re-render. A ResizeObserver watches the hosts themselves, which
+   covers window resizes too.
+
+   Redraw is skipped when the integer width is unchanged, so the observer's
+   initial callback and any sub-pixel churn cost nothing.
+*/
+function observePlots(live) {
+  if (typeof ResizeObserver === 'undefined' || !live || !live.root) return;
+  if (RO) RO.disconnect();
   let t = 0;
-  window.addEventListener('resize', () => {
+  RO = new ResizeObserver((entries) => {
+    let changed = false;
+    for (const e of entries) {
+      const w = Math.round(e.contentRect.width);
+      if (w > 0 && live.widths.get(e.target.id) !== w) { live.widths.set(e.target.id, w); changed = true; }
+    }
+    if (!changed) return;
     clearTimeout(t);
-    t = setTimeout(() => paintPlots(LIVE), 120);
+    t = setTimeout(() => paintPlots(live), 100);
   });
+  for (const { id } of live.specs) {
+    const el = live.root.querySelector(`#${id}`);
+    if (el) { live.widths.set(id, Math.round(el.clientWidth)); RO.observe(el); }
+  }
+}
+
+/* Explicit repaint hook for layout changes the observer cannot see as a resize
+   of a plot host — currently only the shell's rail toggle, which animates. */
+if (typeof window !== 'undefined') {
+  window.__ACE_RESIZE__ = () => setTimeout(() => paintPlots(LIVE), 260);
+  /* ResizeObserver is universal in every browser this ships to, but a window
+     listener costs nothing and keeps the old behaviour if it is ever absent. */
+  if (typeof ResizeObserver === 'undefined') {
+    let t = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(() => paintPlots(LIVE), 120);
+    });
+  }
 }
 
 /** Compact sparkline for the lead KPI — history, not decoration. */
@@ -381,8 +561,18 @@ export function bindTips(root) {
   const show = (el, x, y) => {
     let o;
     try { o = JSON.parse(el.dataset.tip); } catch { return; }
+    /* A row is [name, value] or [name, value, mark], where mark is a series
+       slot (1–5) or 'dash' for the reference line. The swatch ties the number
+       to the mark it came from, which is what makes a two-series tooltip
+       readable at a glance. */
+    const row = ([k, v, mark]) => {
+      const sw = mark == null ? ''
+        : `<i class="tip-i${mark === 'dash' ? ' dash' : ` s${mark}`}"${
+          typeof mark === 'number' ? ` style="background:var(--chart-${mark})"` : ''}></i>`;
+      return `<div class="tr">${sw}<span>${esc(k)}</span><b>${esc(v)}</b></div>`;
+    };
     tip.innerHTML = `${o.title ? `<div class="tt">${esc(o.title)}</div>` : ''}${
-      (o.rows || []).map(([k, v]) => `<div class="tr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${
+      (o.rows || []).map(row).join('')}${
       o.note ? `<div class="td">${esc(o.note)}</div>` : ''}`;
     tip.style.display = 'block';
     requestAnimationFrame(() => tip.classList.add('show'));
