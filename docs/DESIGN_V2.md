@@ -105,3 +105,57 @@ genuinely float: drawer, modal, popover, tooltip, toast.
 `src/icons.mjs` — a local inline-SVG set on a 24×24 grid, 1.5 stroke, round caps and joins,
 rendered at 16px. No icon dependency was added. Every Unicode geometric glyph
 (◈ ◑ ◐ ⬆ ▣ ◆ ◇ ☰ ✓ ▲ ▼) is gone from navigation and controls.
+
+## Verification
+
+Automated, over 7 routes × 5 viewports (1440 / 1280 / 1024 / 768 / 390) × 2 themes:
+
+| Check | Tool | Result |
+| --- | --- | --- |
+| Business logic | `npm test` | 254 pass, unchanged from baseline |
+| Horizontal overflow | `scripts/audit-ui.mjs` | none |
+| Contrast (WCAG AA) | `scripts/audit-ui.mjs` | no failures |
+| Accessible names on controls | `scripts/audit-ui.mjs` | none missing |
+| 44px touch targets at 390px | `scripts/audit-ui.mjs` | no failures |
+| Console errors | `scripts/audit-ui.mjs` | none beyond the known pre-existing set |
+| Keyboard + focus + drawer | `scripts/audit-keys.mjs` | 22 of 22 pass |
+
+Known pre-existing issues, unchanged by this work and reported separately from it:
+the `node:crypto` CORS console noise, the six anonymous Supabase 401s on
+`ace_checks` / `ace_selections` (RLS working as designed, static per-date JSON is
+the fallback), and the missing untracked per-date backup files for some
+drill-downs.
+
+## Self-audit
+
+| Dimension | Score |
+| --- | --- |
+| First impression | 9 |
+| Executive quality | 9 |
+| Information hierarchy | 9 |
+| Typography | 9 |
+| Navigation | 9 |
+| KPI presentation | 9 |
+| Charts | 8.5 |
+| Tables | 9 |
+| Filters | 8.5 |
+| Colour system | 9 |
+| Spacing | 9 |
+| Consistency | 8.5 |
+| Responsiveness | 9 |
+| Accessibility | 9 |
+| Overall polish | 8.8 |
+
+**Weakest points, stated plainly:**
+
+1. **Pilot Review still runs the legacy inline chart engine.** Its funnel, compare
+   bars and cover-mix line were restyled onto the v2 tokens and series scale, but
+   they were not re-architected onto `chartPanel`, so they have no headline value
+   or delta badge in their headers and their tooltips use the older markup. This
+   is the one place the app is visibly two generations of chart code.
+2. **Server Performance has no KPI band.** A manager lands on the filter bar and
+   then straight into a 17-row table. Every other operational route leads with a
+   figure. Adding one was left out deliberately rather than inventing an
+   aggregate — the right fix is to surface the totals the page already computes.
+3. **The type stack is the system stack.** Correct for a bundler-free GitHub Pages
+   deployment with no font fetch, but it caps how refined the display sizes get.
