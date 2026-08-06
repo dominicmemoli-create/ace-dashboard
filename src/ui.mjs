@@ -91,6 +91,78 @@ export function panel(o) {
     ${o.foot ? `<div class="panel-f">${o.foot}</div>` : ''}</section>`;
 }
 
+/* ------------------------------------------------------------- chart system --
+   One configuration object per chart drives the series colour, the legend and
+   the tooltip together, so those three can never disagree about what a colour
+   means. A series is declared once:
+
+     { ayce: { label: 'AYCE covers', series: 1 },
+       alc:  { label: 'À la carte',  series: 4, kind: 'dash' } }
+
+   `series` picks a slot in the theme's --chart-1..5 scale. The container binds
+   those slots to --c-1..5, and the plot marks paint with var(--c-N), so no
+   colour is ever written into plot geometry.
+*/
+
+/** Style attribute binding a config's series slots to the container. */
+function seriesVars(config) {
+  const seen = new Set();
+  const out = [];
+  Object.values(config || {}).forEach((c, i) => {
+    const slot = c.series ?? (i + 1);
+    if (seen.has(slot)) return;
+    seen.add(slot);
+    out.push(`--c-${out.length + 1}:var(--chart-${slot})`);
+  });
+  return out.length ? ` style="${out.join(';')}"` : '';
+}
+
+/**
+ * Legend rendered from a chart config. `kind` selects the swatch:
+ * 'dot' (default), 'line', 'dash' — the dashed swatch marks a reference series.
+ */
+export function chartLegend(config) {
+  const items = Object.values(config || {}).filter((c) => c.label && c.legend !== false);
+  if (!items.length) return '';
+  return `<div class="plegend">${items.map((c, i) => {
+    const slot = c.series ?? (i + 1);
+    const kind = c.kind === 'line' ? ' ln' : c.kind === 'dash' ? ' dash' : '';
+    const colour = c.kind === 'dash' ? '' : ` style="${c.kind === 'line' ? 'border-top-color' : 'background'}:var(--chart-${slot})"`;
+    return `<span><i class="${kind.trim()}"${colour}></i>${esc(c.label)}</span>`;
+  }).join('')}</div>`;
+}
+
+/**
+ * Chart panel — the shared container for every plot in the app.
+ *
+ * The header answers "what is this, what does it currently read, and did it
+ * move" before the reader looks at the geometry: title, headline value, delta
+ * badge, one supporting sentence, then the legend.
+ *
+ * @param {object} o
+ * @param {string} o.title
+ * @param {string} [o.desc]
+ * @param {string} [o.value]   formatted headline figure
+ * @param {string} [o.delta]   markup from delta()
+ * @param {object} [o.config]  chart config — drives series colours and legend
+ * @param {string} [o.legend]  explicit legend markup, overriding the config's
+ * @param {string} o.body      plot markup or a plot host element
+ * @param {string} [o.foot]
+ * @param {string} [o.cls]
+ */
+export function chartPanel(o) {
+  const legend = o.legend ?? (o.config ? chartLegend(o.config) : '');
+  const head = `<div class="chead">
+    <div class="ch-l"><div class="ch-t">${o.title}</div>${
+  o.desc ? `<div class="ch-d">${o.desc}</div>` : ''}</div>${
+  (o.value || o.delta) ? `<div class="ch-r">${
+    o.value ? `<div class="ch-v">${o.value}</div>` : ''}${o.delta ?? ''}</div>` : ''}
+  </div>`;
+  return `<section class="panel${o.cls ? ` ${o.cls}` : ''}"${seriesVars(o.config)}>${head}
+    <div class="panel-b">${legend ? `<div class="ch-lg">${legend}</div>` : ''}${o.body}</div>
+    ${o.foot ? `<div class="panel-f">${o.foot}</div>` : ''}</section>`;
+}
+
 /**
  * KPI band. The first cell is the lead metric and spans the band's full height;
  * the rest are supporting figures at a quieter weight.
@@ -324,9 +396,11 @@ export function stackedBars(o, width = 900) {
  * rather than accumulating one per render.
  */
 let LIVE = null;
+let RO = null;
 export function drawPlots(root, specs) {
-  LIVE = { root, specs };
+  LIVE = { root, specs, widths: new Map() };
   paintPlots(LIVE);
+  observePlots(LIVE);
 }
 function paintPlots(live) {
   if (!live || !live.root || !live.root.isConnected) return;
@@ -336,15 +410,52 @@ function paintPlots(live) {
   }
   bindTips(live.root);
 }
-/* Debounced on a timer rather than requestAnimationFrame: rAF is suspended
-   while the tab is hidden, so a window resized in the background would leave
-   the plots at their old geometry until the next full re-render. */
-if (typeof window !== 'undefined') {
+
+/*
+   Plots are measured against the element they land in, not the window.
+
+   A window-resize listener misses every container-only change — collapsing the
+   sidebar is the obvious one: the viewport never changes, so the charts would
+   keep drawing at the old width and their axis labels would sit wrong until the
+   next full re-render. A ResizeObserver watches the hosts themselves, which
+   covers window resizes too.
+
+   Redraw is skipped when the integer width is unchanged, so the observer's
+   initial callback and any sub-pixel churn cost nothing.
+*/
+function observePlots(live) {
+  if (typeof ResizeObserver === 'undefined' || !live || !live.root) return;
+  if (RO) RO.disconnect();
   let t = 0;
-  window.addEventListener('resize', () => {
+  RO = new ResizeObserver((entries) => {
+    let changed = false;
+    for (const e of entries) {
+      const w = Math.round(e.contentRect.width);
+      if (w > 0 && live.widths.get(e.target.id) !== w) { live.widths.set(e.target.id, w); changed = true; }
+    }
+    if (!changed) return;
     clearTimeout(t);
-    t = setTimeout(() => paintPlots(LIVE), 120);
+    t = setTimeout(() => paintPlots(live), 100);
   });
+  for (const { id } of live.specs) {
+    const el = live.root.querySelector(`#${id}`);
+    if (el) { live.widths.set(id, Math.round(el.clientWidth)); RO.observe(el); }
+  }
+}
+
+/* Explicit repaint hook for layout changes the observer cannot see as a resize
+   of a plot host — currently only the shell's rail toggle, which animates. */
+if (typeof window !== 'undefined') {
+  window.__ACE_RESIZE__ = () => setTimeout(() => paintPlots(LIVE), 260);
+  /* ResizeObserver is universal in every browser this ships to, but a window
+     listener costs nothing and keeps the old behaviour if it is ever absent. */
+  if (typeof ResizeObserver === 'undefined') {
+    let t = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(() => paintPlots(LIVE), 120);
+    });
+  }
 }
 
 /** Compact sparkline for the lead KPI — history, not decoration. */
@@ -381,8 +492,18 @@ export function bindTips(root) {
   const show = (el, x, y) => {
     let o;
     try { o = JSON.parse(el.dataset.tip); } catch { return; }
+    /* A row is [name, value] or [name, value, mark], where mark is a series
+       slot (1–5) or 'dash' for the reference line. The swatch ties the number
+       to the mark it came from, which is what makes a two-series tooltip
+       readable at a glance. */
+    const row = ([k, v, mark]) => {
+      const sw = mark == null ? ''
+        : `<i class="tip-i${mark === 'dash' ? ' dash' : ` s${mark}`}"${
+          typeof mark === 'number' ? ` style="background:var(--chart-${mark})"` : ''}></i>`;
+      return `<div class="tr">${sw}<span>${esc(k)}</span><b>${esc(v)}</b></div>`;
+    };
     tip.innerHTML = `${o.title ? `<div class="tt">${esc(o.title)}</div>` : ''}${
-      (o.rows || []).map(([k, v]) => `<div class="tr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${
+      (o.rows || []).map(row).join('')}${
       o.note ? `<div class="td">${esc(o.note)}</div>` : ''}`;
     tip.style.display = 'block';
     requestAnimationFrame(() => tip.classList.add('show'));
