@@ -78,7 +78,7 @@ brand accent that read as an error).
 | Surface / 2 / 3 | `#ffffff` / `#f7f9fb` / `#eef1f5` | `#121720` / `#171d27` / `#1e2530` |
 | Sidebar | `#ffffff` | `#0d1117` |
 | Border / strong / stronger | `#e3e8ef` / `#cfd7e2` / `#aab6c6` | `#232b36` / `#313b48` / `#45525f` |
-| Text / 2 / 3 / 4 | `#101828` / `#475467` / `#667085` / `#98a2b3` | `#e9edf3` / `#b0bac7` / `#8b96a5` / `#6a7484` |
+| Text / 2 / 3 / 4 | `#101828` / `#475467` / `#5e6879` / `#98a2b3` | `#e9edf3` / `#b0bac7` / `#8b96a5` / `#6a7484` |
 | Brand | `#1d5fd0` | `#5b9bf5` |
 | Positive | `#0b7a4b` | `#3ecf8e` |
 | Warning | `#9a6206` | `#e0aa4f` |
@@ -87,7 +87,8 @@ brand accent that read as an error).
 
 Chart series, in assignment order: azure `--chart-1`, teal `--chart-2`, amber `--chart-3`,
 slate `--chart-4`, violet `--chart-5`. None is red or green, so those two hues stay purely
-semantic in charts as well as in text.
+semantic in charts as well as in text. Each has a `-solid` variant (>=4.5:1 vs white) used
+wherever a filled bar carries a label inside it.
 
 **Type scale** — nine levels with real gaps, replacing seven near-identical ones:
 11 · 12 · 13 · 14 · 16 · 19 · 30 (page title) · 32 (KPI) · 46 (lead KPI).
