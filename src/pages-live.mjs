@@ -907,7 +907,7 @@ function renderServersLive(host) {
       <td>${usd0(r.a.entitlementNet)}</td>
       <td><b>${pct(r.p)}</b></td>
       <td>${r.median === undefined ? '<span class="muted">…</span>' : r.median === null ? '—'
-        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}⚠</span>` : ''}`}</td>
+        : `${pct(r.median.medianPct)}${r.median.outlierCount ? ` <span class="badge neu" title="${r.median.outlierCount} check(s) above the outlier line (Q3 + 1.5×IQR = ${pct(r.median.outlierAbovePct)})">${r.median.outlierCount}${icon('alert', 12)}</span>` : ''}`}</td>
       <td>${pct(base.pct)}</td>
       <td>${r.conv.eligible ? `${pct((r.conv.converted / r.conv.eligible) * 100, 0)} <span class="muted">(${r.conv.converted}/${r.conv.eligible})</span>` : '<span class="muted" title="No recorded-and-connected eligible tables — conversion unavailable, not zero">n/a</span>'}</td>
       <td style="text-align:center">${costBadge(r)}</td>
@@ -968,7 +968,7 @@ function srvTh(key, label, view, thAttrs = '', tip = null) {
   return `<th scope="col" ${thAttrs}${ariaSort}>
     <button type="button" class="sortbtn" data-k="${key}" aria-label="Sort by ${esc(label)}${on ? (view.dir === 1 ? ', currently ascending' : ', currently descending') : ''}"
       style="background:none;border:none;cursor:pointer;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;padding:0">
-      ${esc(label)}<span class="sarr" aria-hidden="true">${on ? (view.dir === 1 ? '▲' : '▼') : '▾'}</span></button>${
+      ${esc(label)}<span class="sarr" aria-hidden="true">${on ? icon(view.dir === 1 ? 'arrowUp' : 'arrowDown', 12) : icon('chevronDown', 12)}</span></button>${
     tip ? `<button class="inf" type="button" aria-label="Definition of ${esc(label)}" data-tip="${esc(tip)}">i</button>` : ''}</th>`;
 }
 function costBadge(r) {
@@ -1068,14 +1068,14 @@ function openServerDrawer(guid, row, range, periods, base) {
       <div style="min-width:0"><h3>${esc(row.name)}</h3>
         <div class="meta"><span>${esc(range.label)} · ${periods.join(' + ')}</span>
           <span>${fmt(row.a.checks)} AYCE checks · ${usd0(row.a.entitlementNet)} AYCE sales</span></div></div>
-      <button class="xbtn" type="button" id="srvDrClose" aria-label="Close server detail">✕</button></div>
+      <button class="xbtn" type="button" id="srvDrClose" aria-label="Close server detail">${icon('close', 18)}</button></div>
     <div class="db">
       <div class="dgrid">
         <div class="dcell"><div class="k">Weighted food cost</div><div class="v">${pct(row.p)}</div>
           <div class="m">Σ cost ÷ Σ AYCE sales — the financial impact</div></div>
         <div class="dcell"><div class="k">Median check</div><div class="v">${stat ? pct(stat.medianPct) : '—'}</div>
           <div class="m">the typical table — whales can't distort it</div></div>
-        <div class="dcell"><div class="k">Middle 50% (IQR)</div><div class="v" style="font-size:15px">${stat && stat.q1Pct != null ? `${pct(stat.q1Pct, 0)}–${pct(stat.q3Pct, 0)}` : '—'}</div>
+        <div class="dcell"><div class="k">Middle 50% (IQR)</div><div class="v" style="font-size:var(--fs-md)">${stat && stat.q1Pct != null ? `${pct(stat.q1Pct, 0)}–${pct(stat.q3Pct, 0)}` : '—'}</div>
           <div class="m">${stat?.outlierCount ? `${stat.outlierCount} outlier check(s) above ${pct(stat.outlierAbovePct, 0)}` : 'no outlier checks'}</div></div>
         <div class="dcell"><div class="k">Restaurant baseline</div><div class="v">${pct(base.pct)}</div>
           <div class="m">same weekday + period, prior ${DATA.ops.baseline.weeks} wks</div></div>
@@ -1145,9 +1145,9 @@ function checkItemsHtml(c) {
   const items = (c.items ?? []).filter((x) => x.cls !== 'entitlement');
   const ent = (c.items ?? []).filter((x) => x.cls === 'entitlement');
   return `
-    <div style="padding:8px 4px;font-size:12.5px;line-height:1.6">
+    <div style="padding:8px 4px;font-size:var(--fs-xs);line-height:1.6">
       ${ent.length ? `<div style="margin-bottom:6px"><b>AYCE entitlement:</b> ${ent.map((x) => `${esc(x.name)} × ${fmt(x.qty)} (${usd0(x.net)})`).join(' · ')}</div>` : ''}
-      ${items.length ? `<table style="font-size:12.5px;max-width:640px">
+      ${items.length ? `<table style="font-size:var(--fs-xs);max-width:640px">
         <caption class="sr">Ordered items and their cost sources</caption>
         <thead><tr><th scope="col" style="text-align:left">Item</th><th scope="col">Qty</th><th scope="col">Est. cost</th><th scope="col" style="text-align:left">Cost source</th></tr></thead>
         <tbody>${items.map((x) => `<tr>
@@ -1367,27 +1367,27 @@ function pgHelp(host) {
     h.innerHTML = `
     <section class="hero rise"><div class="hero-top"><div class="hero-verdict">
       <div class="hero-eyebrow">How This Works</div>
-      <div class="hero-delta"><span class="big" style="font-size:26px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
+      <div class="hero-delta"><span class="big" style="font-size:28px;letter-spacing:-.6px;line-height:1.3">Three data sources.<br>Three simple jobs.</span></div>
     </div></div></section>
 
-    <div class="sec g3">
+    <div class="sec g3 band">
       <div class="card"><header><div><div class="ttl">1 · Toast sales — automatic</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">Every morning around 6 AM the previous
+        <div class="body" >Every morning around 6 AM the previous
         day's sales arrive from Toast by themselves. Nobody needs to do anything. If a morning is missed,
         <b>Update Dashboard</b> shows a Retry button.</div></div>
       <div class="card"><header><div><div class="ttl">2 · OpenTable file — after service</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">Download the reservations file from
+        <div class="body" >Download the reservations file from
         OpenTable GuestCenter and upload it under <b>Update Dashboard</b>. It carries each table's recorded
         starting choice (Undecided, À la carte, or AYCE) so conversion can be measured. Uploading the same
         file twice is always safe.</div></div>
       <div class="card"><header><div><div class="ttl">3 · Food costs — occasional</div></div></header>
-        <div class="body" style="font-size:13.5px;line-height:1.65">When the chef confirms item costs,
+        <div class="body" >When the chef confirms item costs,
         upload the cost sheet under <b>Update Dashboard → Food Costs</b>. Until then numbers
         are marked provisional. Past days keep their old costs — history never changes.</div></div>
     </div>
 
     <div class="card sec"><header><div><div class="ttl">What the numbers mean — in plain language</div></div></header>
-      <div class="body"><dl style="display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:13.5px;line-height:1.6">
+      <div class="body"><dl style="display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:var(--fs-sm);line-height:1.6">
         <dt style="font-weight:650;white-space:nowrap">AYCE food cost</dt>
         <dd>The estimated cost of AYCE food the kitchen sent out, divided by what guests paid for AYCE.
           Estimated from what was recorded in Toast — it is not an inventory count and says nothing about waste.
@@ -1413,7 +1413,7 @@ function pgHelp(host) {
 
     <div class="sec">
       <div class="acc"><button type="button" aria-expanded="false" id="advDetTgl">
-        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">▶</span></button>
+        Advanced Details — data &amp; methodology (for technical readers)<span class="ch">${icon('chevronRight', 14)}</span></button>
         <div class="ab" hidden id="advDetBody"></div></div>
     </div>`;
 
@@ -1442,7 +1442,7 @@ function pgHelp(host) {
         const censusSum = conv.eligible + conv.predecided + conv.unknown + conv.review + conv.notConnected + conv.ambiguous + conv.excluded;
         const wrap = document.createElement('div');
         wrap.innerHTML = `
-        <table class="tb" style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:14px">
+        <table class="tb" style="width:100%;font-size:var(--fs-xs);border-collapse:collapse;margin-bottom:14px">
         <caption class="sr">Technical data and methodology details</caption><tbody>
           ${mrow('Data source', DATA.source === 'supabase' ? 'Shared database' : 'Static fallback files (database unreachable)')}
           ${mrow('Deployed commit', '<span id="deploySha">Checking GitHub Pages...</span>')}

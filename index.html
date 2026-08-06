@@ -56,7 +56,7 @@
   --grid:#eaeef4;        /* chart gridlines: quieter than a hairline */
 
   /* -- text --------------------------------------------------------------- */
-  --text:#101828; --text-2:#475467; --text-3:#667085; --text-4:#98a2b3;
+  --text:#101828; --text-2:#475467; --text-3:#5e6879; --text-4:#98a2b3;
 
   /* -- brand -------------------------------------------------------------- */
   --brand:#1d5fd0; --brand-hover:#1a4fae; --brand-press:#16428f;
@@ -75,6 +75,9 @@
   --chart-1:#2563c9; --chart-2:#0f8a8a; --chart-3:#b07d18;
   --chart-4:#64748b; --chart-5:#7c5cbf;
   --chart-1-soft:#e8f0fd; --chart-2-soft:#e2f4f4;
+  /* white-text-safe fills (>=4.5:1 vs #fff) for bars carrying an inline label */
+  --chart-1-solid:#1b4fa8; --chart-2-solid:#0a6b6b; --chart-3-solid:#8a6014;
+  --chart-4-solid:#4b5563; --chart-5-solid:#5f47a0;
 
   /* -- elevation ----------------------------------------------------------
      Panels do not float. Only things that genuinely sit above the page get a
@@ -123,8 +126,8 @@
   --gold:var(--warn); --gold-soft:var(--warn-soft); --gold-line:var(--warn-line);
   --s1:var(--chart-1); --s2:var(--chart-2); --s3:var(--chart-3);
   --s4:var(--chart-4); --s5:var(--chart-5);
-  --fill-blue:var(--chart-1); --fill-coral:var(--chart-2);
-  --fill-gold:var(--chart-3); --fill-grey:var(--chart-4);
+  --fill-blue:var(--chart-1-solid); --fill-coral:var(--chart-2-solid);
+  --fill-gold:var(--chart-3-solid); --fill-grey:var(--chart-4-solid);
 }
 
 :root[data-theme="dark"]{
@@ -190,7 +193,7 @@ svg.ic{flex:none;display:block}
 .nowrap{white-space:nowrap}
 
 .skiplink{position:absolute;left:var(--sp-2);top:-48px;z-index:500;background:var(--brand);color:var(--on-brand);
-  padding:10px 18px;border-radius:0 0 var(--r-sm) var(--r-sm);font-weight:640;font-size:var(--fs-base);
+  padding:12px 18px;min-height:44px;display:inline-flex;align-items:center;border-radius:0 0 var(--r-sm) var(--r-sm);font-weight:640;font-size:var(--fs-base);
   text-decoration:none;transition:top var(--dur) ease}
 .skiplink:focus{top:0}
 
@@ -227,7 +230,7 @@ svg.ic{flex:none;display:block}
 /* grouped navigation — tight inside a group, generous between groups */
 #side nav{padding:var(--sp-4) var(--sp-3);display:flex;flex-direction:column;gap:2px;flex:1;
   overflow-y:auto;overflow-x:hidden}
-#side .navlbl{font-size:var(--fs-micro);letter-spacing:.7px;text-transform:uppercase;color:var(--text-4);
+#side .navlbl{font-size:var(--fs-micro);letter-spacing:.7px;text-transform:uppercase;color:var(--text-3);
   padding:var(--sp-5) var(--sp-2) var(--sp-2);font-weight:650}
 #side nav>.navlbl:first-child{padding-top:var(--sp-1)}
 #side nav button{
@@ -257,7 +260,7 @@ svg.ic{flex:none;display:block}
 /* separated lower utility zone */
 #side .foot{padding:var(--sp-3);border-top:1px solid var(--border);display:flex;
   flex-direction:column;gap:var(--sp-1)}
-#side .foot .gen{font-size:var(--fs-micro);color:var(--text-4);line-height:1.5;
+#side .foot .gen{font-size:var(--fs-micro);color:var(--text-3);line-height:1.5;
   padding:var(--sp-2) var(--sp-2) 0;margin-top:var(--sp-1);border-top:1px solid var(--border)}
 .themebtn{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;background:none;
   border:none;color:var(--text-2);border-radius:var(--r);padding:7px 10px;font-size:var(--fs-sm);
@@ -300,7 +303,7 @@ svg.ic{flex:none;display:block}
 .tb-per{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--text-2);
   white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:500;
   background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-pill);padding:3px 11px}
-.tb-per::before{content:"";width:13px;height:13px;flex:none;background:var(--text-4);
+.tb-per::before{content:"";width:13px;height:13px;flex:none;background:var(--text-3);
   -webkit-mask:var(--m-cal) center/contain no-repeat;mask:var(--m-cal) center/contain no-repeat}
 .tb-per:empty{display:none}
 /* the navigation trigger is a mobile affordance only */
@@ -396,7 +399,7 @@ svg.ic{flex:none;display:block}
 /* band — several regions sharing ONE surface, divided by hairlines. This is
    what stops a page reading as a column of unrelated cards: two panels sitting
    side by side become one region with a rule down the middle. */
-.band{display:grid;background:var(--surface);border:1px solid var(--border);
+.band{display:grid;gap:0;align-items:stretch;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-lg);overflow:hidden}
 .band>*{background:var(--surface);border:none;border-radius:0;
   box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
@@ -570,7 +573,7 @@ select.ctl{padding-right:32px;cursor:pointer;
   background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 .ctl:hover{border-color:var(--border-3)}
 .ctl:disabled{background:var(--surface-3);color:var(--text-4);cursor:not-allowed}
-.ctl::placeholder{color:var(--text-4)}
+.ctl::placeholder{color:var(--text-3)}
 .ctl[aria-invalid="true"]{border-color:var(--neg);background:var(--neg-soft)}
 .fieldrow{display:flex;gap:var(--sp-4);flex-wrap:wrap;align-items:flex-end}
 .fieldrow .grow{flex:1;min-width:170px}
@@ -682,7 +685,7 @@ thead th .sortbtn{background:none;border:none;cursor:pointer;font:inherit;color:
   text-transform:inherit;letter-spacing:inherit;padding:2px;border-radius:var(--r-xs);
   transition:color var(--dur)}
 thead th .sortbtn:hover{color:var(--text)}
-thead th .sarr{display:inline-block;width:10px;margin-left:2px;opacity:.35;font-size:8px}
+thead th .sarr{display:inline-flex;vertical-align:-2px;margin-left:3px;opacity:.4}
 thead th[aria-sort]{color:var(--text);box-shadow:inset 0 -2px 0 var(--brand)}
 thead th[aria-sort] .sarr{opacity:1;color:var(--brand)}
 th:first-child,td:first-child{text-align:left;padding-left:var(--sp-5)}
@@ -971,7 +974,7 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
   background:var(--surface-2);border:none;cursor:pointer;text-align:left;font-size:var(--fs-sm);
   font-weight:640;min-height:48px;transition:background var(--dur)}
 .acc>button:hover{background:var(--surface-3)}
-.acc>button .ch{margin-left:auto;color:var(--text-3);transition:transform .2s var(--ease);font-size:11px}
+.acc>button .ch{margin-left:auto;color:var(--text-3);transition:transform .2s var(--ease);display:flex}
 .acc>button[aria-expanded="true"]{border-bottom:1px solid var(--border)}
 .acc>button[aria-expanded="true"] .ch{transform:rotate(90deg)}
 .acc .ab{padding:var(--sp-5);font-size:var(--fs-sm);color:var(--text-2);line-height:1.7}
@@ -1000,8 +1003,8 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
 
 .empty{padding:var(--sp-7) var(--sp-5);text-align:center;color:var(--text-3);
   background:var(--surface);border:1px dashed var(--border-2);border-radius:var(--r-lg)}
-.empty .ei{width:44px;height:44px;margin:0 auto var(--sp-4);border-radius:50%;background:var(--surface-3);
-  color:var(--text-4);display:grid;place-items:center;font-size:19px}
+.empty .ei{width:44px;height:44px;margin:0 auto var(--sp-4);border-radius:50%;background:var(--pos-soft);
+  color:var(--pos);display:grid;place-items:center}
 .empty .et{font-size:var(--fs-md);font-weight:640;color:var(--text-2);margin-bottom:6px}
 .empty .es{font-size:var(--fs-xs);max-width:48ch;margin:0 auto var(--sp-4);line-height:1.6}
 .pempty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
@@ -1149,7 +1152,9 @@ tfoot td{padding:12px;text-align:right;font-weight:660;background:var(--surface-
   /* comfortable touch targets */
   .btn,.bigbtn,.fixbtn,.seg button,.tog,.fbtn,.ctl,.srch input,.iconbtn,.xbtn{min-height:44px}
   .seg button{padding:8px 14px}
-  .btn.sm{min-height:38px}
+  .btn.sm{min-height:44px}
+  /* a sort control is a real tap target, even inside a table header */
+  thead th .sortbtn{min-height:44px;display:inline-flex;align-items:center;justify-content:flex-end}
   .iconbtn,.xbtn{width:44px;height:44px}
 }
 @media(max-width:560px){
@@ -1707,14 +1712,14 @@ function compareBars(items, o) {
     const w = it.rate == null ? 0 : (100 * it.rate) / max;
     h += `<div style="margin-bottom:${i === items.length - 1 ? 2 : 15}px">
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px">
-        <span style="font-size:13px;font-weight:600">${esc(it.label)}</span>
+        <span style="font-size:var(--fs-sm);font-weight:600">${esc(it.label)}</span>
         <span class="tag ${it.cls || "unk"}" style="font-size:10px">n = ${it.n}</span>
-        <span style="margin-left:auto;font-size:16px;font-weight:680;letter-spacing:-.3px;color:${it.color}">${pct(it.rate)}</span>
+        <span style="margin-left:auto;font-size:var(--fs-md);font-weight:660;letter-spacing:-.3px;color:var(--text)">${pct(it.rate)}</span>
       </div>
       <div class="hit" data-i="${i}" style="height:24px;background:var(--surface-3);border-radius:5px;overflow:hidden;position:relative">
         <div class="grow" style="width:${w}%;height:100%;background:${it.color};border-radius:5px;animation-delay:${i * 110}ms"></div>
       </div>
-      <div style="font-size:11.5px;color:var(--text-3);margin-top:5px">${esc(it.sub)}</div></div>`;
+      <div style="font-size:var(--fs-xs);color:var(--text-3);margin-top:5px">${esc(it.sub)}</div></div>`;
   });
   wrap.innerHTML = h;
   $$(".hit", wrap).forEach((el, i) => { if (items[i].tip) bindTip(el, tipHTML(items[i].tip)); });
@@ -2244,7 +2249,7 @@ function pgOverview(host) {
   /* revenue */
   const nonAce = r2(sc.revenue - sc.aceRevenue);
   $("#cRev", wrap).appendChild(stackBar([
-    { v: sc.aceRevenue, color: "var(--chart-1)", label: "AYCE tables", short: "AYCE tables", fv: usd0(sc.aceRevenue),
+    { v: sc.aceRevenue, color: "var(--chart-1-solid)", label: "AYCE tables", short: "AYCE tables", fv: usd0(sc.aceRevenue),
       tip: tipHTML({ title: "AYCE table revenue", rows: [["F&B revenue", usd(sc.aceRevenue)], ["Share of floor", pct(100 * sc.aceRevenue / (sc.revenue || 1))], ["AYCE tables", fmt(sc.aceTables)]], def: DEFS.rev }) },
     { v: nonAce, color: "var(--fill-grey)", label: "Non-AYCE tables", short: "Non-AYCE", fv: usd0(nonAce),
       tip: tipHTML({ title: "Non-AYCE table revenue", rows: [["F&B revenue", usd(nonAce)], ["Share of floor", pct(100 * nonAce / (sc.revenue || 1))], ["Tables", fmt(sc.tables - sc.aceTables)]], def: DEFS.rev }) },

@@ -13,6 +13,7 @@
 import { triageIntents, exclusionSummaryLines, KIND } from './triage.mjs?v=20260806-v2';
 import { rpc, restGet } from './auth.mjs?v=20260806-v2';
 import { requireOperator, notify } from './manager-mode.mjs?v=20260806-v2';
+import { icon } from './icons.mjs?v=20260806-v2';
 
 let CTX = null;
 export function initFixesPage(ctx) { CTX = ctx; }
@@ -159,7 +160,7 @@ export function pgFixes(host) {
 
   const list = host.querySelector('#fixList');
   if (!actionable.length) {
-    list.innerHTML = `<div class="empty sec"><div class="ei" aria-hidden="true">✓</div>
+    list.innerHTML = `<div class="empty sec"><div class="ei" aria-hidden="true">${icon('check', 22)}</div>
       <div class="et">Nothing needs a decision</div>
       <div class="es">New items appear here after an OpenTable upload when something genuinely needs a call.</div></div>`;
   } else if (!visible.length) {
@@ -213,7 +214,7 @@ function fixCard(item, idx) {
       <div class="fact"><div class="k">Time</div><div class="v">${esc(r.visitTime ?? '—')}</div></div>
       <div class="fact"><div class="k">OpenTable table${(r.tableTokens?.length ?? 0) > 1 ? 's' : ''}</div><div class="v">${esc(r.tableTokens?.join(', ') || '—')}</div></div>
       <div class="fact"><div class="k">Party size</div><div class="v">${esc(r.partySize ?? '—')}</div></div>
-      <div class="fact"><div class="k">Area</div><div class="v" style="font-size:12px">${esc(r.diningArea || 'not recorded by host')}</div></div>
+      <div class="fact"><div class="k">Area</div><div class="v" style="font-size:var(--fs-xs)">${esc(r.diningArea || 'not recorded by host')}</div></div>
     </div>
     <div class="said">
       <div><div class="k">What OpenTable said</div>${saidOT}</div>

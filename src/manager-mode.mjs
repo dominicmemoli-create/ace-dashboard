@@ -97,7 +97,7 @@ export function openSignIn(message) {
           style="flex:1;min-width:220px;padding:10px 14px;border:1px solid var(--border-2);border-radius:var(--r-sm);background:var(--surface-2)">
         <button class="bigbtn" type="submit">Email me a sign-in link</button>
       </form>
-      <div id="mmErr" style="color:var(--neg);font-size:12.5px;min-height:18px;margin-top:8px" role="alert"></div>
+      <div id="mmErr" style="color:var(--neg);font-size:var(--fs-xs);min-height:18px;margin-top:8px" role="alert"></div>
       ${isSignedInUnapproved() ? `<div style="margin-top:14px;display:flex;justify-content:flex-end">
         <button class="bigbtn ghost" type="button" id="mmOut">Sign out</button></div>` : ''}
       <div class="note" style="margin-top:10px">Open the email on this device and tap the link — you stay

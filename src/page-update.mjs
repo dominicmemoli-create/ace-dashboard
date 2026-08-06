@@ -10,6 +10,7 @@ import { parseCostCsvDetailed, rowsFromWorkbookAoaDetailed, attachAliases, diffC
 import { buildMetricsForDate } from './metrics-builder.mjs?v=20260806-v2';
 import { rpc, restGet } from './auth.mjs?v=20260806-v2';
 import { requireOperator, notify, currentUser } from './manager-mode.mjs?v=20260806-v2';
+import { icon } from './icons.mjs?v=20260806-v2';
 
 let CTX = null;
 export function initUpdatePage(ctx) { CTX = ctx; }
@@ -129,7 +130,7 @@ export function pgUpdate(host) {
     <div><div class="sh2">${esc(sys.head)}</div><div class="sm">${esc(sys.action)}</div></div>
   </div>
 
-  <div class="sec g3 srccards">
+  <div class="sec g3 band srccards">
     <section class="card srccard ${toastTone}" aria-labelledby="srcToastTtl">
       <header><div><div class="ttl" id="srcToastTtl">Toast Sales</div>
         <div class="sub">Updates by itself every morning</div></div></header>
@@ -202,7 +203,7 @@ function renderToastActions(el, t) {
   el.innerHTML = `
     <button class="bigbtn" id="retryBtn" type="button">Retry Toast Update</button>
     <div class="acc"><button type="button" aria-expanded="false" id="advTgl">
-      Advanced<span class="ch">▶</span></button>
+      Advanced<span class="ch">${icon('chevronRight', 14)}</span></button>
       <div class="ab" hidden id="advBody">
         <label class="field" for="advDate"><span>Business date to update</span>
           <input class="ctl" id="advDate" type="date" style="max-width:210px"></label>
@@ -293,7 +294,7 @@ async function fetchDateData(date) {
 
 function stageCard(stageHost, title, bodyHtml) {
   stageHost.innerHTML = `<div class="card rise"><header><div><div class="ttl">${esc(title)}</div></div>
-    <span class="sp"></span><button class="xbtn" type="button" id="stageClose" aria-label="Close">✕</button></header>
+    <span class="sp"></span><button class="xbtn" type="button" id="stageClose" aria-label="Close">${icon('close', 18)}</button></header>
     <div class="body" id="stageBody">${bodyHtml}</div></div>`;
   stageHost.querySelector('#stageClose').addEventListener('click', () => { stageHost.innerHTML = ''; });
   stageHost.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -555,8 +556,8 @@ async function handleCostFile(file, stage) {
         </tbody></table></div>` : ''}
       ${diff.skipped.length ? `<div class="note gold" style="margin-top:10px">${diff.skipped.length} item(s) skipped: ${esc(diff.skipped.map((s) => s.name).join(', '))} — a newer cost is already in place.</div>` : ''}
       ${uncosted.length ? `<div class="note" style="margin-top:10px">Still without a cost: ${esc(uncosted.slice(0, 12).join(', '))}${uncosted.length > 12 ? ` and ${uncosted.length - 12} more` : ''}. They stay out of the numbers (never counted as $0) until costed.</div>` : ''}
-      <div class="acc" style="margin-top:12px"><button type="button" aria-expanded="false" id="cAdv">Advanced<span class="ch">▶</span></button>
-        <div class="ab" hidden><label style="display:flex;flex-direction:column;gap:4px;font-size:12px">New costs take effect from
+      <div class="acc" style="margin-top:12px"><button type="button" aria-expanded="false" id="cAdv">Advanced<span class="ch">${icon('chevronRight', 14)}</span></button>
+        <div class="ab" hidden><label style="display:flex;flex-direction:column;gap:4px;font-size:var(--fs-xs)">New costs take effect from
           <input id="cEff" type="date" value="${effectiveFrom.slice(0, 4)}-${effectiveFrom.slice(4, 6)}-${effectiveFrom.slice(6, 8)}"
             style="padding:7px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--surface-2);max-width:200px"></label>
           <div class="sub" style="margin-top:6px">Days before this date keep their old costs — history never changes.</div></div></div>
