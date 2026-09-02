@@ -29,6 +29,7 @@ export const LIVE_MIGRATIONS = [
   '0004_operator_role.sql',     // one operator capability
   '0005_upload_rematch.sql',    // opentable upload re-match behaviour
   '0006_manager_writes.sql',    // production authorization: policies, grants, RPCs
+  '0007_marginedge_costs.sql',  // MarginEdge mapping layer, per-source freshness, sync audit
 ];
 
 export const LEGACY_MIGRATIONS = ['0001_schema.sql', '0002_rls.sql'];

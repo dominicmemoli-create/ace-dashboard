@@ -93,8 +93,8 @@ export function buildCostIndex(costRecords) {
  * precedence model. Returns { record, method, tier } — method ∈ 'guid' |
  * 'alias' | 'name' | 'override' | null. 'alias' vs 'name': alias = the matched
  * key differs from the record's canonical name; name = canonical equality.
- * tier (see costTierOf): 'confirmed' | 'override' | 'explicit_temp' |
- * 'rough_estimate' | 'fallback_2'.
+ * tier (see costTierOf): 'confirmed' | 'marginedge' | 'override' |
+ * 'explicit_temp' | 'rough_estimate' | 'fallback_2'.
  */
 export function resolveCost(selection, index, businessDate) {
   const candidates = [];
@@ -187,8 +187,12 @@ export function computeFoodCost(selections, checks, reference, costRecords, opts
     entitlementQty: 0,
     excludedModifierQty: 0, excludedDrinkQty: 0,
     checksAffectedByUnmatched: new Set(),
-    costByTier: { confirmed: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
-    qtyByTier: { confirmed: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
+    // 'marginedge' = derived from a chef-confirmed portion mapping against the
+    // current MarginEdge ingredient price. Automated but genuinely costed, so it
+    // is reported separately from both 'confirmed' (chef signed the number) and
+    // 'rough_estimate' (nobody did).
+    costByTier: { confirmed: 0, marginedge: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
+    qtyByTier: { confirmed: 0, marginedge: 0, override: 0, explicit_temp: 0, rough_estimate: 0, fallback_2: 0 },
   };
 
   const acc = () => ({

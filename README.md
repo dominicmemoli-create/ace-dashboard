@@ -40,13 +40,13 @@ commands). Administrators: **docs/TECHNICAL_RUNBOOK.md**.
 | `supabase/migrations/` | Schema, RLS, manager-tool functions |
 | `data/live/` · `data/ace_payload.js` | Static fallback data · frozen pilot extract |
 | `legacy/index.html` | Byte-identical pilot dashboard snapshot |
-| `test/` | Vitest suite (127 tests) + `scripts/admin/verify-live.mjs` (live) |
+| `test/` | Vitest suite (321 tests) + `scripts/admin/verify-live.mjs` (live) |
 
 ## Quick start (developers)
 
 ```bash
 npm ci
-npm test                 # 127 tests
+npm test                 # 321 tests
 npx serve -l 5173 .      # local preview (module pages need http, not file://)
 ```
 
@@ -62,3 +62,19 @@ npx serve -l 5173 .      # local preview (module pages need http, not file://)
   as unavailable, never as zero — and they never pay commission or create work.
 - Every correction is audited under the authenticated user and reversible.
 - Nothing claims to be connected that isn't (see docs/CREDENTIALS.md).
+
+## Credentials
+
+- **[docs/API_KEYS.md](docs/API_KEYS.md)** — every environment variable the code
+  actually reads, what each unlocks, and which of `.env` / GitHub Actions secrets /
+  Supabase Vault it belongs in. Start here when setting up or rotating keys.
+- **[docs/SUPABASE_DEPLOY_READINESS.md](docs/SUPABASE_DEPLOY_READINESS.md)** — verified live
+  Supabase state and every outstanding step before deploy.
+- [docs/CREDENTIALS.md](docs/CREDENTIALS.md) — status of each external dependency and
+  how to obtain the ones still outstanding.
+- [.env.example](.env.example) — placeholders only; copy to `.env` (gitignored).
+
+Required for the two scheduled pipelines: `SUPABASE_DB_URL`, `TOAST_CLIENT_ID`,
+`TOAST_CLIENT_SECRET`, `MARGINEDGE_API_KEY`. Nothing server-side ever reaches the
+browser — the dashboard's only client-side credential is the deliberately public
+publishable key in `data/supabase_config.json`.

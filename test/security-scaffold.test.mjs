@@ -35,7 +35,13 @@ describe('RLS migration posture', () => {
 describe('secret hygiene', () => {
   it('.env.example contains placeholders only', () => {
     const env = read('.env.example');
-    const KNOWN_PUBLIC = new Set(['e574444c-c511-4468-ab89-93d0abbec72b']); // restaurant GUID is not a secret
+    // Non-secret identifiers: the Toast restaurant GUID and the MarginEdge
+    // restaurantUnitId. Both are opaque account references that authorize
+    // nothing on their own — the credentials that do are separate placeholders.
+    const KNOWN_PUBLIC = new Set([
+      'e574444c-c511-4468-ab89-93d0abbec72b',
+      '377809302',
+    ]);
     for (const line of env.split(/\r?\n/)) {
       const m = /^\s*([A-Z0-9_]+)\s*=\s*([^#\s]*)/.exec(line);
       if (!m || !m[2]) continue;
@@ -56,6 +62,22 @@ describe('secret hygiene', () => {
     for (const f of ['index.html', 'src/pages-live.mjs', 'scripts/ingest-toast.mjs', 'scripts/lib/toast-client.mjs']) {
       const src = read(f);
       expect(src).not.toMatch(/clientSecret\s*[:=]\s*['"][A-Za-z0-9]/);
+    }
+  });
+  it('the MarginEdge API key never reaches browser-shipped code', () => {
+    // MarginEdge is server-side only (GitHub Actions). No browser module may
+    // name the secret, send the header, or call the API at all.
+    const browserFiles = ['index.html', ...fs.readdirSync(path.join(ROOT, 'src'))
+      .filter((f) => /\.(mjs|js)$/.test(f)).map((f) => `src/${f}`)];
+    for (const f of browserFiles) {
+      const src = read(f);
+      expect(src, f).not.toMatch(/MARGINEDGE_API_KEY/);
+      expect(src, f).not.toMatch(/x-api-key/i);
+      expect(src, f).not.toMatch(/api\.marginedge\.com/);
+    }
+    // And no literal key-shaped value anywhere a tracked file could carry one.
+    for (const f of ['scripts/lib/marginedge-client.mjs', 'scripts/sync-marginedge-costs.mjs', 'config/marginedge_mappings.seed.json', '.env.example']) {
+      expect(read(f), f).not.toMatch(/MARGINEDGE_API_KEY\s*[:=]\s*['"]?[A-Za-z0-9]{16,}/);
     }
   });
   it('payroll and server portal feature flags are OFF', () => {

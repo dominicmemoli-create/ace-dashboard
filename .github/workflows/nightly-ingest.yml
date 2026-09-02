@@ -12,6 +12,10 @@ on:
         description: 'Business date YYYYMMDD (default: yesterday NY time)'
         required: false
 
+# The job only checks out code; it never writes to the repository.
+permissions:
+  contents: read
+
 jobs:
   ingest:
     runs-on: ubuntu-latest
@@ -38,4 +42,8 @@ jobs:
           TOAST_CLIENT_ID: ${{ secrets.TOAST_CLIENT_ID }}
           TOAST_CLIENT_SECRET: ${{ secrets.TOAST_CLIENT_SECRET }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: node scripts/nightly.mjs ${{ inputs.businessDate }}
+          # Passed through the environment, never interpolated into the shell
+          # line, so a dispatch input cannot inject commands into a step that
+          # holds secrets. nightly.mjs validates the value itself.
+          BUSINESS_DATE: ${{ inputs.businessDate }}
+        run: node scripts/nightly.mjs $BUSINESS_DATE

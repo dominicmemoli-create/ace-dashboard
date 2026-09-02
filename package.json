@@ -11,6 +11,9 @@
     "build:metrics": "node scripts/build-metrics.mjs",
     "serve": "npx serve .",
     "import:opentable": "node scripts/import-opentable.mjs",
+    "sync:marginedge": "node scripts/sync-marginedge-costs.mjs",
+    "audit:marginedge": "node scripts/audit-marginedge-costs.mjs",
+    "load:marginedge-mappings": "node scripts/admin/load-marginedge-mappings.mjs",
     "shots": "node scripts/shots.mjs",
     "shots:fixtures": "node scripts/shots-fixtures.mjs"
   },

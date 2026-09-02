@@ -70,6 +70,11 @@ node scripts/deploy-supabase.mjs
 
 ## 3. Supabase Auth configuration (dashboard UI, one time)
 
+> **Verified live on 2026-09-01** — Site URL resolves to the GitHub Pages URL, the production
+> redirect is accepted and unlisted redirects fall back to the Site URL. Method and evidence in
+> [`SUPABASE_DEPLOY_READINESS.md`](SUPABASE_DEPLOY_READINESS.md) §B4. Re-check only if the
+> dashboard moves to a new URL.
+
 **Authentication → URL Configuration**
 
 - Site URL: `https://dominicmemoli-create.github.io/ace-dashboard/`

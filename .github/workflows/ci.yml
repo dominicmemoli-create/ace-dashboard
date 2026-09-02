@@ -4,6 +4,9 @@ on:
     branches: ['**']
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,5 +20,5 @@ jobs:
       - run: npm test
       - name: Verify no secrets committed
         run: |
-          ! grep -rE "TOAST_CLIENT_SECRET\s*=\s*[A-Za-z0-9]" --include="*.mjs" --include="*.js" --include="*.html" . --exclude-dir=node_modules
+          ! grep -rE "(TOAST_CLIENT_SECRET|MARGINEDGE_API_KEY)\s*=\s*[A-Za-z0-9]" --include="*.mjs" --include="*.js" --include="*.html" --include="*.json" --include="*.yml" . --exclude-dir=node_modules
           test -f .env && exit 1 || true
