@@ -194,9 +194,22 @@ export function ruleCostRecords() {
  * $0 records like the AYCE entitlements) beat every temporary rule; portion
  * overrides beat the explicit map; the explicit map beats other provisional
  * records; the $2 supplied-menu fallback beats only the legacy umbrella
- * "Sides/Desserts/Sauce" bucket so items surface under their own names. */
+ * "Sides/Desserts/Sauce" bucket so items surface under their own names.
+ *
+ * MarginEdge sits BELOW chef-confirmed and ABOVE every temporary rule:
+ *   - a verified MarginEdge cost (chef-confirmed portion mapping × current
+ *     invoice-derived ingredient price) is real costing, so it replaces the
+ *     rough workbook, the $2 fallback and the explicit temporary map;
+ *   - it never silently outranks a cost the chef signed off on directly, which
+ *     is why 1.5 sits between chef_confirmed (1) and portion_override (2);
+ *   - an UNVERIFIED MarginEdge record (mapping not yet confirmed) is provisional
+ *     and ranks with the other rough estimates, so it cannot beat the curated
+ *     portion overrides or the explicit management costs.
+ * Ranks are only ever compared, never stored, so a fractional rank is safe. */
 export function costRank(rec) {
-  if (rec.source === 'chef_confirmed' || rec.verification === 'verified') return 1;
+  if (rec.source === 'chef_confirmed') return 1;
+  if (rec.source === 'marginedge') return rec.verification === 'verified' ? 1.5 : 4;
+  if (rec.verification === 'verified') return 1;
   if (rec.source === 'portion_override') return 2;
   if (rec.source === 'explicit_temp') return 3;
   if (normalizeName(rec.canonicalName) === 'sides desserts sauce') return 6;
@@ -207,6 +220,9 @@ export function costRank(rec) {
 /** Human label for how a cost was assigned — used in coverage breakdowns. */
 export function costTierOf(rec) {
   if (rec.source === 'chef_confirmed') return 'confirmed';
+  if (rec.source === 'marginedge') {
+    return rec.verification === 'verified' ? 'marginedge' : 'rough_estimate';
+  }
   if (rec.verification === 'verified') return 'confirmed';
   if (rec.source === 'portion_override') return 'override';
   if (rec.source === 'explicit_temp') return 'explicit_temp';

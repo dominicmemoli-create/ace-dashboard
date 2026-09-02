@@ -1,0 +1,82 @@
+name: Daily MarginEdge cost sync
+
+# INDEPENDENT of "Nightly Toast ingestion" by design (docs/METRICS.md):
+# a separate workflow, separate schedule, separate secrets, separate failure
+# state. If Toast ingestion fails this still runs; if this fails Toast ingestion
+# is unaffected and ACE keeps serving the last successful MarginEdge snapshot.
+#
+# Fires ~6:20 AM America/New_York — after the Toast run so the dashboard settles
+# once, but with no dependency on it. GitHub cron is UTC-fixed, so both DST slots
+# fire and the job itself checks the New York hour.
+on:
+  schedule:
+    - cron: '20 10 * * *'   # 6:20 AM EDT
+    - cron: '20 11 * * *'   # 6:20 AM EST
+  workflow_dispatch:
+    inputs:
+      effectiveFrom:
+        description: 'Cost effective date YYYYMMDD (default: today, New York)'
+        required: false
+      mode:
+        description: 'dry-run reports without writing; apply publishes costs'
+        required: false
+        default: apply
+        type: choice
+        options: [apply, dry-run]
+
+# Never let two syncs write cost history at the same time.
+concurrency:
+  group: marginedge-cost-sync
+  cancel-in-progress: false
+
+# The job only checks out code; it never writes to the repository. The only
+# thing it writes to is OUR Supabase database — never MarginEdge, which the
+# client reaches with GET requests only.
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: DST gate — proceed only at 6 AM New York (or manual dispatch)
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          NY_HOUR=$(TZ=America/New_York date +%H)
+          if [ "$NY_HOUR" = "06" ]; then echo "run=true" >> "$GITHUB_OUTPUT";
+          else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Not 6 AM in New York (hour=$NY_HOUR) — skipping duplicate DST slot."; fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with: { node-version: 22, cache: npm }
+      - name: Install
+        if: steps.gate.outputs.run == 'true'
+        run: npm ci
+
+      # Always report the plan first. On a scheduled run this is the record of
+      # what the apply step was about to do; on a dry-run dispatch it is the
+      # whole job.
+      # The dispatch input is passed through the environment and never
+      # interpolated into the shell line, so nobody can inject commands into a
+      # step that holds MARGINEDGE_API_KEY. The script validates it as YYYYMMDD.
+      - name: Plan (dry run)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          MARGINEDGE_API_KEY: ${{ secrets.MARGINEDGE_API_KEY }}
+          MARGINEDGE_RESTAURANT_UNIT_ID: ${{ secrets.MARGINEDGE_RESTAURANT_UNIT_ID }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          EFFECTIVE_FROM: ${{ inputs.effectiveFrom }}
+        run: node scripts/sync-marginedge-costs.mjs --dry-run --verbose ${EFFECTIVE_FROM:+--effective-from "$EFFECTIVE_FROM"}
+
+      - name: Apply verified cost changes
+        if: steps.gate.outputs.run == 'true' && inputs.mode != 'dry-run'
+        env:
+          MARGINEDGE_API_KEY: ${{ secrets.MARGINEDGE_API_KEY }}
+          MARGINEDGE_RESTAURANT_UNIT_ID: ${{ secrets.MARGINEDGE_RESTAURANT_UNIT_ID }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          EFFECTIVE_FROM: ${{ inputs.effectiveFrom }}
+        run: node scripts/sync-marginedge-costs.mjs --apply --verbose ${EFFECTIVE_FROM:+--effective-from "$EFFECTIVE_FROM"}

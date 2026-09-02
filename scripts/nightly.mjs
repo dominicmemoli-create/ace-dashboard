@@ -211,6 +211,24 @@ async function main() {
     await client.query(
       `update ace_ingestion_runs set payload = payload || $2 where run_id = $1`,
       [runId, JSON.stringify({ status: failed ? 'failed' : 'success', error: failed, results, finishedAt: new Date().toISOString() })]);
+
+    // Independent per-source freshness (supabase/migrations/0007). Toast's own
+    // ace_manifest.last_toast_sync is unchanged above; this row is what lets the
+    // UI say "Toast — updated today 6:04 AM" without implying anything about
+    // MarginEdge or OpenTable. Best-effort: a project that has not applied 0007
+    // yet must still complete ingestion normally.
+    try {
+      await client.query(
+        `insert into ace_source_status (source, last_success_at, last_attempt_at, status, detail, updated_at)
+         values ('toast', case when $1 then now() else null end, now(), $2, $3, now())
+         on conflict (source) do update set
+           last_success_at = case when $1 then now() else ace_source_status.last_success_at end,
+           last_attempt_at = now(), status = $2, detail = $3, updated_at = now()`,
+        [!failed, failed ? 'failed' : 'ok',
+         JSON.stringify({ runId, target, dates: toIngest, results, error: failed })]);
+    } catch (e) {
+      console.warn(`Could not record Toast source status (apply migration 0007?): ${e.message}`);
+    }
   } finally {
     await client.end();
   }

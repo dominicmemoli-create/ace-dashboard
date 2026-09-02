@@ -1,0 +1,4058 @@
+{
+  "generatedFor": "Chasin' Tails — CT: Founders Row, Falls Church (CTFC)",
+  "toastRestaurantGuid": "e574444c-c511-4468-ab89-93d0abbec72b",
+  "marginedge": {
+    "restaurantUnitId": 377809302,
+    "restaurantUnitName": "Nue/Chasin' Tails - Falls Church",
+    "productsFetched": 5091,
+    "foodCategoryTypes": [
+      "FOOD"
+    ],
+    "foodCategories": [
+      {
+        "id": "68226",
+        "name": "Bread"
+      },
+      {
+        "id": "68228",
+        "name": "Dairy"
+      },
+      {
+        "id": "68208",
+        "name": "Grocery and Dry Goods"
+      },
+      {
+        "id": "68206",
+        "name": "Meat"
+      },
+      {
+        "id": "68224",
+        "name": "Produce"
+      },
+      {
+        "id": "68210",
+        "name": "Seafood"
+      }
+    ],
+    "error": null,
+    "apiLimitation": "The MarginEdge public API exposes no recipe, recipe-ingredient, yield, conversion, plated-recipe-cost or recipe-cost-history endpoints. Plated costs cannot be read from MarginEdge; only ingredient prices can."
+  },
+  "summary": {
+    "datesCovered": 34,
+    "distinctCostBearingItems": 63,
+    "totalCostBearingQuantity": 14858,
+    "itemsByStatus": {
+      "NEEDS_REVIEW": 26,
+      "NO_MARGINEDGE_PRODUCT": 7,
+      "NEEDS_PORTION_SPEC": 30
+    },
+    "quantityByStatus": {
+      "NEEDS_REVIEW": 9701,
+      "NO_MARGINEDGE_PRODUCT": 1012,
+      "NEEDS_PORTION_SPEC": 4145
+    },
+    "quantityByCurrentAceTier": {
+      "rough_estimate": 8799,
+      "override": 1244,
+      "fallback_2": 2758,
+      "explicit_temp": 1966,
+      "uncosted": 91
+    },
+    "itemsWithNoAceCost": 6,
+    "quantityWithNoAceCost": 91,
+    "roughOrFallbackItems": 38,
+    "roughOrFallbackQuantity": 11557,
+    "chefConfirmedItems": 0,
+    "verifiedMarginedgeItems": 0,
+    "verifiedMarginedgeQuantity": 0,
+    "quantityWeightedVerifiedCoveragePct": 0
+  },
+  "marginedgeDataQuality": {
+    "foodProducts": 1163,
+    "zeroPricedFoodProducts": [
+      {
+        "productId": "899592897",
+        "productName": "Agar Agar"
+      },
+      {
+        "productId": "879999494",
+        "productName": "Amaranth, Fresh"
+      },
+      {
+        "productId": "835806739",
+        "productName": "Apple, Golden Delicious"
+      },
+      {
+        "productId": "980100301",
+        "productName": "Apples, Gala"
+      },
+      {
+        "productId": "828255662",
+        "productName": "Beef, Oxtail"
+      },
+      {
+        "productId": "828234548",
+        "productName": "Cheese, Cheddar Sliced"
+      },
+      {
+        "productId": "869412528",
+        "productName": "Chicken, Feet"
+      },
+      {
+        "productId": "980831045",
+        "productName": "Cookies, Ginger Snaps"
+      },
+      {
+        "productId": "958727145",
+        "productName": "Croissant, Chocolate"
+      },
+      {
+        "productId": "912797445",
+        "productName": "Extract, Lemon"
+      },
+      {
+        "productId": "885478629",
+        "productName": "Fiddlehead Ferns"
+      },
+      {
+        "productId": "1090258006",
+        "productName": "Gelato, Stupify Speculoos"
+      },
+      {
+        "productId": "1103729237",
+        "productName": "Gelato, Ube"
+      },
+      {
+        "productId": "995596932",
+        "productName": "Juice, Carrot"
+      },
+      {
+        "productId": "941605814",
+        "productName": "Lemons, Strips Candied"
+      },
+      {
+        "productId": "843514500",
+        "productName": "Micro Bulls Blood"
+      },
+      {
+        "productId": "832458973",
+        "productName": "Mirin"
+      },
+      {
+        "productId": "945388025",
+        "productName": "Molasses"
+      },
+      {
+        "productId": "885360613",
+        "productName": "Mushrooms, Morel"
+      },
+      {
+        "productId": "828222749",
+        "productName": "Mushrooms, Portabella"
+      },
+      {
+        "productId": "908560046",
+        "productName": "Noodles, Chow Mein"
+      },
+      {
+        "productId": "828363557",
+        "productName": "Oranges, Mandarin Can"
+      },
+      {
+        "productId": "1057284186",
+        "productName": "Packet, Wasabi"
+      },
+      {
+        "productId": "988152626",
+        "productName": "Pasta, Fettuccine"
+      },
+      {
+        "productId": "945386923",
+        "productName": "Paste, Almond"
+      },
+      {
+        "productId": "901083565",
+        "productName": "Paste, Sesame"
+      },
+      {
+        "productId": "941706825",
+        "productName": "Paste, Tomato"
+      },
+      {
+        "productId": "828222645",
+        "productName": "Peppers, Orange"
+      },
+      {
+        "productId": "948311099",
+        "productName": "Peppers, Yellow"
+      },
+      {
+        "productId": "931185509",
+        "productName": "Pistachios"
+      },
+      {
+        "productId": "885478688",
+        "productName": "Pork, Guanciale"
+      },
+      {
+        "productId": "980830953",
+        "productName": "Pumpkin, Can"
+      },
+      {
+        "productId": "953637974",
+        "productName": "Quinoa"
+      },
+      {
+        "productId": "869737110",
+        "productName": "Radish, Daikon Shredded"
+      },
+      {
+        "productId": "841276176",
+        "productName": "Rice, Brown"
+      },
+      {
+        "productId": "910992449",
+        "productName": "Sales Tax on Consumables"
+      },
+      {
+        "productId": "884450375",
+        "productName": "Sauce, BBQ"
+      },
+      {
+        "productId": "832416940",
+        "productName": "Seaweed Salad"
+      },
+      {
+        "productId": "908305802",
+        "productName": "Spice, Cinnamon Ground"
+      },
+      {
+        "productId": "842543223",
+        "productName": "Spice, Himalayan Pink Salt"
+      },
+      {
+        "productId": "888540904",
+        "productName": "Spice, Korean Chili Flakes"
+      },
+      {
+        "productId": "980830956",
+        "productName": "Spice, Pumpkin Pie"
+      },
+      {
+        "productId": "837510194",
+        "productName": "Spice, Togarashi"
+      },
+      {
+        "productId": "955378891",
+        "productName": "Spice, Turmeric Ground"
+      },
+      {
+        "productId": "837450891",
+        "productName": "Sprinkles, Assorted"
+      },
+      {
+        "productId": "899594622",
+        "productName": "Stevia Packets (Green)"
+      },
+      {
+        "productId": "832422361",
+        "productName": "Tuna, Poke Cubes"
+      },
+      {
+        "productId": "941706846",
+        "productName": "Walnuts"
+      },
+      {
+        "productId": "846317539",
+        "productName": "Water, Tap"
+      }
+    ],
+    "nullPricedFoodProducts": [
+      {
+        "productId": "911979487",
+        "productName": "Gelatin Sheets"
+      },
+      {
+        "productId": "828255760",
+        "productName": "Spice, Star Anise"
+      }
+    ],
+    "opaqueUnitFoodProducts": 115,
+    "foodProductsWithNoVendorItems": 434,
+    "duplicateFoodProductNames": []
+  },
+  "items": [
+    {
+      "toastItemGuid": "4ae4697f-1166-4575-84c0-28b24d76ef89",
+      "toastItemName": "SNOW CRAB (2 Clusters)",
+      "normalizedName": "snow crab 2 clusters",
+      "quantityObserved": 1184,
+      "datesObserved": 34,
+      "aceCost": 14.5,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-snow-crab-2-clusters",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "2 clusters x 9 oz ASSUMED = 1.125 lb. MarginEdge pins the grade, not the average: every August purchase is '8/Up' (US Foods 'Crab Snow Clstr 8+ Z In Shl' 30 lb cases, Samuels 'Snow Crab Clusters 8/Up'), i.e. each cluster weighs AT LEAST 8 oz, so the floor is 1.0 lb; 8/up product commercially runs 8-10 oz and 9 oz is the midpoint.",
+      "candidateProducts": [
+        {
+          "productId": "828228826",
+          "productName": "Snow crab, Cluster",
+          "latestPrice": 11.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "903010147",
+          "productName": "Crab Roe",
+          "latestPrice": 12.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "845435042",
+          "productName": "Crab, Baby",
+          "latestPrice": 7.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1218194687",
+          "productName": "Crab, Cocktail",
+          "latestPrice": 10,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "831329981",
+          "productName": "Crab, Dungeness",
+          "latestPrice": 17.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "a77b0eee-273c-463d-8c45-34077eb69d6c",
+      "toastItemName": "Lamb Chops",
+      "normalizedName": "lamb chops",
+      "quantityObserved": 952,
+      "datesObserved": 34,
+      "aceCost": 4,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-lamb-chops",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "2 chops ASSUMED (the example row in docs/CHEF_COSTS.md says '2 chops' but was never chef-confirmed) x one chop = 2.375 oz DERIVED from MarginEdge: August racks are Fells Point 'Lamb N.Z Rack 18/20 Frenched' (18-20 oz per rack, 414 lb) and, since 2026-08-28, '16/18' (118 lb); at 8 ribs per rack 19/8 = 2.375 oz per bone-in chop = 6.74 chops per lb (16/18 grade: 2.125 oz = 7.53 per lb). NZ frenched racks are sold as 7-9 ribs, so per-chop weight carries about +/-12%.",
+      "candidateProducts": [
+        {
+          "productId": "835234523",
+          "productName": "Lamb, Rack",
+          "latestPrice": 18.76,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "4bc6b8fc-433e-42c1-8e29-3e579dc76629",
+      "toastItemName": "1 pc crab cake",
+      "normalizedName": "1 pc crab cake",
+      "quantityObserved": 696,
+      "datesObserved": 34,
+      "aceCost": 4,
+      "aceCostSource": "portion_override",
+      "aceVerification": "unverified",
+      "aceTier": "override",
+      "aceMatchMethod": "override",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-1-pc-crab-cake",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "0.16 lb (2.56 oz) of mix ASSUMED, back-solved from ACE's $4.00 portion override at $25.00/lb. The mix (Aunt Connie's, Samuels, 5 lb tubs at $125 = $25.00/lb, 18 August lines) is bought by weight; nothing in MarginEdge states the cake size. Corroboration: August purchases (140-196 lb of mix incl. a raw-lump substitute) against ~33 cakes/day sold across all crab-cake items imply an all-cakes average of 2.2-3.1 oz raw, so a 4 oz AYCE cake is essentially impossible.",
+      "candidateProducts": [
+        {
+          "productId": "847922298",
+          "productName": "Crab Cake mix",
+          "latestPrice": 25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "832438062",
+          "productName": "Cake Mix",
+          "latestPrice": 5.13,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626641",
+          "productName": "Cake, Carrot",
+          "latestPrice": 31.32,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1016628029",
+          "productName": "Cake, Tiramisu",
+          "latestPrice": 25.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "903010147",
+          "productName": "Crab Roe",
+          "latestPrice": 12.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "580a20a7-dae6-4f29-b8f9-e640a3778593",
+      "toastItemName": "AYCE KING CRAB LEG (1 leg)",
+      "normalizedName": "ayce king crab leg 1 leg",
+      "quantityObserved": 650,
+      "datesObserved": 34,
+      "aceCost": 30,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-ayce-king-crab-leg-1-leg",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 leg. Weight DERIVED from the purchased grade: 94% of August pounds are J.J. McDonnell 'King Crab Legs 16/20 Gold' (620 lb @ $53.95/lb); 16/20 = 16-20 legs per 10 lb -> 0.556 lb (8.9 oz) per leg if the case is legs only = 1.8 legs per lb. If the case is legs AND claws (industry default, ~3:1) a leg is ~0.46 lb (~$25) and a claw served as a 'leg' ~0.42 lb (~$22.50).",
+      "candidateProducts": [
+        {
+          "productId": "830926106",
+          "productName": "Crab, King Legs",
+          "latestPrice": 53.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "903010147",
+          "productName": "Crab Roe",
+          "latestPrice": 12.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "845435042",
+          "productName": "Crab, Baby",
+          "latestPrice": 7.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1218194687",
+          "productName": "Crab, Cocktail",
+          "latestPrice": 10,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "831329981",
+          "productName": "Crab, Dungeness",
+          "latestPrice": 17.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "96040d7c-ad46-4482-9caa-5aa7721fbfeb",
+      "toastItemName": "Imperial Wagyu Zabuton",
+      "normalizedName": "imperial wagyu zabuton",
+      "quantityObserved": 569,
+      "datesObserved": 34,
+      "aceCost": 5.9375,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-imperial-wagyu-zabuton",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "0.2675 lb (4.3 oz raw) ASSUMED, back-solved from ACE's rough $5.94 at $22.20/lb. Zabuton = Denver steak = chuck flap, and the McLean vendor items are literally 'Imperial American Wagyu ... Chuck Flap', so the product match is firm; the portion and trim yield are not in MarginEdge.",
+      "candidateProducts": [
+        {
+          "productId": "978436973",
+          "productName": "Beef, Wagyu Sirloin",
+          "latestPrice": 20,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "937194622",
+          "productName": "Beef, Wagyu Tenderloin",
+          "latestPrice": 68.87,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "1063417812",
+          "productName": "Beef, Teres Major Wagyu",
+          "latestPrice": 14.09,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.41
+        },
+        {
+          "productId": "1025408720",
+          "productName": "Beef, Wagyu Chuck Flap",
+          "latestPrice": 22.2,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.41
+        },
+        {
+          "productId": "1050528941",
+          "productName": "Beef, Wagyu Eye Round",
+          "latestPrice": 1.8,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.41
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "f44fdeb8-3447-49cd-b8dd-49835de052c4",
+      "toastItemName": "BEIGNETS",
+      "normalizedName": "beignets",
+      "quantityObserved": 457,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "4cc2991c-136e-43d3-b08f-098245b050d8",
+      "toastItemName": "AUS KING PRAWNS",
+      "normalizedName": "aus king prawns",
+      "quantityObserved": 455,
+      "datesObserved": 34,
+      "aceCost": 12,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-aus-king-prawns",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "3 prawns ASSUMED at 7 per lb (every August line is 'King Prawn Head On 6/8' = 6-8 per lb; 11 lb cases; the kitchen specs this SKU by count: 'Must Be 6-8!'). The a-la-carte sibling 'AUSSIE KING PRAWNS (1/2 lb)' = 3-4 prawns; the AYCE item carries no portion in its name, so 1/2 lb is a ceiling, not a fact.",
+      "candidateProducts": [
+        {
+          "productId": "830926106",
+          "productName": "Crab, King Legs",
+          "latestPrice": 53.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "830103928",
+          "productName": "Prawns, U/6",
+          "latestPrice": 17.89,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "69028685-8c96-4e25-8148-c62d1487cb01",
+      "toastItemName": "LOUISIANA CRAWFISH",
+      "normalizedName": "louisiana crawfish",
+      "quantityObserved": 453,
+      "datesObserved": 34,
+      "aceCost": 5.5,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-louisiana-crawfish",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 lb — published by the restaurant itself: chasintailsss.com/menu lists 'LOUISIANA CRAWFISH – Eunice, 1 pound' and the Postmates listing reads 'Louisiana, 1 pound'. MarginEdge supplies only the price ($4.95/lb); the Toast name carries no weight.",
+      "candidateProducts": [
+        {
+          "productId": "828247210",
+          "productName": "Crawfish, Live",
+          "latestPrice": 4.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "830103200",
+          "productName": "Crawfish, Whole Cooked",
+          "latestPrice": 4.89,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "857192785",
+          "productName": "Crawfish, Tail Meat",
+          "latestPrice": 7.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "7b22bdbc-eb6e-4259-95d8-5d46e9d1f225",
+      "toastItemName": "Blue Crabs (AYCE 2)",
+      "normalizedName": "blue crabs ayce 2",
+      "quantityObserved": 450,
+      "datesObserved": 33,
+      "aceCost": 12,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-blue-crabs-ayce-2",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "2 crabs (from the Toast name). BLOCKED: the product is priced per Case ($190 latest) and no purchased SKU carries a count. August purchases coded to this product: Samuels '1s Full Box' $225 (9 boxes, #1 grade), Stanley Pearlman 'Steamed Crab Bu' $299 -> $190 (8 bushels, ungraded), Samuels 'Cooked Fresh Males Full Bushel' $125 (2), '#1 Males Maryland' $175 (1). None is labelled #2 despite the product name. Samuels' own spec: #1 bushel box = 6-7 dozen, #2 = 8-10 dozen.",
+      "candidateProducts": [
+        {
+          "productId": "973191245",
+          "productName": "Crabs, Blue #1",
+          "latestPrice": 195,
+          "reportByUnit": "Bushel",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "925793217",
+          "productName": "Crabs, Blue #2",
+          "latestPrice": 190,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "1252713457",
+          "productName": "Crabs, Cooked",
+          "latestPrice": 65,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1034116070",
+          "productName": "Stone Crabs",
+          "latestPrice": 35,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "959439307",
+          "productName": "Crabs, Cook Seasoned",
+          "latestPrice": 225,
+          "reportByUnit": "Box",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "7b774274-5051-4b5f-a678-21743e646816",
+      "toastItemName": "Vanilla Ice Cream",
+      "normalizedName": "vanilla ice cream",
+      "quantityObserved": 448,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-vanilla-ice-cream",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "One 4 oz scoop ASSUMED = 1/32 gal. Product priced per gallon ($12.72 latest; US Foods 3 gal tubs at $41.23-41.99 = $13.74-14.00/gal, PFG $25.49-30.15 per tub).",
+      "candidateProducts": [
+        {
+          "productId": "828228798",
+          "productName": "Ice Cream, Vanilla",
+          "latestPrice": 12.72,
+          "reportByUnit": "Gallon",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "1042068250",
+          "productName": "Ice Cream, Neapolitan",
+          "latestPrice": 7.27,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.627
+        },
+        {
+          "productId": "1042070971",
+          "productName": "Ice Cream, Peppermint",
+          "latestPrice": 5.9,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.627
+        },
+        {
+          "productId": "914653183",
+          "productName": "Ice Cream, Strawberry",
+          "latestPrice": 7.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.627
+        },
+        {
+          "productId": "901404247",
+          "productName": "ice Cream Bar, Assorted",
+          "latestPrice": 5.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.587
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "5dc22b3b-5bb1-4520-aef5-6c11a703cea6",
+      "toastItemName": "GREEN-LIPPED MUSSELS",
+      "normalizedName": "green lipped mussels",
+      "quantityObserved": 438,
+      "datesObserved": 34,
+      "aceCost": 5.95,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-green-lipped-mussels",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1.192 lb ASSUMED, back-solved from ACE's rough $5.95 at $4.99/lb. Bought as NZ green-shell cooked half-shell, frozen IQF, 24 lb cases (912 lb in Aug, all Samuels, all $4.99/lb) and plated by the piece; MarginEdge does not record the size grade (9-19 pieces per lb by grade), so neither count nor weight per order is derivable.",
+      "candidateProducts": [
+        {
+          "productId": "830103652",
+          "productName": "Mussels",
+          "latestPrice": 4.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "839182904",
+          "productName": "Beans, Green",
+          "latestPrice": 2.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "836148974",
+          "productName": "Cabbage, Green",
+          "latestPrice": 3.75,
+          "reportByUnit": "Count",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "828490719",
+          "productName": "Onions, Green",
+          "latestPrice": 0.65,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "828239006",
+          "productName": "Papaya, Green",
+          "latestPrice": 3.1,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "21974870-9d5c-4805-9c70-8d9b607e7a9b",
+      "toastItemName": "LOBSTER TAIL (6-7oz)",
+      "normalizedName": "lobster tail 6 7oz",
+      "quantityObserved": 400,
+      "datesObserved": 34,
+      "aceCost": 12,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-lobster-tail-6-7oz",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 whole cold-water tail of the 6/7 oz grade = 6.5 oz midpoint = 0.40625 lb. Every August purchase under this product is the 6-7 oz grade (Samuels 'Lobster Tail 6/7 Spring Cold Water' 210 lb @ $25.00/lb; Capital Seaboard 'Lobster Tails cw 6-7oz' $239 per 10 lb case = $23.90/lb; J.J. McDonnell 'Lobster Cw/Tail 6-7OZ' $24.90/lb), matching the Toast item name.",
+      "candidateProducts": [
+        {
+          "productId": "828247214",
+          "productName": "Lobster, Live",
+          "latestPrice": 11.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "828493992",
+          "productName": "Lobster, Meat",
+          "latestPrice": 45,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "837428186",
+          "productName": "Lobster, Tails",
+          "latestPrice": 25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "857192785",
+          "productName": "Crawfish, Tail Meat",
+          "latestPrice": 7.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.293
+        },
+        {
+          "productId": "1225613793",
+          "productName": "Lobster, Sleepy(Dead)",
+          "latestPrice": 9.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.293
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "5a026bfb-da3e-476d-84f4-902aff3aa2a0",
+      "toastItemName": "FRIED CHEESECAKE",
+      "normalizedName": "fried cheesecake",
+      "quantityObserved": 391,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828221634",
+          "productName": "Cheesecake, Plain",
+          "latestPrice": 39.79,
+          "reportByUnit": "Box",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1265995638",
+          "productName": "Cheesecake, Pineapple Upside Down",
+          "latestPrice": 38.16,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.82
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "76b30fbe-1d9f-4326-a2c4-6df0a7a7b161",
+      "toastItemName": "SNOW CRAB (1 Cluster)",
+      "normalizedName": "snow crab 1 cluster",
+      "quantityObserved": 388,
+      "datesObserved": 33,
+      "aceCost": 7.5,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-snow-crab-1-cluster",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 cluster x 9 oz ASSUMED = 0.5625 lb (floor 0.5 lb from the 8/Up grade). Must stay exactly half of the 2-cluster row.",
+      "candidateProducts": [
+        {
+          "productId": "828228826",
+          "productName": "Snow crab, Cluster",
+          "latestPrice": 11.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "903010147",
+          "productName": "Crab Roe",
+          "latestPrice": 12.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "845435042",
+          "productName": "Crab, Baby",
+          "latestPrice": 7.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1218194687",
+          "productName": "Crab, Cocktail",
+          "latestPrice": 10,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "831329981",
+          "productName": "Crab, Dungeness",
+          "latestPrice": 17.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "190e3c67-90f2-4dce-88f2-e9101f392ef4",
+      "toastItemName": "AYCE RIBEYE (8oz)",
+      "normalizedName": "ayce ribeye 8oz",
+      "quantityObserved": 380,
+      "datesObserved": 34,
+      "aceCost": 10,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-ayce-ribeye-8oz",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "8 oz as named = 0.5 lb raw boneless (112A lip-on rolls: Fells Point Creekstone $18.04-18.54, Demkota Prime $18.61-19.76, US Foods $15.75-18.08; 620 lb in Aug). Bone-in is not a feasible source for an 8 oz steak (that product is 24 oz bone-in steaks). Steaks are cut in-house from whole rolls, so a trim/end-piece yield applies on top of 100%.",
+      "candidateProducts": [
+        {
+          "productId": "872453321",
+          "productName": "Beef, Ribeye Boneless",
+          "latestPrice": 18.54,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "829926037",
+          "productName": "Beef, Ribeye Bone In",
+          "latestPrice": 21.84,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.41
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "0bc0a82a-fddb-4c8d-8dd2-60762d69c2fa",
+      "toastItemName": "EZ__PEEL SHRIMP 1/2LB",
+      "normalizedName": "ez peel shrimp 1 2lb",
+      "quantityObserved": 371,
+      "datesObserved": 34,
+      "aceCost": 2.5,
+      "aceCostSource": "portion_override",
+      "aceVerification": "unverified",
+      "aceTier": "override",
+      "aceMatchMethod": "override",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-ez-peel-shrimp-1-2lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1/2 lb as named. Same product and price as the 1 lb row.",
+      "candidateProducts": [
+        {
+          "productId": "828222605",
+          "productName": "Shrimp, 21/25 EZ Peel",
+          "latestPrice": 5.45,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.75
+        },
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "2f9706b3-bfb7-4757-9c69-39018d66c76d",
+      "toastItemName": "SEASONAL BERRY CHEESECAKE",
+      "normalizedName": "seasonal berry cheesecake",
+      "quantityObserved": 349,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828221634",
+          "productName": "Cheesecake, Plain",
+          "latestPrice": 39.79,
+          "reportByUnit": "Box",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265995638",
+          "productName": "Cheesecake, Pineapple Upside Down",
+          "latestPrice": 38.16,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.41
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "ba534dc1-d9e8-4c10-a5d4-f2e70376bc63",
+      "toastItemName": "FRESH GARLIC NOODLES",
+      "normalizedName": "fresh garlic noodles",
+      "quantityObserved": 333,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "1055605794",
+          "productName": "Garlic, Fresh",
+          "latestPrice": 6.65,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "830927032",
+          "productName": "Garlic, Fried",
+          "latestPrice": 0.28,
+          "reportByUnit": "Ounce",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1193450588",
+          "productName": "Noodles, Jumbo",
+          "latestPrice": 5.75,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "857534807",
+          "productName": "Garlic, Black",
+          "latestPrice": 40.25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "916500554",
+          "productName": "Garlic, Chopped",
+          "latestPrice": 15.35,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "9657228c-ecdd-4bd9-bec8-1e8c5d3c2484",
+      "toastItemName": "Hamachi Crudo",
+      "normalizedName": "hamachi crudo",
+      "quantityObserved": 311,
+      "datesObserved": 34,
+      "aceCost": 2.5,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-hamachi-crudo",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "0.139 lb (2.2 oz) ASSUMED, back-solved from ACE's rough $2.50 at the old $17.99/lb. Fillets are bought whole (4.1-4.6 lb each, catch weight) so the portion should be stated as orders per fillet or as trimmed oz per plate plus a trim yield.",
+      "candidateProducts": [
+        {
+          "productId": "829878135",
+          "productName": "Hamachi, Fillet",
+          "latestPrice": 20.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "97e8fe3b-8bdb-4d15-8c3d-39eaadc36863",
+      "toastItemName": "Charbroiled Oysters Half Dozen",
+      "normalizedName": "charbroiled oysters half dozen",
+      "quantityObserved": 279,
+      "datesObserved": 34,
+      "aceCost": 4.68,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "847921797",
+          "productName": "Oysters, Blackberry",
+          "latestPrice": 0.95,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "904945584",
+          "productName": "Oysters, Chesapeake",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1151150747",
+          "productName": "Oysters, Choptank",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1109363016",
+          "productName": "Oysters, Cortaze",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1295793882",
+          "productName": "Oysters, Delaware",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "603ec26e-a16c-42d1-8862-5946b6200df6",
+      "toastItemName": "BRUSSELS SPROUTS",
+      "normalizedName": "brussels sprouts",
+      "quantityObserved": 260,
+      "datesObserved": 34,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828496634",
+          "productName": "Bean Sprouts",
+          "latestPrice": 7.95,
+          "reportByUnit": "Bag (10 Pounds)",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "831861853",
+          "productName": "Brussel Sprouts, Fresh",
+          "latestPrice": 1.89,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "c1e1dbf9-dac7-43df-8029-97f92e27e7f2",
+      "toastItemName": "Crab & Spinach Dip",
+      "normalizedName": "crab spinach dip",
+      "quantityObserved": 255,
+      "datesObserved": 34,
+      "aceCost": 4,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "903010147",
+          "productName": "Crab Roe",
+          "latestPrice": 12.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "845435042",
+          "productName": "Crab, Baby",
+          "latestPrice": 7.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "1218194687",
+          "productName": "Crab, Cocktail",
+          "latestPrice": 10,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "831329981",
+          "productName": "Crab, Dungeness",
+          "latestPrice": 17.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "832458984",
+          "productName": "Crab, Imitation",
+          "latestPrice": 6.5,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "7d867656-9db3-4af4-9e0f-d622550b81b4",
+      "toastItemName": "EZ__PEEL SHRIMP 1LB",
+      "normalizedName": "ez peel shrimp 1lb",
+      "quantityObserved": 255,
+      "datesObserved": 32,
+      "aceCost": 4.85,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-ez-peel-shrimp-1lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 lb as named. 26 August invoices, all Samuels 'Shrimp 21/25 Quick Peels Easy To Peel 20Lb Case', 1,460 lb at $5.45/lb, no other SKU bought.",
+      "candidateProducts": [
+        {
+          "productId": "828222605",
+          "productName": "Shrimp, 21/25 EZ Peel",
+          "latestPrice": 5.45,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.75
+        },
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "bd3d5aab-1f54-43f5-8d28-cec20c5a6a34",
+      "toastItemName": "Sriracha Honey Shrimp",
+      "normalizedName": "sriracha honey shrimp",
+      "quantityObserved": 250,
+      "datesObserved": 34,
+      "aceCost": 4,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "751df211-6821-47e2-9bee-b578a67b2a82",
+      "toastItemName": "(12) Skinny Dippers",
+      "normalizedName": "12 skinny dippers",
+      "quantityObserved": 246,
+      "datesObserved": 32,
+      "aceCost": 9.36,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-12-skinny-dippers",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "12 oysters as named. Same 100-per-box basis as the (6) row.",
+      "candidateProducts": [
+        {
+          "productId": "828495545",
+          "productName": "Oysters, Skinny Dipper",
+          "latestPrice": 72.95,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "e4100552-67fc-4f55-a408-dcc74d12975f",
+      "toastItemName": "Gator Bites",
+      "normalizedName": "gator bites",
+      "quantityObserved": 218,
+      "datesObserved": 33,
+      "aceCost": 3,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-gator-bites",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "0.24 lb ASSUMED, back-solved from ACE's explicit $3.00 at $12.49/lb. Bought as 12 x 1 lb retail packs of tail meat ($12.49/lb, stable, 13 August lines); the 1 lb pack is a prep unit, not a plate.",
+      "candidateProducts": [
+        {
+          "productId": "961272902",
+          "productName": "Candy, Chili Tamarind Bites",
+          "latestPrice": 20.33,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.41
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "222141c2-f6b7-4440-901d-6e540ed0ac1e",
+      "toastItemName": "Charbroiled Oysters Dozen",
+      "normalizedName": "charbroiled oysters dozen",
+      "quantityObserved": 206,
+      "datesObserved": 33,
+      "aceCost": 9.36,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "847921797",
+          "productName": "Oysters, Blackberry",
+          "latestPrice": 0.95,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "904945584",
+          "productName": "Oysters, Chesapeake",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1151150747",
+          "productName": "Oysters, Choptank",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1109363016",
+          "productName": "Oysters, Cortaze",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1295793882",
+          "productName": "Oysters, Delaware",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "674e73be-bf90-4d43-b309-e36eae258154",
+      "toastItemName": "Blackened Wings",
+      "normalizedName": "blackened wings",
+      "quantityObserved": 201,
+      "datesObserved": 32,
+      "aceCost": 2,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828228850",
+          "productName": "Chicken, Wings",
+          "latestPrice": 2.25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1245278946",
+          "productName": "Chicken Wings(CT)",
+          "latestPrice": 1.93,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.88
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "dea9dd4a-2be0-485f-82c5-96de1b8da71f",
+      "toastItemName": "SOUTHERN HUSH PUPPIES",
+      "normalizedName": "southern hush puppies",
+      "quantityObserved": 197,
+      "datesObserved": 32,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "7577450b-abd3-46be-9378-28612a4a3eb0",
+      "toastItemName": "Blackened Salmon",
+      "normalizedName": "blackened salmon",
+      "quantityObserved": 183,
+      "datesObserved": 32,
+      "aceCost": 6,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "1312122065",
+          "productName": "Roe, Salmon",
+          "latestPrice": 59.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "828264268",
+          "productName": "Salmon, Fillet",
+          "latestPrice": 10.49,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1193450046",
+          "productName": "Salmon, Tails",
+          "latestPrice": 2.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "832645509",
+          "productName": "Salmon, Trim",
+          "latestPrice": 2,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1243147596",
+          "productName": "Salmon, Sushi Fillet",
+          "latestPrice": 11.69,
+          "reportByUnit": "Salmon, Sushi Fillet (Pound)",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.88
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "7d758db8-9e1f-46e7-9c9e-9c8d4741bb56",
+      "toastItemName": "3 pc Scallops",
+      "normalizedName": "3 pc scallops",
+      "quantityObserved": 182,
+      "datesObserved": 33,
+      "aceCost": 8,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "1253681873",
+          "productName": "Scallops, 10/20",
+          "latestPrice": 30,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "925789878",
+          "productName": "Scallops, 80/100",
+          "latestPrice": 10.77,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "897663066",
+          "productName": "Scallops shell, 20/30",
+          "latestPrice": 14.38,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "830246428",
+          "productName": "Scallops, U/12",
+          "latestPrice": 27.25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1175469620",
+          "productName": "Scallops, U/15",
+          "latestPrice": 27.55,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "d41f3b7c-f409-4d34-abd1-18105c1b895d",
+      "toastItemName": "MAC & CHEESE",
+      "normalizedName": "mac cheese",
+      "quantityObserved": 170,
+      "datesObserved": 32,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "832438847",
+          "productName": "Cheese, Burrata",
+          "latestPrice": 0.84,
+          "reportByUnit": "Ounce",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "832433051",
+          "productName": "Cheese, Mascarpone",
+          "latestPrice": 4.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626153",
+          "productName": "Cheese, Velveeta",
+          "latestPrice": 2.34,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828222731",
+          "productName": "Cream Cheese",
+          "latestPrice": 4.45,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Dairy"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265996620",
+          "productName": "Macaroni & Cheese",
+          "latestPrice": 1.89,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "8d09f1ed-526a-4eb9-9355-e6b7620a3889",
+      "toastItemName": "(6) FANNY BAY Oysters",
+      "normalizedName": "6 fanny bay oysters",
+      "quantityObserved": 165,
+      "datesObserved": 33,
+      "aceCost": 10.8,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-6-fanny-bay-oysters",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "6 oysters as named x $1.35 each. The product NAMED 'Fanny Bay' (#942139937) is a near-orphan (1 line in Aug); 100% of the August Fanny Bay volume (3,060 pcs 'Oyster Fanny Bay Baynes Sound B.C' @ $1.35, plus Stanley Pearlman 120-ct cases @ $130 = $1.08 each) is coded to #833486701, which is the de facto West Coast half-shell product despite its 'Shigoku' name.",
+      "candidateProducts": [
+        {
+          "productId": "1111666282",
+          "productName": "Oysters, Fanny Bay",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "942139937",
+          "productName": "Oyster, Fanny Bay",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.627
+        },
+        {
+          "productId": "847921797",
+          "productName": "Oysters, Blackberry",
+          "latestPrice": 0.95,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "904945584",
+          "productName": "Oysters, Chesapeake",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "1151150747",
+          "productName": "Oysters, Choptank",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "d685b1a7-850e-42c5-9511-5afbf8b5d8b5",
+      "toastItemName": "(6) Skinny Dippers",
+      "normalizedName": "6 skinny dippers",
+      "quantityObserved": 155,
+      "datesObserved": 31,
+      "aceCost": 4.68,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-6-skinny-dippers",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "6 oysters as named. Product is priced per Case/Box ($72.95-75.95, 154 J.J. McDonnell boxes in Aug) and the MarginEdge packaging record carries no count; 100 per box is the grower's spec (True Chesapeake Oyster Co.) and the count on every sibling East Coast vendor item that does have packaging (Sewanscott, Blackberry, Watch House: 100 EA). ACE's own $4.68 / 6 = $0.78 = $78 per 100-ct box.",
+      "candidateProducts": [
+        {
+          "productId": "828495545",
+          "productName": "Oysters, Skinny Dipper",
+          "latestPrice": 72.95,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "1838bd43-fba4-4053-b2c5-a859e68a84bc",
+      "toastItemName": "CAJUN FRIES",
+      "normalizedName": "cajun fries",
+      "quantityObserved": 150,
+      "datesObserved": 31,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828491019",
+          "productName": "French Fries",
+          "latestPrice": 1.4,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "871678867",
+          "productName": "Seasoning, Cajun",
+          "latestPrice": 4.89,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "852569249",
+          "productName": "Yuca, Fries",
+          "latestPrice": 5.82,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1086571183",
+          "productName": "[RP] Fries, Shoestring",
+          "latestPrice": 70.85,
+          "reportByUnit": "Case (Case)",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "1058848184",
+          "productName": "French Fries, Sweet Potato",
+          "latestPrice": 2.52,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.41
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "f80220dc-20a5-4e15-8807-cbd7e9e6f352",
+      "toastItemName": "(12) FANNY BAY Oysters",
+      "normalizedName": "12 fanny bay oysters",
+      "quantityObserved": 146,
+      "datesObserved": 32,
+      "aceCost": 21.6,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-12-fanny-bay-oysters",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "12 oysters as named. Same product note as the (6) row.",
+      "candidateProducts": [
+        {
+          "productId": "1111666282",
+          "productName": "Oysters, Fanny Bay",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "942139937",
+          "productName": "Oyster, Fanny Bay",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.627
+        },
+        {
+          "productId": "847921797",
+          "productName": "Oysters, Blackberry",
+          "latestPrice": 0.95,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "904945584",
+          "productName": "Oysters, Chesapeake",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "1151150747",
+          "productName": "Oysters, Choptank",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "e7b81bf8-d447-49b8-961b-b926c44437b6",
+      "toastItemName": "JUMBO WHITE SHRIMP 1/2LB",
+      "normalizedName": "jumbo white shrimp 1 2lb",
+      "quantityObserved": 145,
+      "datesObserved": 28,
+      "aceCost": 2.5,
+      "aceCostSource": "portion_override",
+      "aceVerification": "unverified",
+      "aceTier": "override",
+      "aceMatchMethod": "override",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-jumbo-white-shrimp-1-2lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1/2 lb as named. Same product as the 1 lb row.",
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.333
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "4bcbf35d-2a1d-47b9-9c09-fc821c7095f6",
+      "toastItemName": "WHOLE LIVE LOBSTER",
+      "normalizedName": "whole live lobster",
+      "quantityObserved": 137,
+      "datesObserved": 30,
+      "aceCost": 20,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247214",
+          "productName": "Lobster, Live",
+          "latestPrice": 11.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "828247210",
+          "productName": "Crawfish, Live",
+          "latestPrice": 4.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828493992",
+          "productName": "Lobster, Meat",
+          "latestPrice": 45,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "837428186",
+          "productName": "Lobster, Tails",
+          "latestPrice": 25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1225613793",
+          "productName": "Lobster, Sleepy(Dead)",
+          "latestPrice": 9.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "e033b47f-bb79-46fe-a65d-0626c49e4be4",
+      "toastItemName": "Fried Shrimp Tacos",
+      "normalizedName": "fried shrimp tacos",
+      "quantityObserved": 132,
+      "datesObserved": 32,
+      "aceCost": 3,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "8cb11b3b-8124-4b4d-8689-35ae0af5f328",
+      "toastItemName": "Whole Dang Thang",
+      "normalizedName": "whole dang thang",
+      "quantityObserved": 120,
+      "datesObserved": 31,
+      "aceCost": 10,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "0657926a-1c65-427f-9cb1-45f6ebf6dc6a",
+      "toastItemName": "Crisp Shrimp",
+      "normalizedName": "crisp shrimp",
+      "quantityObserved": 116,
+      "datesObserved": 31,
+      "aceCost": 2,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 1
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "77bda1b1-60ac-4fbf-aa06-5fa61be87777",
+      "toastItemName": "Clam Chowder CUP (SMALL)",
+      "normalizedName": "clam chowder cup small",
+      "quantityObserved": 115,
+      "datesObserved": 33,
+      "aceCost": 2,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "45ab2085-1ad6-4afc-a13b-40ca68ee0c7f",
+      "toastItemName": "Shrimp Scampi",
+      "normalizedName": "shrimp scampi",
+      "quantityObserved": 100,
+      "datesObserved": 31,
+      "aceCost": 4,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "c31fb4ba-b70e-421e-a443-f7bd39aa2160",
+      "toastItemName": "Crisp Catfish",
+      "normalizedName": "crisp catfish",
+      "quantityObserved": 99,
+      "datesObserved": 29,
+      "aceCost": 3,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-crisp-catfish",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "0.5 lb ASSUMED, back-solved from ACE's explicit $3.00 at the old $5.99/lb. MarginEdge brackets a single fillet at 5-9 oz (the kitchen accepted a '6/8' fillet as a like-for-like substitute on 2026-08-23; historical SKUs are '5/7OZ' and '7-9Oz') but does not say fillets per order.",
+      "candidateProducts": [
+        {
+          "productId": "828247232",
+          "productName": "Catfish, Fillet",
+          "latestPrice": 6.24,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.94
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "a0221ed0-d2a0-472c-beb4-e0779c0f1040",
+      "toastItemName": "ROYAL SURF N' TURF (AYCE - 20oz)",
+      "normalizedName": "royal surf n turf ayce 20oz",
+      "quantityObserved": 93,
+      "datesObserved": 27,
+      "aceCost": 35,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "6b4bfe34-2c61-40d1-949b-5e2348313fc3",
+      "toastItemName": "Blue Catfish Tacos",
+      "normalizedName": "blue catfish tacos",
+      "quantityObserved": 84,
+      "datesObserved": 30,
+      "aceCost": 3,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828247232",
+          "productName": "Catfish, Fillet",
+          "latestPrice": 6.24,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "973191245",
+          "productName": "Crabs, Blue #1",
+          "latestPrice": 195,
+          "reportByUnit": "Bushel",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "925793217",
+          "productName": "Crabs, Blue #2",
+          "latestPrice": 190,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "852965934",
+          "productName": "Food Coloring, Blue",
+          "latestPrice": 20,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.293
+        },
+        {
+          "productId": "1033878932",
+          "productName": "Oysters, Blue Point",
+          "latestPrice": 2.19,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.293
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "14de93c3-28ba-45ed-8854-ad1d2d9e9e74",
+      "toastItemName": "Lobster Garlic Noodles",
+      "normalizedName": "lobster garlic noodles",
+      "quantityObserved": 72,
+      "datesObserved": 28,
+      "aceCost": 23,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "1055605794",
+          "productName": "Garlic, Fresh",
+          "latestPrice": 6.65,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "830927032",
+          "productName": "Garlic, Fried",
+          "latestPrice": 0.28,
+          "reportByUnit": "Ounce",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "1193450588",
+          "productName": "Noodles, Jumbo",
+          "latestPrice": 5.75,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.333
+        },
+        {
+          "productId": "857534807",
+          "productName": "Garlic, Black",
+          "latestPrice": 40.25,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        },
+        {
+          "productId": "916500554",
+          "productName": "Garlic, Chopped",
+          "latestPrice": 15.35,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.313
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "1ed80673-a81a-4ef3-a019-072f20691555",
+      "toastItemName": "JUMBO WHITE SHRIMP 1 LB",
+      "normalizedName": "jumbo white shrimp 1 lb",
+      "quantityObserved": 71,
+      "datesObserved": 24,
+      "aceCost": 4.85,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-jumbo-white-shrimp-1-lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 lb as named. 16 August invoices, all Samuels 'Shrimp White 21/25 Tropic 4lb Blocks/40lb Case', 880 lb at $4.50/lb. 21/25 count IS the 'jumbo' grade and this is the only white shell-on shrimp bought in August.",
+      "candidateProducts": [
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1152920664",
+          "productName": "Shrimp, 20/30",
+          "latestPrice": 8.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "878115623",
+          "productName": "Shrimp, 41/50",
+          "latestPrice": 5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "1266217520",
+          "productName": "Shrimp, 6/8",
+          "latestPrice": 13.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.5
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "f1e69090-2181-46ac-8459-a08aacff9b2b",
+      "toastItemName": "Chicken Tenders",
+      "normalizedName": "chicken tenders",
+      "quantityObserved": 63,
+      "datesObserved": 23,
+      "aceCost": 3,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "843732087",
+          "productName": "Chicken, Tenders",
+          "latestPrice": 1.92,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "1118519876",
+          "productName": "Chicken, Leg",
+          "latestPrice": 3.58,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "828238973",
+          "productName": "Chicken, Whole",
+          "latestPrice": 3.39,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "976273607",
+          "productName": "Broth, Chicken",
+          "latestPrice": 1.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626888",
+          "productName": "Chicken Salad",
+          "latestPrice": 4.7,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "f5f6c8c9-6d79-435d-8707-5a573bbfcb6f",
+      "toastItemName": "Jumbotron Oysters ",
+      "normalizedName": "jumbotron oysters",
+      "quantityObserved": 62,
+      "datesObserved": 15,
+      "aceCost": 15,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "guid",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "847921797",
+          "productName": "Oysters, Blackberry",
+          "latestPrice": 0.95,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "904945584",
+          "productName": "Oysters, Chesapeake",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1151150747",
+          "productName": "Oysters, Choptank",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1109363016",
+          "productName": "Oysters, Cortaze",
+          "latestPrice": 1.35,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1295793882",
+          "productName": "Oysters, Delaware",
+          "latestPrice": 0.9,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "7c57022b-0d10-4d82-bc43-b535b2549297",
+      "toastItemName": "Jasmine Rice",
+      "normalizedName": "jasmine rice",
+      "quantityObserved": 53,
+      "datesObserved": 21,
+      "aceCost": 2,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828255735",
+          "productName": "Rice, Jasmine",
+          "latestPrice": 1.12,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "866882251",
+          "productName": "Flour, Rice",
+          "latestPrice": 1.06,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1063417258",
+          "productName": "Noodle, Rice Fresh",
+          "latestPrice": 3.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1075479796",
+          "productName": "Pancake, Rice",
+          "latestPrice": 1.73,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "890955927",
+          "productName": "Red, Rice",
+          "latestPrice": 1.45,
+          "reportByUnit": "Rice, Red (Pound)",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "5266078e-9f19-4018-b69f-7be8af3683a0",
+      "toastItemName": "Jumbotron Oyster (AYCE)",
+      "normalizedName": "jumbotron oyster ayce",
+      "quantityObserved": 37,
+      "datesObserved": 17,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "879938792",
+          "productName": "Mushrooms, Oyster",
+          "latestPrice": 6.19,
+          "reportByUnit": "Mushroom, Oyster (Pound)",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1232676956",
+          "productName": "Oyster, Duxbury",
+          "latestPrice": 1.25,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1070715297",
+          "productName": "Oyster, Oysterponds",
+          "latestPrice": 1.1,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1117379712",
+          "productName": "Oyster, Royal Miyagi",
+          "latestPrice": 1.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1035512320",
+          "productName": "Oyster, Skookum",
+          "latestPrice": 1.11,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "c0bd8171-8e0e-45b2-8064-0d8b99332de8",
+      "toastItemName": "HEAD ON SHRIMP 1/2LB",
+      "normalizedName": "head on shrimp 1 2lb",
+      "quantityObserved": 32,
+      "datesObserved": 15,
+      "aceCost": 2.5,
+      "aceCostSource": "portion_override",
+      "aceVerification": "unverified",
+      "aceTier": "override",
+      "aceMatchMethod": "override",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-head-on-shrimp-1-2lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1/2 lb as named. Same product as the 1 lb row.",
+      "candidateProducts": [
+        {
+          "productId": "838546958",
+          "productName": "Shrimp, 16/20 Head On",
+          "latestPrice": 3.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.75
+        },
+        {
+          "productId": "1198623738",
+          "productName": "Shrimp U7, Head on",
+          "latestPrice": 10.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.705
+        },
+        {
+          "productId": "872435171",
+          "productName": "Shrimp, 21/25 Shell On",
+          "latestPrice": 4.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "d9d55dfd-4a01-47ee-92ba-7f330684435a",
+      "toastItemName": "Crisp Calamari",
+      "normalizedName": "crisp calamari",
+      "quantityObserved": 25,
+      "datesObserved": 14,
+      "aceCost": 4,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "eaeca4a2-558e-4c66-ad9a-e5307a3cdbff",
+      "toastItemName": "HEAD ON SHRIMP 1LB",
+      "normalizedName": "head on shrimp 1lb",
+      "quantityObserved": 24,
+      "datesObserved": 16,
+      "aceCost": 4.85,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": "memap-head-on-shrimp-1lb",
+      "mappingType": "single_product",
+      "mappingReviewStatus": "proposed",
+      "portionBasis": "1 lb as named. Every August purchase under this product is Capital Seaboard '30/40 Cnt Head-On Shrimp 40#' at $158-162 per 40 lb case = $3.95-4.05/lb (30/40 per kg head-on is the same shrimp as 16/20 headless per lb). The other head-on products (9/12 at $4.19, U/7 at $10.95) had no August purchases.",
+      "candidateProducts": [
+        {
+          "productId": "838546958",
+          "productName": "Shrimp, 16/20 Head On",
+          "latestPrice": 3.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.75
+        },
+        {
+          "productId": "1198623738",
+          "productName": "Shrimp U7, Head on",
+          "latestPrice": 10.95,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.705
+        },
+        {
+          "productId": "872435171",
+          "productName": "Shrimp, 21/25 Shell On",
+          "latestPrice": 4.5,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828247278",
+          "productName": "Shrimp, 13/15",
+          "latestPrice": 8.75,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        },
+        {
+          "productId": "853785512",
+          "productName": "Shrimp, 16/20",
+          "latestPrice": 8.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Seafood"
+          ],
+          "score": 0.25
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_REVIEW",
+      "notes": "mapping exists with review status \"proposed\""
+    },
+    {
+      "toastItemGuid": "54b398b9-3528-4b82-8c68-da09f0afa597",
+      "toastItemName": "French Bread",
+      "normalizedName": "french bread",
+      "quantityObserved": 23,
+      "datesObserved": 16,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "1266314568",
+          "productName": "Bread, Baguette",
+          "latestPrice": 1.26,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Bread"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1277726829",
+          "productName": "Bread, Banana",
+          "latestPrice": 57.05,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Bread"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626080",
+          "productName": "Bread, Ciabatta",
+          "latestPrice": 0.5,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Bread"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626061",
+          "productName": "Bread, Rye",
+          "latestPrice": 3.59,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Bread"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1265626200",
+          "productName": "Bread, Wheat",
+          "latestPrice": 3.64,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Bread"
+          ],
+          "score": 0.47
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "820445f4-632d-4786-80ab-710e6f160b8e",
+      "toastItemName": "Boiled Egg (2)",
+      "normalizedName": "boiled egg 2",
+      "quantityObserved": 23,
+      "datesObserved": 14,
+      "aceCost": 2,
+      "aceCostSource": "rough_workbook",
+      "aceVerification": "unverified",
+      "aceTier": "rough_estimate",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "886877210",
+          "productName": "Egg Tart Shell",
+          "latestPrice": 6.79,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "868809105",
+          "productName": "Egg Tart Shells",
+          "latestPrice": 0.37,
+          "reportByUnit": "Pack",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "908654438",
+          "productName": "Pasta, Egg Noodle",
+          "latestPrice": 4.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "828492124",
+          "productName": "Pasta, Pappardelle Egg",
+          "latestPrice": 6.4,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "852959893",
+          "productName": "Shells, Tart Egg",
+          "latestPrice": 1.67,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "06277d22-5e19-4242-976e-68a0ebb3037e",
+      "toastItemName": "Corn (2)",
+      "normalizedName": "corn 2",
+      "quantityObserved": 13,
+      "datesObserved": 11,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828499341",
+          "productName": "Corn Starch",
+          "latestPrice": 0.58,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "868544202",
+          "productName": "Corn Syrup",
+          "latestPrice": 8.16,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "896646109",
+          "productName": "Corn, Baby",
+          "latestPrice": 0.35,
+          "reportByUnit": "Ounce",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1048443691",
+          "productName": "Corn, Can",
+          "latestPrice": 5.67,
+          "reportByUnit": "Can",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "828492542",
+          "productName": "Corn, Yellow",
+          "latestPrice": 19.21,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.94
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "c965c0e7-0bbb-4392-b87f-261fe6b37050",
+      "toastItemName": "1/4 lb Andouille Sausage",
+      "normalizedName": "1 4 lb andouille sausage",
+      "quantityObserved": 11,
+      "datesObserved": 6,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "829347029",
+          "productName": "Sausage, Andouille",
+          "latestPrice": 6.37,
+          "reportByUnit": " (Pound)",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "908653463",
+          "productName": "Sausage, Chinese",
+          "latestPrice": 8,
+          "reportByUnit": "1 (Pound)",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1139982842",
+          "productName": "Sausage, Vietnamese",
+          "latestPrice": 9.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828491354",
+          "productName": "Sausage, Pork Link",
+          "latestPrice": 11.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "828574787",
+          "productName": "Sausage, Pork Patty",
+          "latestPrice": 49.94,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "dd0cbbe8-86c7-41ba-a091-73a633cdcd5d",
+      "toastItemName": "Clam Chowder BOWL (LARGE)",
+      "normalizedName": "clam chowder bowl large",
+      "quantityObserved": 5,
+      "datesObserved": 5,
+      "aceCost": 4,
+      "aceCostSource": "explicit_temp",
+      "aceVerification": "unverified",
+      "aceTier": "explicit_temp",
+      "aceMatchMethod": "alias",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NO_MARGINEDGE_PRODUCT",
+      "notes": "no MarginEdge FOOD product shares a content word with this Toast item"
+    },
+    {
+      "toastItemGuid": "774fac7b-05a8-4462-a3e2-008d93ac128e",
+      "toastItemName": "1/2 lb Andouille Sausage",
+      "normalizedName": "1 2 lb andouille sausage",
+      "quantityObserved": 5,
+      "datesObserved": 5,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "829347029",
+          "productName": "Sausage, Andouille",
+          "latestPrice": 6.37,
+          "reportByUnit": " (Pound)",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 1
+        },
+        {
+          "productId": "908653463",
+          "productName": "Sausage, Chinese",
+          "latestPrice": 8,
+          "reportByUnit": "1 (Pound)",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "1139982842",
+          "productName": "Sausage, Vietnamese",
+          "latestPrice": 9.99,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.47
+        },
+        {
+          "productId": "828491354",
+          "productName": "Sausage, Pork Link",
+          "latestPrice": 11.99,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        },
+        {
+          "productId": "828574787",
+          "productName": "Sausage, Pork Patty",
+          "latestPrice": 49.94,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Meat"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "1277c558-3e89-4f16-88cb-e8de13da7c7c",
+      "toastItemName": "Bowl Of Lemons",
+      "normalizedName": "bowl of lemons",
+      "quantityObserved": 3,
+      "datesObserved": 2,
+      "aceCost": 2,
+      "aceCostSource": "menu_fallback",
+      "aceVerification": "unverified",
+      "aceTier": "fallback_2",
+      "aceMatchMethod": "name",
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "828222666",
+          "productName": "Lemons, Fresh",
+          "latestPrice": 0.17,
+          "reportByUnit": "Each",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.5
+        },
+        {
+          "productId": "941605814",
+          "productName": "Lemons, Strips Candied",
+          "latestPrice": 0,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.44
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    },
+    {
+      "toastItemGuid": "b45ec065-ebfa-42f2-8837-9b0391133f1a",
+      "toastItemName": "Potatoes (3)",
+      "normalizedName": "potatoes 3",
+      "quantityObserved": 2,
+      "datesObserved": 1,
+      "aceCost": null,
+      "aceCostSource": null,
+      "aceVerification": null,
+      "aceTier": null,
+      "aceMatchMethod": null,
+      "marginedgeRestaurantUnitId": 377809302,
+      "mappingId": null,
+      "mappingType": null,
+      "mappingReviewStatus": null,
+      "portionBasis": null,
+      "candidateProducts": [
+        {
+          "productId": "836892785",
+          "productName": "Potatoes, Diced",
+          "latestPrice": 47.05,
+          "reportByUnit": "Case",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "1047008009",
+          "productName": "Potatoes, Mashed",
+          "latestPrice": 1.81,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Grocery and Dry Goods"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "828222690",
+          "productName": "Potatoes, Red",
+          "latestPrice": 0.66,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "847921745",
+          "productName": "Potatoes, Sweet",
+          "latestPrice": 1.79,
+          "reportByUnit": "Pound",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.94
+        },
+        {
+          "productId": "991934414",
+          "productName": "Potatoes, Sweet Jumbo",
+          "latestPrice": 25.95,
+          "reportByUnit": " (Case)",
+          "categoryNames": [
+            "Produce"
+          ],
+          "score": 0.94
+        }
+      ],
+      "proposedCostPerToastUnit": null,
+      "derivedComponents": [],
+      "status": "NEEDS_PORTION_SPEC",
+      "notes": "candidate ingredient(s) found; a chef-confirmed portion quantity is required before costing"
+    }
+  ]
+}

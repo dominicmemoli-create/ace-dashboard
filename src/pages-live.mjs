@@ -63,6 +63,11 @@ const DATA = {
   costs: [], reference: null, manifest: null,
   importRuns: [],       // upload history (newest first)
   ingestionRuns: [],    // Toast update history (payloads)
+  // Independent per-source freshness (supabase/migrations/0007). One row per
+  // upstream source so a stale OpenTable upload never makes Toast or MarginEdge
+  // look broken. Always an array — never assume the table exists.
+  sourceStatus: [],
+  marginedgeRuns: [],   // MarginEdge cost-sync history (payloads, newest first)
 };
 let CFG = null;
 
@@ -146,6 +151,22 @@ function loadLive() {
         try { DATA.ingestionRuns = await fetchJson('data/live/ingestion_runs.json'); } catch { DATA.ingestionRuns = []; }
         DATA.source = 'static';
       }
+      // Per-source freshness is fetched SEPARATELY and never inside the main
+      // Promise.all: a project that has not applied migration 0007 yet must
+      // still render the whole dashboard rather than falling back to backup data.
+      if (db) {
+        const cfg2 = await configReady;
+        try {
+          DATA.sourceStatus = await sbRows(cfg2, 'ace_source_status',
+            'source,last_success_at,last_attempt_at,status,detail', '&order=source');
+        } catch (e) { console.warn('ace_source_status unavailable:', e?.message); }
+        try {
+          const runs = await sbRows(cfg2, 'ace_marginedge_sync_runs', 'payload',
+            '&order=created_at.desc&limit=10');
+          DATA.marginedgeRuns = runs.map((r) => r.payload);
+        } catch (e) { console.warn('ace_marginedge_sync_runs unavailable:', e?.message); }
+      }
+
       DATA.loaded = true;
       await reverifyStoredMatches();
       renderFreshness();

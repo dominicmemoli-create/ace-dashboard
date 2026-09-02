@@ -110,3 +110,24 @@ The $5/$7.50/$10 (classic/premium/royalty) conversion commission applied to the 
 weekend **Jul 31 – Aug 2, 2026 only**. It is currently **inactive**
 (`config/feature_flags.json → commission_program`). No commission accrues outside the
 pilot window unless management re-enables the program with an explicit effective date.
+
+## MarginEdge cost source (added 2026-09-01)
+
+Food cost has three independent inputs and they fail independently:
+
+- **Toast** — quantities consumed. Nightly, `nightly-ingest.yml`.
+- **MarginEdge** — ingredient prices. Daily, `marginedge-costs.yml`. The MarginEdge public API
+  exposes NO recipe endpoints, so ACE owns the portion (BOM) layer: `cost = Σ (quantityPerToastUnit
+  × ingredient price)`. Only chef-confirmed mappings in `ace_marginedge_mappings` produce a cost.
+- **OpenTable** — guest context only. Manager CSV upload.
+
+**Food cost never depends on OpenTable.** With no OpenTable upload for a business date, food-cost
+dollars, item usage, per-server item usage, PMIX and food-cost % all still calculate; only guest
+segmentation, pre-decided vs converted and intent-linked commission are marked incomplete.
+
+Coverage tiers (`qtyByTier` / `costByTier`): `confirmed` (chef signed the number), `marginedge`
+(chef-confirmed portion × current MarginEdge price), `override`, `explicit_temp`,
+`rough_estimate`, `fallback_2`. Verified coverage = `confirmed` + `marginedge`.
+
+Per-source freshness lives in `ace_source_status` (one row per source). Never present one stale
+source as the whole dashboard being down. Full detail: docs/MARGINEDGE_COST_AUDIT.md.

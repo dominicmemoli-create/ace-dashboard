@@ -58,17 +58,76 @@ export function opentableStatus(DATA) {
   return { otDates, otLast, lastUpload, behind, toastLast };
 }
 
+/** One row of ace_source_status, or null when migration 0007 is not applied. */
+export function sourceFreshness(DATA, source) {
+  return (DATA.sourceStatus ?? []).find((r) => r.source === source) ?? null;
+}
+
+/**
+ * MarginEdge cost-sync state. Deliberately independent of Toast and OpenTable:
+ * MarginEdge being stale says nothing about sales being current, and vice versa.
+ * `state`:
+ *   'never'   — no successful cost sync yet (mappings still need confirming)
+ *   'ok'      — synced recently
+ *   'stale'   — last success older than staleAfterHours
+ *   'failed'  — last attempt failed; the previous verified costs are still live
+ */
+export function marginedgeStatus(DATA, { staleAfterHours = 48, now = Date.now() } = {}) {
+  const row = sourceFreshness(DATA, 'marginedge');
+  const run = (DATA.marginedgeRuns ?? [])[0] ?? null;
+  const lastSuccess = row?.last_success_at ?? null;
+  const held = Number(run?.held ?? 0);
+  const unresolved = Number(run?.skipped ?? 0);
+  if (!lastSuccess) {
+    return {
+      state: 'never', lastSuccess: null, lastAttempt: row?.last_attempt_at ?? null,
+      held, unresolved,
+      label: 'Not yet pulling costs from MarginEdge',
+    };
+  }
+  const ageH = (now - Date.parse(lastSuccess)) / 3600e3;
+  if (row?.status === 'failed') {
+    return {
+      state: 'failed', lastSuccess, lastAttempt: row?.last_attempt_at ?? null, held, unresolved,
+      label: 'Using the last successful MarginEdge costs',
+    };
+  }
+  if (ageH > staleAfterHours) {
+    return {
+      state: 'stale', lastSuccess, lastAttempt: row?.last_attempt_at ?? null, held, unresolved,
+      label: 'MarginEdge costs are behind',
+    };
+  }
+  return {
+    state: 'ok', lastSuccess, lastAttempt: row?.last_attempt_at ?? null, held, unresolved,
+    label: 'Food costs updated from MarginEdge',
+  };
+}
+
 export function costsStatus(DATA) {
   let rough = 0, total = 0, matched = 0, qty = 0;
   for (const it of DATA.items ?? []) {
     if (!it.matched) continue;
     total += it.cost;
-    // anything not chef-confirmed is a temporary estimate of some tier
-    if (it.source !== 'chef_confirmed' && it.verification !== 'verified') rough += it.cost;
+    // A MarginEdge cost derived from a chef-confirmed portion mapping is real
+    // costing, so it does not count toward the "rough" share the way the
+    // workbook estimates and the $2 fallback do.
+    const trustworthy = it.source === 'chef_confirmed'
+      || it.verification === 'verified'
+      || it.tier === 'marginedge';
+    if (!trustworthy) rough += it.cost;
   }
+  // Quantity-weighted verified coverage, straight off the engine's tier split.
+  let verifiedQty = 0, tierQty = 0, uncostedItems = 0;
   for (const r of DATA.metrics ?? []) {
     if (r.serverGuid) continue;
     matched += r.matchedQty ?? 0; qty += r.totalQty ?? 0;
+    uncostedItems += r.unmatchedItems ?? 0;
+    const byTier = r.qtyByTier ?? {};
+    for (const [k, v] of Object.entries(byTier)) {
+      tierQty += v ?? 0;
+      if (k === 'confirmed' || k === 'marginedge') verifiedQty += v ?? 0;
+    }
   }
   const stamped = (DATA.costs ?? []).filter((c) => c.updatedAt)
     .sort((a, b) => String(a.updatedAt).localeCompare(String(b.updatedAt)));
@@ -76,6 +135,9 @@ export function costsStatus(DATA) {
   return {
     roughShare: total > 0 ? (rough / total) * 100 : 0,
     coverage: qty > 0 ? (matched / qty) * 100 : null,
+    // Share of AYCE item quantity whose cost is chef-confirmed or MarginEdge-derived.
+    verifiedCoverage: tierQty > 0 ? (verifiedQty / tierQty) * 100 : null,
+    uncostedItems,
     lastUpdated: last?.updatedAt ?? null,
     lastUpdatedBy: last?.updatedBy ?? null,
   };
@@ -85,20 +147,36 @@ export function systemStatus(DATA, badge) {
   const t = toastStatus(DATA);
   const ot = opentableStatus(DATA);
   const c = costsStatus(DATA);
+  const me = marginedgeStatus(DATA);
   const failedImport = (DATA.importRuns ?? [])[0]?.status === 'failed';
+
+  // Each upstream source fails on its own. The headline names the source that
+  // is actually broken and says what still works, instead of collapsing three
+  // independent states into "the dashboard is down".
   if (t.lastFailed || failedImport) {
     return {
-      color: 'red', head: 'Data update failed',
+      color: 'red', head: t.lastFailed ? 'Toast sales update failed' : 'The last upload failed',
       action: t.lastFailed
-        ? 'The overnight Toast update did not finish. Press Retry Toast Update below.'
+        ? 'Sales data is behind. Press Retry Toast Update below. Food costs and guest status are unaffected.'
         : 'The last upload did not finish. Try the upload again — nothing was half-saved.',
+    };
+  }
+  if (me.state === 'failed') {
+    return {
+      color: 'yellow', head: 'MarginEdge cost update failed',
+      action: 'Food costs are using the last successful MarginEdge snapshot. Sales and guest numbers are current.',
     };
   }
   const needs = [];
   if (t.state === 'attention') needs.push('Toast is behind. Press Retry Toast Update below.');
   if (ot.behind) needs.push(`Upload the OpenTable file for ${longDate(ot.toastLast)}.`);
   if (badge > 0) needs.push(`${badge} item${badge === 1 ? '' : 's'} under Fixes Needed ${badge === 1 ? 'needs' : 'need'} a decision.`);
-  if (c.roughShare > 0) needs.push('Rough costs — waiting for chef confirmation.');
+  if (me.held > 0) needs.push(`${me.held} MarginEdge price change${me.held === 1 ? '' : 's'} held back for review.`);
+  if (c.roughShare > 0) {
+    needs.push(me.state === 'never'
+      ? 'Food costs still use rough estimates — confirm menu-item portions to switch MarginEdge on.'
+      : 'Some items still use rough costs.');
+  }
   if (needs.length) {
     return {
       color: 'yellow',
@@ -106,7 +184,10 @@ export function systemStatus(DATA, badge) {
       action: needs.join(' '),
     };
   }
-  return { color: 'green', head: 'Everything is up to date', action: 'Toast is current, guest status is loaded, and there is nothing waiting on a decision.' };
+  return {
+    color: 'green', head: 'Everything is up to date',
+    action: 'Sales are current from Toast, food costs are current from MarginEdge, guest status is loaded, and nothing is waiting on a decision.',
+  };
 }
 
 /* ------------------------------------------------------------------- page -- */
@@ -117,12 +198,15 @@ export function pgUpdate(host) {
   const t = toastStatus(DATA);
   const ot = opentableStatus(DATA);
   const c = costsStatus(DATA);
+  const me = marginedgeStatus(DATA);
+  const needsCostReview = c.uncostedItems + me.unresolved;
 
   // each source card carries its own attention tone, so the three states are
   // distinguishable at a glance and not just three identical white cards
   const toastTone = t.state === 'ok' ? 'ok' : t.state === 'updating' ? 'busy' : 'alert';
   const otTone = ot.behind ? 'attn' : 'ok';
-  const costTone = c.roughShare > 0 ? 'attn' : 'ok';
+  const costTone = me.state === 'failed' ? 'alert'
+    : (me.state === 'ok' && c.roughShare === 0) ? 'ok' : 'attn';
 
   host.innerHTML = `
   <div class="sys ${sys.color} rise" role="status">
@@ -166,21 +250,38 @@ export function pgUpdate(host) {
 
     <section class="card srccard ${costTone}" aria-labelledby="srcCostTtl">
       <header><div><div class="ttl" id="srcCostTtl">Food Costs</div>
-        <div class="sub">Occasional — when the chef confirms costs</div></div></header>
+        <div class="sub">Updates by itself from MarginEdge invoices</div></div></header>
       <div class="body">
-        <div class="srcstate">${c.roughShare > 0
-          ? '<span class="st partial">Rough costs — waiting for chef confirmation</span>'
-          : '<span class="st ok">Chef-confirmed</span>'}</div>
+        <div class="srcstate">${me.state === 'ok' ? `<span class="st ok">${esc(me.label)}</span>`
+          : me.state === 'failed' ? `<span class="st rev">${esc(me.label)}</span>`
+          : `<span class="st partial">${esc(me.label)}</span>`}</div>
         <dl class="deflist">
-          <div><dt>Last updated</dt><dd>${fmtWhen(c.lastUpdated)}${c.lastUpdatedBy ? ` · ${esc(c.lastUpdatedBy.split('@')[0])}` : ''}</dd></div>
-          <div><dt>AYCE items with costs entered</dt><dd>${c.coverage == null ? '—' : c.coverage.toFixed(0) + '%'}</dd></div>
+          <div><dt>Costs updated</dt><dd>${me.lastSuccess ? fmtWhen(me.lastSuccess) : 'not yet'}</dd></div>
+          <div><dt>AYCE quantity with verified costs</dt><dd>${c.verifiedCoverage == null ? '—' : c.verifiedCoverage.toFixed(1) + '%'}</dd></div>
+          ${needsCostReview > 0 ? `<div><dt>Items needing cost review</dt><dd>${needsCostReview}</dd></div>` : ''}
         </dl>
-        <p class="srcnote">${c.roughShare > 0
-          ? `About ${c.roughShare.toFixed(0)}% of cost dollars still use rough costs. Numbers stay marked
-             "waiting for chef confirmation" until the chef's confirmed costs are uploaded — uploading here replaces
-             the rough values item by item.`
-          : 'Costs are chef-confirmed. Upload a new file whenever prices change.'}</p>
-        <div class="srcactions"><button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button></div>
+        <p class="srcnote">${
+          me.state === 'failed'
+            ? `The last cost update from MarginEdge did not finish, so food costs are using the last
+               successful MarginEdge snapshot${me.lastSuccess ? ` from ${esc(fmtWhen(me.lastSuccess))}` : ''}.
+               Sales and guest numbers are unaffected.`
+          : me.state === 'never'
+            ? `Costs still come from the rough estimates${c.roughShare > 0 ? ` — about ${c.roughShare.toFixed(0)}% of cost dollars` : ''}.
+               MarginEdge takes over automatically once the chef confirms the portion sizes for each menu item.`
+          : me.state === 'stale'
+            ? 'MarginEdge has not sent new costs recently. The last verified costs are still in use.'
+          : `Vendor invoices in MarginEdge set the prices, so nobody re-types a cost sheet.${
+               c.roughShare > 0 ? ` About ${c.roughShare.toFixed(0)}% of cost dollars still use rough estimates.` : ''}`
+        }${me.held > 0 ? ` ${me.held} price change${me.held === 1 ? '' : 's'} looked wrong and ${me.held === 1 ? 'was' : 'were'} held back for review — the previous cost is still in use.` : ''}</p>
+        <div class="srcactions">
+          <div class="acc"><button type="button" aria-expanded="false" id="costManualTgl">
+            Enter costs by hand<span class="ch">${icon('chevronRight', 14)}</span></button>
+            <div class="ab" hidden id="costManualBody">
+              <p class="sub">Only needed to correct something MarginEdge has wrong, or in an
+                emergency. A file uploaded here overrides the automatic costs until it is replaced.</p>
+              <button class="bigbtn" id="costUploadBtn" type="button">Upload Food Costs</button>
+            </div></div>
+        </div>
       </div></section>
   </div>
 
@@ -190,6 +291,14 @@ export function pgUpdate(host) {
   host.querySelector('#otUploadBtn').addEventListener('click', () => {
     if (!requireOperator('Uploading the OpenTable file')) return;
     startOpenTableFlow(host.querySelector('#upStage'));
+  });
+  // The manual cost upload is now a fallback, so it lives behind a disclosure.
+  const cmTgl = host.querySelector('#costManualTgl');
+  cmTgl.addEventListener('click', () => {
+    const body = host.querySelector('#costManualBody');
+    const open = cmTgl.getAttribute('aria-expanded') === 'true';
+    cmTgl.setAttribute('aria-expanded', String(!open));
+    body.hidden = open;
   });
   host.querySelector('#costUploadBtn').addEventListener('click', () => {
     if (!requireOperator('Uploading food costs')) return;

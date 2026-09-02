@@ -43,7 +43,12 @@ describe('business date selection', () => {
     expect(workflow).toMatch(/workflow_dispatch:/);
     expect(workflow).toMatch(/businessDate:/);
     expect(workflow).toMatch(/github\.event_name.*workflow_dispatch/);
-    expect(workflow).toMatch(/nightly\.mjs \$\{\{ inputs\.businessDate \}\}/);
+    // The dispatch input reaches the script through the environment, never by
+    // interpolating ${{ inputs.* }} into a shell line that holds secrets.
+    expect(workflow).toMatch(/BUSINESS_DATE: \$\{\{ inputs\.businessDate \}\}/);
+    expect(workflow).toMatch(/nightly\.mjs \$BUSINESS_DATE/);
+    expect(workflow).not.toMatch(/run:.*\$\{\{ inputs\./);
+    expect(workflow).toMatch(/permissions:\s*\r?\n\s*contents: read/);
   });
 });
 
@@ -136,7 +141,17 @@ describe('bootstrap order', () => {
     const order = migrationOrder();
     expect(order[0]).toBe('0000_ace_core_tables.sql');
     expect(order.indexOf('0003_manager_tools.sql')).toBeLessThan(order.indexOf('0006_manager_writes.sql'));
-    expect(order.at(-1)).toBe('0006_manager_writes.sql');
+    // 0007 depends on 0006: it calls ace_is_operator() in a policy and reads
+    // ace_import_runs to backfill OpenTable freshness.
+    expect(order.indexOf('0006_manager_writes.sql')).toBeLessThan(order.indexOf('0007_marginedge_costs.sql'));
+    expect(order.at(-1)).toBe('0007_marginedge_costs.sql');
+  });
+
+  it('bootstrap applies the MarginEdge migration on a clean project', () => {
+    // Regression guard: 0007 was initially absent from LIVE_MIGRATIONS, so a
+    // clean bootstrap silently produced a project with no mapping table and a
+    // cost sync that could never run.
+    expect(LIVE_MIGRATIONS).toContain('0007_marginedge_costs.sql');
   });
 
   it('every listed migration exists on disk', () => {
